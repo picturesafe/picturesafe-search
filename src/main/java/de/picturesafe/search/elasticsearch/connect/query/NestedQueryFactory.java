@@ -29,7 +29,8 @@ public class NestedQueryFactory implements QueryFactory {
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
         if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
             final QueryBuilder targetFilterBuilder = QueryBuilders.termQuery(fieldName, valueExpression.getValue());
-            return QueryBuilders.nestedQuery(fieldConfiguration.getName(), QueryBuilders.boolQuery().filter(targetFilterBuilder), ScoreMode.Total);
+            final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
+            return QueryBuilders.nestedQuery(objectPath, QueryBuilders.boolQuery().filter(targetFilterBuilder), ScoreMode.Total);
         }
 
         return null;

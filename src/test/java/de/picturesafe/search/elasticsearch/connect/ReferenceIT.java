@@ -9,6 +9,8 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.expression.Expression;
+import de.picturesafe.search.expression.InExpression;
+import de.picturesafe.search.expression.IsNullExpression;
 import de.picturesafe.search.expression.OperationExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SortOption;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -107,21 +110,111 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     }
 
     @Test
-    public void testUnsortedSearch() {
-        final Map<String, Object> data = new HashMap<>();
-        data.put("id", 23);
-        final List<Map<String, Object>> references = new ArrayList<>();
-        references.add(generateReference(8, null, null));
+    public void testSearchValue() {
+        final Map<String, Object> doc1 = new HashMap<>();
+        doc1.put("id", 23);
+        List<Map<String, Object>> references = new ArrayList<>();
         references.add(generateReference(7, null, null));
-        data.put("referenceWithSort", references);
+        doc1.put("referenceWithSort", references);
 
-        elasticsearch.addToIndex(data, mappingConfiguration, indexAlias, true);
+        final Map<String, Object> doc2 = new HashMap<>();
+        doc2.put("id", 24);
+        references = new ArrayList<>();
+        references.add(generateReference(8, null, null));
+        doc2.put("referenceWithSort", references);
 
-        final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 8);
+        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+
+        final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 7);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, null, Locale.GERMAN);
-        final ElasticsearchResult unsortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
-        assertEquals("did not find reference without sortOrder", 23, getId(unsortedResult.getHits().get(0)));
+        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("should find only one doc", 1, result.getTotalHitCount());
+        assertEquals("did not find reference", 23, getId(result.getHits().get(0)));
+    }
+
+    @Test
+    public void testSearchIn() {
+        final Map<String, Object> doc1 = new HashMap<>();
+        doc1.put("id", 123);
+        List<Map<String, Object>> references = new ArrayList<>();
+        references.add(generateReference(7, null, null));
+        references.add(generateReference(8, null, null));
+        doc1.put("referenceWithSort", references);
+
+        final Map<String, Object> doc2 = new HashMap<>();
+        doc2.put("id", 124);
+        references = new ArrayList<>();
+        references.add(generateReference(8, null, null));
+        doc2.put("referenceWithSort", references);
+
+        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+
+        Expression expression = new InExpression("referenceWithSort." + FIELD_TARGET_ID, 7);
+        final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
+        QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, null, Locale.GERMAN);
+        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("should find only one doc", 1, result.getTotalHitCount());
+        assertEquals("did not find reference", 123, getId(result.getHits().get(0)));
+
+        expression = new InExpression("referenceWithSort." + FIELD_TARGET_ID, 7, 8);
+        queryDto = new QueryDto(expression, queryRangeDto, null, null, null, Locale.GERMAN);
+        result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("should find two docs", 2, result.getTotalHitCount());
+    }
+
+    @Test
+    public void testSearchEmptyIn() {
+        final Map<String, Object> doc1 = new HashMap<>();
+        doc1.put("id", 223);
+        doc1.put("caption", "SearchEmptyIn");
+        List<Map<String, Object>> references = new ArrayList<>();
+        references.add(generateReference(7, null, null));
+        references.add(generateReference(8, null, null));
+        doc1.put("referenceWithSort", references);
+
+        final Map<String, Object> doc2 = new HashMap<>();
+        doc2.put("id", 224);
+        doc2.put("caption", "SearchEmptyIn");
+        references = new ArrayList<>();
+        references.add(generateReference(8, null, null));
+        doc2.put("referenceWithSort", references);
+
+        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+
+        final OperationExpression expression = OperationExpression.builder()
+                .add(new ValueExpression("caption", "SearchEmptyIn"))
+                .add(new InExpression("referenceWithSort." + FIELD_TARGET_ID))
+                .build();
+        final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, null, Locale.GERMAN);
+        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("should find two docs", 2, result.getTotalHitCount());
+    }
+
+    @Test
+    public void testSearchIsNull() {
+        final Map<String, Object> doc1 = new HashMap<>();
+        doc1.put("id", 323);
+        doc1.put("caption", "SearchIsNull");
+        final List<Map<String, Object>> references = new ArrayList<>();
+        references.add(generateReference(7, null, null));
+        doc1.put("referenceWithSort", references);
+
+        final Map<String, Object> doc2 = new HashMap<>();
+        doc2.put("id", 324);
+        doc2.put("caption", "SearchIsNull");
+
+        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+
+        final OperationExpression expression = OperationExpression.builder()
+                .add(new ValueExpression("caption", "SearchIsNull"))
+                .add(new IsNullExpression("referenceWithSort." + FIELD_TARGET_ID))
+                .build();
+        final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, null, Locale.GERMAN);
+        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("should find only one doc", 1, result.getTotalHitCount());
     }
 
     @Test

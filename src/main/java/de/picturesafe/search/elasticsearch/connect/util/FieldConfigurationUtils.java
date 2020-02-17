@@ -64,4 +64,8 @@ public class FieldConfigurationUtils {
     public static boolean isTextField(FieldConfiguration fieldConfig) {
         return fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.TEXT.toString());
     }
+
+    public static String rootFieldName(FieldConfiguration fieldConfig) {
+        return StringUtils.substringBefore(fieldConfig.getName(), ".");
+    }
 }

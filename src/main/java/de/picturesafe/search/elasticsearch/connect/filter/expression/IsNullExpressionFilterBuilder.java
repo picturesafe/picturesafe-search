@@ -4,11 +4,14 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
+import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.expression.IsNullExpression;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 public class IsNullExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder {
 
@@ -19,10 +22,17 @@ public class IsNullExpressionFilterBuilder extends AbstractFieldExpressionFilter
         }
 
         final IsNullExpression isNullExpression = (IsNullExpression) context.getExpression();
-        final String esFieldName
-                = FieldConfigurationUtils.getElasticFieldName(context.getMappingConfiguration(), isNullExpression.getName(), context.getQueryDto().getLocale());
-        final ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(esFieldName);
-        return isNullExpression.isMatchNull() ? new BoolQueryBuilder().mustNot(existsQuery) : existsQuery;
+        final MappingConfiguration mappingConfiguration = context.getMappingConfiguration();
+        final String fieldName
+                = FieldConfigurationUtils.getElasticFieldName(mappingConfiguration, isNullExpression.getName(), context.getQueryDto().getLocale());
+        final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
+
+        QueryBuilder query = QueryBuilders.existsQuery(fieldName);
+        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
+            final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
+            query = QueryBuilders.nestedQuery(objectPath, query, ScoreMode.None);
+        }
+        return isNullExpression.isMatchNull() ? new BoolQueryBuilder().mustNot(query) : query;
     }
 
     @Override

@@ -18,27 +18,24 @@ public class InExpressionFilterBuilder extends AbstractFieldExpressionFilterBuil
 
     private QueryBuilder inFilter(final String fieldName, final Object[] values, ExpressionFilterBuilderContext filterBuilderContext) {
         Validate.notEmpty(fieldName, "Parameter 'fieldName' may be not empty!");
+        if (ArrayUtils.isEmpty(values)) {
+            return null;
+        }
 
         final MappingConfiguration mappingConfiguration = filterBuilderContext.getMappingConfiguration();
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
         final String queryFieldName = FieldConfigurationUtils.keywordFieldName(fieldConfiguration, fieldName);
 
-        final QueryBuilder queryBuilder;
-        // Create FilterBuilder for all passed values
-        if (ArrayUtils.isEmpty(values)) {
-            final QueryBuilder query;
-            if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
-                query = QueryBuilders.nestedQuery(queryFieldName, QueryBuilders.matchAllQuery(), ScoreMode.None);
-            } else {
-                query = QueryBuilders.existsQuery(queryFieldName);
-            }
-            queryBuilder = QueryBuilders.boolQuery().mustNot(query);
-        } else if (values.length > 1) {
-            // Create InFilter for array of values
+        QueryBuilder queryBuilder;
+        if (values.length > 1) {
             queryBuilder = QueryBuilders.termsQuery(queryFieldName, values);
         } else {
-            // Create TermFilter for scalar values
             queryBuilder = QueryBuilders.termQuery(queryFieldName, values[0]);
+        }
+
+        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
+            final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
+            queryBuilder = QueryBuilders.nestedQuery(objectPath, queryBuilder, ScoreMode.None);
         }
 
         return queryBuilder;
@@ -51,12 +48,7 @@ public class InExpressionFilterBuilder extends AbstractFieldExpressionFilterBuil
         }
 
         final InExpression inExpression = (InExpression) expressionFilterBuilderContext.getExpression();
-        final Object[] values = inExpression.getValues();
-        if (values == null || values.length > 0) {
-            return inFilter(inExpression.getName(), values, expressionFilterBuilderContext);
-        }
-
-        return null;
+        return inFilter(inExpression.getName(), inExpression.getValues(), expressionFilterBuilderContext);
     }
 
     @Override
