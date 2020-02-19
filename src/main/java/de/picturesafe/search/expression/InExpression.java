@@ -11,11 +11,17 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Expression to match a set of values
  */
 public class InExpression extends AbstractExpression implements FieldExpression {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InExpression.class);
+
+    private static final int MAX_SIZE = 65_536; // Limit by elasticsearch terms query
 
     private String name = "";
     private Object[] values;
@@ -85,11 +91,29 @@ public class InExpression extends AbstractExpression implements FieldExpression 
 
     @Override
     public Expression optimize() {
-        if (values != null && values.length == 0) {
+        if (ArrayUtils.isEmpty(values)) {
             return new FalseExpression();
+        } else if (values.length > MAX_SIZE) {
+            LOGGER.warn("Number of values [{}] exceeds the limit by elasticsearch [{}], will split expression in smaller batches.", values.length, MAX_SIZE);
+            return optimizeBatches(MAX_SIZE / 2);
         } else {
             return this;
         }
+    }
+
+    OperationExpression optimizeBatches(int batchSize) {
+        final OperationExpression.Builder opeBuilder = OperationExpression.builder(OperationExpression.Operator.OR);
+        for (int i = 0; i < values.length; i += currentBatchSize(batchSize, i)) {
+            final int size = currentBatchSize(batchSize, i);
+            final Object[] batch = new Object[size];
+            System.arraycopy(values, i, batch, 0, size);
+            opeBuilder.add(new InExpression(name, batch));
+        }
+        return opeBuilder.build();
+    }
+
+    private int currentBatchSize(int batchSize, int valuesIdx) {
+        return Math.min(batchSize, values.length - valuesIdx);
     }
 
     @Override
