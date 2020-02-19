@@ -62,8 +62,7 @@ public class FieldConfigurationTest {
 
     @Test
     public void testNestedFieldFieldConfiguration() {
-
-        List<FieldConfiguration> nestedFields = new ArrayList<>();
+        final List<StandardFieldConfiguration> nestedFields = new ArrayList<>();
         nestedFields.add(StandardFieldConfiguration.builder("nestedTestField", ElasticsearchType.TEXT).build());
         nestedFields.add(StandardFieldConfiguration.builder("nestedIntegerField", ElasticsearchType.INTEGER).build());
         nestedFields.add(StandardFieldConfiguration.builder("nestedDateField", ElasticsearchType.DATE).build());

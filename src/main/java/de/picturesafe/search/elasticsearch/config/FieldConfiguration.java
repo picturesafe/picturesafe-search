@@ -29,11 +29,13 @@ public interface FieldConfiguration {
 
     String getAnalyzer();
 
-    List<FieldConfiguration> getNestedFields();
+    List<? extends FieldConfiguration> getNestedFields();
 
     FieldConfiguration getNestedField(String name);
 
     boolean isNestedObject();
 
     Set<String> getCopyToFields();
+
+    FieldConfiguration getParent();
 }

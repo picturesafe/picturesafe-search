@@ -148,7 +148,7 @@ public class TestConfiguration {
     }
 
     private FieldConfiguration createReferenceWithSortFieldConfiguration() {
-        final List<FieldConfiguration> nestedFields = new ArrayList<>();
+        final List<StandardFieldConfiguration> nestedFields = new ArrayList<>();
         nestedFields.add(StandardFieldConfiguration.builder("targetId", ElasticsearchType.INTEGER).build());
         nestedFields.add(StandardFieldConfiguration.builder("sortOrder", ElasticsearchType.LONG).sortable(true).build());
         nestedFields.add(StandardFieldConfiguration.builder("linkingTime", ElasticsearchType.LONG).sortable(true).build());

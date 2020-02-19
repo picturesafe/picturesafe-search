@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -245,6 +246,39 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
 
         assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0)));
         assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1)));
+    }
+
+    @Test
+    public void testSortOnLinkingTimeFilteredByTargetId() {
+        final Map<String, Object> doc1 = new HashMap<>();
+        doc1.put("id", 1001);
+        List<Map<String, Object>> references = new ArrayList<>();
+        references.add(generateReference(777, null, 1L));
+        references.add(generateReference(888, null, 3L));
+        doc1.put("referenceWithSort", references);
+
+        final Map<String, Object> doc2 = new HashMap<>();
+        doc2.put("id", 1002);
+        references = new ArrayList<>();
+        references.add(generateReference(888, null, 2L));
+        doc2.put("referenceWithSort", references);
+
+        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+
+        final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888);
+        final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
+        final SortOption sortOption =  new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, Collections.singletonList(sortOption), null, Locale.GERMAN);
+        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("result is not sorted correctly", 1001, getId(result.getHits().get(0)));
+        assertEquals("result is not sorted correctly", 1002, getId(result.getHits().get(1)));
+
+        final SortOption filteredSortOption =  new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC);
+        filteredSortOption.setFilter(new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888));
+        final QueryDto filteredQueryDto = new QueryDto(expression, queryRangeDto, null, Collections.singletonList(filteredSortOption), null, Locale.GERMAN);
+        final ElasticsearchResult filteredResult = elasticsearch.search(filteredQueryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("result is not sorted correctly", 1002, getId(filteredResult.getHits().get(0)));
+        assertEquals("result is not sorted correctly", 1001, getId(filteredResult.getHits().get(1)));
     }
 
     @Test

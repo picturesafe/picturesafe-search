@@ -81,11 +81,11 @@ public class ValueExpressionFilterBuilder extends AbstractFieldExpressionFilterB
         switch (comparison) {
             case EQ:
             case LIKE:
-                return internalFilterBuilder.build(esFieldName, value);
+                return internalFilterBuilder.build(esFieldName, value, context);
             case NOT_EQ:
-                return QueryBuilders.boolQuery().mustNot(internalFilterBuilder.build(esFieldName, value));
+                return QueryBuilders.boolQuery().mustNot(internalFilterBuilder.build(esFieldName, value, context));
             case NOT_LIKE:
-                return internalFilterBuilder.build(esFieldName, "NOT (" + value + ")");
+                return internalFilterBuilder.build(esFieldName, "NOT (" + value + ")", context);
             case GT:
                 return QueryBuilders.rangeQuery(esFieldName).gt(value);
             case LT:
@@ -116,7 +116,7 @@ public class ValueExpressionFilterBuilder extends AbstractFieldExpressionFilterB
                 filterBuilder = internalNestedFilterBuilder;
             } else if (fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.BOOLEAN.toString()) && Boolean.FALSE.equals(value)) {
                 // Boolean-Feld nicht vorhanden wird als false interpretiert.
-                filterBuilder = (k, v) ->
+                filterBuilder = (k, v, c) ->
                         new BoolQueryBuilder().should(QueryBuilders.termQuery(k, v)).should(new BoolQueryBuilder().mustNot(new ExistsQueryBuilder(k)));
             }
         }

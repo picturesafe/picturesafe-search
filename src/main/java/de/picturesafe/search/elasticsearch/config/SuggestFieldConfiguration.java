@@ -78,4 +78,9 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     public Set<String> getCopyToFields() {
         return null;
     }
+
+    @Override
+    public FieldConfiguration getParent() {
+        return null;
+    }
 }

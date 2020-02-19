@@ -69,7 +69,7 @@ public class MappingBuilder {
         return mapping;
     }
 
-    private void addFields(XContentBuilder mapping, List<FieldConfiguration> fieldConfigurations) throws IOException {
+    private void addFields(XContentBuilder mapping, List<? extends FieldConfiguration> fieldConfigurations) throws IOException {
         for (final FieldConfiguration fieldConfig : fieldConfigurations) {
             mapping.startObject(fieldConfig.getName());
             if (isTextField(fieldConfig)) {

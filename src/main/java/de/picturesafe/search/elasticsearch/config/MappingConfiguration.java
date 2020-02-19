@@ -5,6 +5,7 @@
 package de.picturesafe.search.elasticsearch.config;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -34,6 +35,11 @@ public class MappingConfiguration {
         this.fieldConfigurations = fieldConfigurations;
         for (FieldConfiguration fieldConfiguration : fieldConfigurations) {
             fieldConfigurationMap.put(fieldConfiguration.getName(), fieldConfiguration);
+            if (CollectionUtils.isNotEmpty(fieldConfiguration.getNestedFields())) {
+                for (final FieldConfiguration nestedConfig : fieldConfiguration.getNestedFields()) {
+                    fieldConfigurationMap.put(fieldConfiguration.getName() + "." + nestedConfig.getName(), nestedConfig);
+                }
+            }
         }
     }
 

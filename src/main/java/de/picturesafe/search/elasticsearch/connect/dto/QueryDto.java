@@ -129,4 +129,8 @@ public class QueryDto {
                 .append("fieldResolverType", fieldResolverType) //--
                 .toString();
     }
+
+    public static QueryDto sortFilter(Expression expression, Locale locale) {
+        return new QueryDto(expression, new QueryRangeDto(-1, Integer.MAX_VALUE), null, null, null, locale);
+    }
 }

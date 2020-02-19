@@ -4,6 +4,7 @@
 
 package de.picturesafe.search.parameter;
 
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,6 +18,7 @@ public class SortOption {
 
     private String fieldName;
     private Direction sortDirection = Direction.ASC;
+    private Expression filter;
 
     /**
      * Default constructor
@@ -74,11 +76,28 @@ public class SortOption {
         this.sortDirection = sortDirection;
     }
 
+    /**
+     * Gets an optional filter expression (for nested objects).
+     * @return Filter expression
+     */
+    public Expression getFilter() {
+        return filter;
+    }
+
+    /**
+     * Sets an optional filter expression (for nested objects).
+     * @param filter Filter expression
+     */
+    public void setFilter(Expression filter) {
+        this.filter = filter;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle())
                 .append("fieldName", fieldName)
                 .append("sortDirection", sortDirection)
+                .append("filter", filter)
                 .toString();
     }
 }

@@ -4,8 +4,10 @@
 
 package de.picturesafe.search.elasticsearch.config;
 
+import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
 import java.util.Set;
@@ -24,8 +26,9 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private boolean aggregatable;
     private boolean multilingual;
     private String analyzer;
-    private List<FieldConfiguration> nestedFields;
+    private List<StandardFieldConfiguration> nestedFields;
     private Set<String> copyToFields;
+    private FieldConfiguration parent;
 
     private StandardFieldConfiguration(Builder builder) {
         this.name = builder.name;
@@ -36,8 +39,17 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         this.aggregatable = builder.aggregatable;
         this.multilingual = builder.multilingual;
         this.analyzer = builder.analyzer;
-        this.nestedFields = builder.nestedFields;
         this.copyToFields = builder.copyToFields;
+        this.nestedFields = builder.nestedFields;
+        initNestedFields();
+    }
+
+    private void initNestedFields() {
+        if (CollectionUtils.isNotEmpty(nestedFields)) {
+            for (final StandardFieldConfiguration nestedField : nestedFields) {
+                nestedField.parent = this;
+            }
+        }
     }
 
     public String getName() {
@@ -68,7 +80,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return analyzer;
     }
 
-    public List<FieldConfiguration> getNestedFields() {
+    public List<? extends FieldConfiguration> getNestedFields() {
         return nestedFields;
     }
 
@@ -91,6 +103,11 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return copyToFields;
     }
 
+    @Override
+    public FieldConfiguration getParent() {
+        return parent;
+    }
+
     public static Builder builder(String name, ElasticsearchType elasticsearchType) {
         return new Builder(name, elasticsearchType);
     }
@@ -108,7 +125,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         private boolean aggregatable;
         private boolean multilingual;
         private String analyzer;
-        private List<FieldConfiguration> nestedFields;
+        private List<StandardFieldConfiguration> nestedFields;
         private Set<String> copyToFields;
 
         public Builder(String name, ElasticsearchType elasticsearchType) {
@@ -167,12 +184,12 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             return this;
         }
 
-        public Builder nestedFields(List<FieldConfiguration> nestedFields) {
+        public Builder nestedFields(List<StandardFieldConfiguration> nestedFields) {
             this.nestedFields = nestedFields;
             return this;
         }
 
-        public FieldConfiguration build() {
+        public StandardFieldConfiguration build() {
             final StandardFieldConfiguration fieldConfiguration = new StandardFieldConfiguration(this);
             validateFieldConfiguration(fieldConfiguration);
             return fieldConfiguration;
@@ -184,24 +201,25 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             Validate.notNull(fieldConfiguration.elasticsearchType, "Parameter 'elasticsearchType' must not be null!");
 
             if (CollectionUtils.isNotEmpty(nestedFields) && !(elasticsearchType.equalsIgnoreCase(ElasticsearchType.NESTED.toString()))) {
-                throw new IllegalArgumentException("Field type has to be '" + elasticsearchType + "' to set nested fields!");
+                throw new IllegalArgumentException("Field type has to be '" + ElasticsearchType.NESTED + "' to set nested fields!");
             }
         }
     }
 
     @Override
     public String toString() {
-        return "StandardFieldConfiguration{"
-                + "name='" + name + '\''
-                + ", elasticsearchType=" + elasticsearchType
-                + ", copyToFulltext=" + copyToFulltext
-                + ", copyToSuggest=" + copyToSuggest
-                + ", sortable=" + sortable
-                + ", aggregatable=" + aggregatable
-                + ", multilingual=" + multilingual
-                + ", analyzer='" + analyzer + '\''
-                + ", nestedFields=" + nestedFields
-                + ", copyToFields=" + copyToFields
-                + '}';
+        return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
+                .append("name", name) //--
+                .append("elasticsearchType", elasticsearchType) //--
+                .append("copyToFulltext", copyToFulltext) //--
+                .append("copyToSuggest", copyToSuggest) //--
+                .append("sortable", sortable) //--
+                .append("aggregatable", aggregatable) //--
+                .append("multilingual", multilingual) //--
+                .append("analyzer", analyzer) //--
+                .append("nestedFields", nestedFields) //--
+                .append("copyToFields", copyToFields) //--
+                .append("parent", (parent != null) ? parent.getName() : null) //--
+                .toString();
     }
 }

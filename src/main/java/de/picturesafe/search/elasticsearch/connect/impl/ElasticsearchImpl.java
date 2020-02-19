@@ -563,7 +563,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     protected SearchResponse internalSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration) {
         final SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(queryDto);
 
-        final QueryBuilder filterBuilder = createQuery(queryDto, mappingConfiguration);
+        final QueryBuilder filterBuilder = createFilter(queryDto, mappingConfiguration);
         final QueryBuilder queryBuilder = createQuery(queryDto.getExpression(), mappingConfiguration);
 
         if (filterBuilder != null) {
@@ -639,39 +639,36 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         }
     }
 
-    protected void addSortOptionsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfiguration, SearchSourceBuilder searchRequestBuilder) {
+    protected void addSortOptionsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfig, SearchSourceBuilder searchRequestBuilder) {
         if (queryDto.getSortOptions() != null) {
             for (SortOption sortOption : queryDto.getSortOptions()) {
-                if (!mappingConfiguration.getSortableFieldNames().contains(sortOption.getFieldName())) {
+                if (!mappingConfig.getSortableFieldNames().contains(sortOption.getFieldName())) {
                     throw new RuntimeException("The field '" + sortOption.getFieldName() + "' is not supported to be used as a sort field!");
                 }
 
-                if (mappingConfiguration.getSortableFieldNames().contains(sortOption.getFieldName())) {
-                    final SortOrder sortOrder = (sortOption.getSortDirection() == SortOption.Direction.ASC) ? SortOrder.ASC : SortOrder.DESC;
+                if (mappingConfig.getSortableFieldNames().contains(sortOption.getFieldName())) {
                     final String fieldName = sortOption.getFieldName();
-                    FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName, false);
+                    FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, fieldName, false);
                     final String topFieldName = StringUtils.substringBefore(fieldName, ".");
 
                     if (fieldConfiguration == null) {
-                        fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, topFieldName, false);
+                        fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, topFieldName, false);
                     }
-                    final FieldSortBuilder fieldSortBuilder;
+
+                    FieldSortBuilder fieldSortBuilder = null;
                     if (fieldConfiguration != null) {
-                        if (fieldConfiguration.isNestedObject()) {
-                            fieldSortBuilder = buildNestedSort(fieldConfiguration, fieldName, topFieldName, sortOrder);
-                        } else if (isTextField(fieldConfiguration)) {
-                            fieldSortBuilder = buildStringSort(fieldConfiguration, mappingConfiguration, fieldName, sortOrder, queryDto.getLocale());
-                        } else {
-                            fieldSortBuilder = SortBuilders
-                                    .fieldSort(topFieldName)
-                                    .order(sortOrder)
-                                    .missing("_" + missingValueSortPosition.getValue());
+                        if (fieldConfiguration.getParent() != null) {
+                            fieldConfiguration = fieldConfiguration.getParent();
                         }
-                    } else {
-                        fieldSortBuilder = SortBuilders
-                                .fieldSort(topFieldName)
-                                .order(sortOrder)
-                                .missing("_" + missingValueSortPosition.getValue());
+
+                        if (fieldConfiguration.isNestedObject()) {
+                            fieldSortBuilder = buildNestedSort(queryDto, fieldConfiguration, fieldName, sortOption, mappingConfig);
+                        } else if (isTextField(fieldConfiguration)) {
+                            fieldSortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
+                        }
+                    }
+                    if (fieldSortBuilder == null){
+                        fieldSortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
                     }
 
                     searchRequestBuilder.sort(fieldSortBuilder);
@@ -680,14 +677,31 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         }
     }
 
-    protected FieldSortBuilder buildNestedSort(FieldConfiguration fieldConfiguration, String fieldName, String topFieldName, SortOrder sortOrder) {
-        final FieldConfiguration nestedField = fieldConfiguration.getNestedField(StringUtils.substringAfter(fieldName, "."));
-        final String sortFieldName = sortFieldName(nestedField, fieldName);
+    private FieldSortBuilder buildNestedSort(QueryDto queryDto, FieldConfiguration fieldConfiguration, String nestedFieldName, SortOption sortOption,
+                                             MappingConfiguration mappingConfiguration) {
+        final FieldConfiguration nestedField = fieldConfiguration.getNestedField(StringUtils.substringAfter(nestedFieldName, "."));
+        final String sortFieldName = sortFieldName(nestedField, nestedFieldName);
         return SortBuilders
                 .fieldSort(sortFieldName)
-                .order(sortOrder)
-                .missing("_" + missingValueSortPosition.getValue())
-                .setNestedSort(new NestedSortBuilder(topFieldName));
+                .order(sortOrder(sortOption))
+                .missing(sortMissing())
+                .setNestedSort(nestedSortBuilder(queryDto, fieldConfiguration.getName(), sortOption, mappingConfiguration));
+    }
+
+    private NestedSortBuilder nestedSortBuilder(QueryDto queryDto, String topFieldName, SortOption sortOption, MappingConfiguration mappingConfiguration) {
+        final NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(topFieldName);
+        if (sortOption.getFilter() != null) {
+            nestedSortBuilder.setFilter(createFilter(QueryDto.sortFilter(sortOption.getFilter(), queryDto.getLocale()), mappingConfiguration));
+        }
+        return nestedSortBuilder;
+    }
+
+    private SortOrder sortOrder(SortOption sortOption) {
+        return (sortOption.getSortDirection() == SortOption.Direction.ASC) ? SortOrder.ASC : SortOrder.DESC;
+    }
+
+    private String sortMissing() {
+        return "_" + missingValueSortPosition.getValue();
     }
 
     protected FieldSortBuilder buildStringSort(FieldConfiguration fieldConfiguration, MappingConfiguration mappingConfiguration, String fieldName,
@@ -752,7 +766,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         searchRequestBuilder.fetchSource(includes, excludes);
     }
 
-    protected QueryBuilder createQuery(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
+    protected QueryBuilder createFilter(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
         final List<QueryBuilder> queryBuilders = new ArrayList<>();
         for (FilterFactory filterFactory : filterFactories) {
             queryBuilders.addAll(filterFactory.create(queryDto, mappingConfiguration));

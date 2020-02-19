@@ -6,6 +6,7 @@ package de.picturesafe.search.elasticsearch.connect.filter;
 
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
 
+import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilderContext;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
@@ -18,14 +19,14 @@ public class InternalQueryFilterBuilder implements InternalFilterBuilder {
     }
 
     @Override
-    public QueryBuilder build(String key, Object value) {
+    public QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context) {
         return QueryBuilders.boolQuery().filter(
                 QueryBuilders.queryStringQuery(convertObject(value)).field(key)
                         .defaultOperator(queryConfig.getDefaultQueryStringOperator())
                         .analyzeWildcard(true));
     }
 
-    private static String convertObject(Object value) {
+    private String convertObject(Object value) {
         final String result;
 
         if (value == null) {
