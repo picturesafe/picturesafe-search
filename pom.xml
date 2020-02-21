@@ -8,7 +8,7 @@
     <description>Service API for Elasticsearch integration</description>
 
     <groupId>de.picturesafe.search</groupId>
-    <artifactId>elasticsearch-service</artifactId>
+    <artifactId>picturesafe-search</artifactId>
     <version>3.0.0</version>
 
     <developers>
