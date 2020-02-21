@@ -55,12 +55,12 @@ public class TestConfiguration {
     private String elasticsearchTimeZone;
 
     @Bean
-    MappingConfiguration mappingConfiguration() {
-        return new MappingConfiguration(testFields(), testLanguageSortConfigurations());
+    protected MappingConfiguration mappingConfiguration() {
+        return new MappingConfiguration(fieldConfigurations(), languageSortConfigurations());
     }
 
     @Bean
-    List<FilterFactory> filterFactories(QueryConfiguration queryConfiguration, String elasticsearchTimeZone) {
+    protected List<FilterFactory> filterFactories(QueryConfiguration queryConfiguration, String elasticsearchTimeZone) {
 
         final InFilterFactory countryInFilterFactory = new InFilterFactory();
         countryInFilterFactory.setQueryFieldName("country");
@@ -82,37 +82,37 @@ public class TestConfiguration {
     }
 
     @Bean
-    AggregationBuilderFactories aggregationBuilderFactories() {
+    protected AggregationBuilderFactories aggregationBuilderFactories() {
         final AggregationBuilderFactories aggregationBuilderFactories = new AggregationBuilderFactories();
         aggregationBuilderFactories.setTypeAggregationBuilderFactories(
                 Collections.singletonMap(
                         "date",
-                        getDateAggregationBuilderFactories()
+                        dateAggregationBuilderFactories()
                 )
         );
         return aggregationBuilderFactories;
     }
 
     @Bean
-    FacetResolver facetResolver() {
+    protected FacetResolver facetResolver() {
         return new FacetResolverMock();
     }
 
     @Bean
-    IndexSetup indexSetup(MappingConfiguration mappingConfiguration,
+    protected IndexSetup indexSetup(MappingConfiguration mappingConfiguration,
                           IndexPresetConfiguration indexPresetConfiguration,
                           ElasticsearchAdmin elasticsearchAdmin) {
         return new IndexSetup(mappingConfiguration, indexPresetConfiguration, elasticsearchAdmin);
     }
 
-    private List<AggregationBuilderFactory> getDateAggregationBuilderFactories() {
+    protected List<AggregationBuilderFactory> dateAggregationBuilderFactories() {
         final List<AggregationBuilderFactory> aggregationBuilderFactories = new ArrayList<>();
-        aggregationBuilderFactories.add(getDateRangeAggregationBuilderFactory());
-        aggregationBuilderFactories.add(getDateHistogramAggregationBuilderFactory());
+        aggregationBuilderFactories.add(dateRangeAggregationBuilderFactory());
+        aggregationBuilderFactories.add(dateHistogramAggregationBuilderFactory());
         return aggregationBuilderFactories;
     }
 
-    private DateRangeAggregationBuilderFactory getDateRangeAggregationBuilderFactory() {
+    protected DateRangeAggregationBuilderFactory dateRangeAggregationBuilderFactory() {
         final List<DateRangeAggregationBuilderFactory.Range> ranges = new ArrayList<>();
         ranges.add(new DateRangeAggregationBuilderFactory.Range("today", "now/d", "now/d+1d"));
         ranges.add(new DateRangeAggregationBuilderFactory.Range("yesterday", "now/d-1d", "now/d"));
@@ -126,21 +126,21 @@ public class TestConfiguration {
         return dateRangeAggregationBuilderFactory;
     }
 
-    private DateHistogramAggregationBuilderFactory getDateHistogramAggregationBuilderFactory() {
+    protected DateHistogramAggregationBuilderFactory dateHistogramAggregationBuilderFactory() {
         final DateHistogramAggregationBuilderFactory dateHistogramAggregationBuilderFactory
                 = new DateHistogramAggregationBuilderFactory("1y", DateHistogramAggregationBuilderFactory.IntervalType.CALENDAR, "yyyy", elasticsearchTimeZone);
         dateHistogramAggregationBuilderFactory.setName("years");
         return dateHistogramAggregationBuilderFactory;
     }
 
-    private List<LanguageSortConfiguration> testLanguageSortConfigurations() {
+    protected List<LanguageSortConfiguration> languageSortConfigurations() {
         final List<LanguageSortConfiguration> languageSortConfigurations = new ArrayList<>();
         languageSortConfigurations.add(new LanguageSortConfiguration(Locale.GERMANY));
         languageSortConfigurations.add(new LanguageSortConfiguration(Locale.UK));
         return languageSortConfigurations;
     }
 
-    private List<FieldConfiguration> testFields() {
+    protected List<FieldConfiguration> fieldConfigurations() {
         final List<FieldConfiguration> testFields = new ArrayList<>();
         testFields.add(StandardFieldConfiguration.builder("id", ElasticsearchType.INTEGER).sortable(true).build());
         testFields.add(StandardFieldConfiguration.builder("title", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).sortable(true).multilingual(true).build());
@@ -154,12 +154,12 @@ public class TestConfiguration {
         testFields.add(StandardFieldConfiguration.builder("treePaths", ElasticsearchType.TEXT).build());
         testFields.add(StandardFieldConfiguration.builder("released", ElasticsearchType.BOOLEAN).aggregatable(true).build());
         testFields.add(StandardFieldConfiguration.builder("facetDate", ElasticsearchType.DATE).aggregatable(true).build());
-        testFields.add(createReferenceWithSortFieldConfiguration());
+        testFields.add(referenceWithSortFieldConfiguration());
         testFields.add(new SuggestFieldConfiguration());
         return testFields;
     }
 
-    private FieldConfiguration createReferenceWithSortFieldConfiguration() {
+    protected FieldConfiguration referenceWithSortFieldConfiguration() {
         final List<StandardFieldConfiguration> nestedFields = new ArrayList<>();
         nestedFields.add(StandardFieldConfiguration.builder("targetId", ElasticsearchType.INTEGER).build());
         nestedFields.add(StandardFieldConfiguration.builder("sortOrder", ElasticsearchType.LONG).sortable(true).build());
