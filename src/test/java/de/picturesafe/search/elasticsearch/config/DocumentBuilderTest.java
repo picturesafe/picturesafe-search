@@ -33,28 +33,28 @@ public class DocumentBuilderTest {
 
     @Test
     public void testDocumentBuilder() {
-        Map<String, Object> document = DocumentBuilder.id(1).put("title", "This is a title").toDcoument();
+        Map<String, Object> document = DocumentBuilder.id(1).put("title", "This is a title").build();
         assertTrue(document.get(FieldConfiguration.FIELD_NAME_ID) instanceof Long);
         assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertEquals("This is a title", document.get("title"));
 
-        document = DocumentBuilder.id(1000).put("title", "This is a title").put("caption", "This is a caption").toDcoument();
+        document = DocumentBuilder.id(1000).put("title", "This is a title").put("caption", "This is a caption").build();
         assertEquals(1000, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertEquals("This is a title", document.get("title"));
         assertEquals("This is a caption", document.get("caption"));
 
-        document = DocumentBuilder.id(1).put("title", "This is a title").put("available", true).toDcoument();
+        document = DocumentBuilder.id(1).put("title", "This is a title").put("available", true).build();
         assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertEquals("This is a title", document.get("title"));
         assertTrue(document.get("available") instanceof Boolean);
         assertTrue((Boolean) document.get("available"));
 
-        document = DocumentBuilder.id(1).put("title", null).toDcoument();
+        document = DocumentBuilder.id(1).put("title", null).build();
         assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertNull(document.get("title"));
 
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Argument 'id' must be > 0!");
-        DocumentBuilder.id(-1).put("title", null).toDcoument();
+        DocumentBuilder.id(-1).put("title", null).build();
     }
 }
