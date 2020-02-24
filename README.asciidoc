@@ -1,0 +1,184 @@
+= picturesafe-search
+
+== An Elasticsearch service wrapper
+
+picturesafe-search is a Java service wrapper for the search engine Elasticsearch.
+
+It allows the fast, flexible and easy integration of Elasticsearch functions into new or existing Java applications.
+
+The following features are included:
+
+* Functions for creating and maintaining Elasticsearch indices
+** Create field definitions
+** Create and delete Elasticsearch indices
+** Add and remove documents
+* Query API for creating simple and complex (nested) search queries.
+** Fulltext queries
+** Field queries
+** Complex queries
+* Filter builder API for easy implementation of customized search filters
+* Aggregation builder API for easy implementation of customized aggregation builders (facets)
+
+== Getting started
+
+Only a few steps are necessary to get started with a standard configuration.
+A complete code example can be found https://github.com/picturesafe/picturesafe-search-samples[here].
+
+=== Installation
+
+picturesafe-search requires a running Elasticsearch server from version 7.x.
+
+For a new application an Elasticsearch server must be installed first:
+
+* https://www.elastic.co/downloads/elasticsearch[Download] and unpack the Elasticsearch official distribution.
+* Run `bin/elasticsearch` on Linux or macOS. Run `bin\elasticsearch.bat` on Windows.
+
+=== Include java library
+
+Add the current version of the picturesafe-search library to your project.
+
+.Maven dependency
+[source,xml]
+----
+<dependency>
+    <groupId>de.picturesafe.search</groupId>
+    <artifactId>picturesafe-search</artifactId>
+    <version>3.1.0</version>
+</dependency>
+----
+
+=== Configuration
+
+==== Configuration bean
+
+Implement a configuration class that imports the `DefaultElasticConfiguration.class`.
+This configuration can be extended later.
+
+The following example defines two fields for the Elasticsearch index:
+
+* Field 'id' (Elasticsearch type integer, sortable)
+* Field 'title' (Elasticsearch type text, within fulltext, aggregatable, sortable)
+
+.Spring configuration
+[source,java]
+----
+@Configuration
+@ComponentScan(basePackages = {"de.picturesafe.search.elasticsearch"})
+@Import({DefaultElasticConfiguration.class})
+public class Config {
+
+    @Bean
+    List<FieldConfiguration> fieldConfigurations() {
+        final List<FieldConfiguration> fieldConfigurations = new ArrayList<>();
+        fieldConfigurations.add(StandardFieldConfiguration
+            .builder("id", ElasticsearchType.INTEGER)
+            .sortable(true).build());
+
+        fieldConfigurations.add(StandardFieldConfiguration
+            .builder("title", ElasticsearchType.TEXT)
+            .copyToFulltext(true).aggregatable(true).sortable(true).build());
+
+        return fieldConfigurations;
+    }
+}
+----
+
+==== Configuration properties
+
+Add a file `elasticsearch.properties` to the classpath of your application and define the following key (this configuration can be extended later):
+
+.Property file
+[source]
+----
+elasticsearch.index.alias_name=picturesafe-search-sample
+----
+
+==== Service implementation
+
+Inject the SingleIndexElasticsearchService and implement an expression-based search:
+
+* Create an Elasticsearch index with alias
+* Add some documents to the index
+* Create an `OperationExpression` with two terms
+* Run the search query
+* Delete the Elasticsearch index
+
+If you want to implement searches for more than one index, please use `ElasticsearchService` instead of `SingleIndexElasticsearchService`.
+
+.Spring service implementation
+[source,java]
+----
+@Component
+@ComponentScan
+public class GettingStarted {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GettingStarted.class);
+
+    @Autowired
+    private SingleIndexElasticsearchService singleIndexElasticsearchService;
+
+    public static void main(String[] args) {
+        final AnnotationConfigApplicationContext ctx
+            = new AnnotationConfigApplicationContext(GettingStarted.class);
+        final GettingStarted gettingStarted = ctx.getBean(GettingStarted.class);
+        gettingStarted.run();
+        ctx.close();
+    }
+
+    private void run() {
+        singleIndexElasticsearchService.createIndexWithAlias();
+
+        singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
+                DocumentBuilder.id(1).put("title", "This is a test title").build());
+        singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
+                DocumentBuilder.id(2).put("title", "This is another test title").build());
+        singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
+                DocumentBuilder.id(3).put("title", "This is one more test title").build());
+
+        final Expression expression = OperationExpression.builder()
+                .add(new FulltextExpression("test title"))
+                .add(new ValueExpression("id", ValueExpression.Comparison.GE, 2))
+                .build();
+
+        final SearchResult searchResult = singleIndexElasticsearchService
+            .search(new AccountContext(), expression, new SearchParameter());
+
+        LOGGER.info(searchResult.toString());
+
+        singleIndexElasticsearchService.deleteIndexWithAlias();
+    }
+}
+----
+
+With implementations of the picturesafe-search `Expression`-Interface complex terms of different search conditions can be easily defined.
+
+Here are some examples:
+
+.Simple fulltext search
+[source,java]
+----
+Expression expression = new FulltextExpression("test title");
+----
+
+.Simple field search
+[source,java]
+----
+Expression expression = new ValueExpression("title", "test");
+----
+
+.Simple field search with comparison operator
+[source,java]
+----
+Expression expression = new ValueExpression("id", ValueExpression.Comparison.GE, 2);
+----
+
+.Search with two terms
+[source,java]
+----
+Expression expression = OperationExpression.builder()
+                .add(new FulltextExpression("test title"))
+                .add(new ValueExpression("id", ValueExpression.Comparison.GE, 2))
+                .build();
+----
+
+In addition there are further expressions like `InExpression`, `MustNotExpression`, `RangeValueExpression`, `DayExpression`, ...
