@@ -32,13 +32,17 @@ public class MustNotExpressionFilterBuilder implements ExpressionFilterBuilder {
             return null;
         }
 
+        final QueryBuilder innerFilter = buildInnerFilter(expressionFilterBuilderContext);
+        return (innerFilter != null) ? QueryBuilders.boolQuery().mustNot(innerFilter) : null;
+    }
+
+    QueryBuilder buildInnerFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
         final MustNotExpression mustNotExpression = (MustNotExpression) expressionFilterBuilderContext.getExpression();
         final QueryDto queryDto = expressionFilterBuilderContext.getQueryDto();
         final MappingConfiguration mappingConfiguration = expressionFilterBuilderContext.getMappingConfiguration();
 
         final ExpressionFilterFactory expressionFilterFactory = expressionFilterBuilderContext.getInitiator();
-        final QueryBuilder filterBuilder = expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), queryDto, mappingConfiguration);
-        return QueryBuilders.boolQuery().mustNot(filterBuilder);
+        return expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), queryDto, mappingConfiguration);
     }
 
     @Override
