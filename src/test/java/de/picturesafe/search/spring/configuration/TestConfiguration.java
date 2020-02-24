@@ -142,18 +142,30 @@ public class TestConfiguration {
 
     protected List<FieldConfiguration> fieldConfigurations() {
         final List<FieldConfiguration> testFields = new ArrayList<>();
-        testFields.add(StandardFieldConfiguration.builder("id", ElasticsearchType.INTEGER).sortable(true).build());
-        testFields.add(StandardFieldConfiguration.builder("title", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).sortable(true).multilingual(true).build());
-        testFields.add(StandardFieldConfiguration.builder("caption", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
-        testFields.add(StandardFieldConfiguration.builder("location", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
-        testFields.add(StandardFieldConfiguration.builder("createDate", ElasticsearchType.DATE).build());
-        testFields.add(StandardFieldConfiguration.builder("keyword", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
-        testFields.add(StandardFieldConfiguration.builder("keywordField", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
-        testFields.add(StandardFieldConfiguration.builder("systemField", ElasticsearchType.TEXT).build());
-        testFields.add(StandardFieldConfiguration.builder("facetResolved", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build());
-        testFields.add(StandardFieldConfiguration.builder("treePaths", ElasticsearchType.TEXT).build());
-        testFields.add(StandardFieldConfiguration.builder("released", ElasticsearchType.BOOLEAN).aggregatable(true).build());
-        testFields.add(StandardFieldConfiguration.builder("facetDate", ElasticsearchType.DATE).aggregatable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "id", ElasticsearchType.INTEGER).sortable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "title", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).sortable(true).multilingual(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "caption", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "location", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "createDate", ElasticsearchType.DATE).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "keyword", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "keywordField", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "systemField", ElasticsearchType.TEXT).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "facetResolved", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "treePaths", ElasticsearchType.TEXT).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "released", ElasticsearchType.BOOLEAN).aggregatable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "facetDate", ElasticsearchType.DATE).aggregatable(true).build());
         testFields.add(referenceWithSortFieldConfiguration());
         testFields.add(new SuggestFieldConfiguration());
         return testFields;

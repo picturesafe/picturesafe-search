@@ -137,12 +137,12 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
 
             final StandardIndexPresetConfiguration cfg = new StandardIndexPresetConfiguration(indexAlias, numberOfShards, numberOfReplicas);
             try {
-                IndexSettingsObject fileNameTokenizer = new IndexSettingsObject("file_name_tokenizer");
+                final IndexSettingsObject fileNameTokenizer = new IndexSettingsObject("file_name_tokenizer");
                 fileNameTokenizer.content().startObject()
                         .field("type", "char_group")
                         .array("tokenize_on_chars", "whitespace", ".", "-", "_", "\n")
                         .endObject();
-                IndexSettingsObject fileNameAnalyzer = new IndexSettingsObject(CUSTOM_ANALYZER_NAME);
+                final IndexSettingsObject fileNameAnalyzer = new IndexSettingsObject(CUSTOM_ANALYZER_NAME);
                 fileNameAnalyzer.content().startObject()
                         .field("type", "custom")
                         .field("tokenizer", "file_name_tokenizer")
@@ -175,14 +175,14 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
 
     private Map<String, Object> createTestDocument(long id, String filename) {
         final Map<String, Object> doc = new HashMap<>();
-        doc.put("id",id);
+        doc.put("id", id);
         doc.put("filenameWithAnalyzer", filename);
         doc.put("filenameWithoutAnalyzer", filename);
         return doc;
     }
 
     private ElasticsearchResult search(String fieldname, String value) {
-        Expression expression = new ValueExpression(fieldname, value);
+        final Expression expression = new ValueExpression(fieldname, value);
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, null, Locale.GERMAN);
         return elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
     }

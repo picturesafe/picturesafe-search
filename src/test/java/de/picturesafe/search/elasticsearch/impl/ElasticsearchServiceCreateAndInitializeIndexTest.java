@@ -122,7 +122,7 @@ public class ElasticsearchServiceCreateAndInitializeIndexTest {
             verify(listener).updateProgress(any(IndexInitializationListener.Event.class));
         }
 
-        String collect = listeners.stream()
+        final String collect = listeners.stream()
                 .filter(listener -> !listener.threadName.contains(listener.indexAlias))
                 .map(listener -> "Thread " + listener.threadName + " processed alias " + listener.indexAlias)
                 .collect(Collectors.joining("\n"));
@@ -133,15 +133,16 @@ public class ElasticsearchServiceCreateAndInitializeIndexTest {
     private ElasticsearchService elasticsearchService() {
         final List<IndexPresetConfiguration> indexPresetConfigurations = new ArrayList<>();
         indexPresetConfigurations.add(new StandardIndexPresetConfiguration("test", 1, 0));
-        final ElasticsearchServiceImpl elasticsearchService = new ElasticsearchServiceImpl(elasticsearch, indexPresetConfigurations, fieldConfigurationProvider);
+        final ElasticsearchServiceImpl elasticsearchService
+                = new ElasticsearchServiceImpl(elasticsearch, indexPresetConfigurations, fieldConfigurationProvider);
         elasticsearchService.setDocumentProvider(documentProvider);
 
         final ElasticsearchServiceImpl elasticsearchServiceSpy = spy(elasticsearchService);
         doAnswer(invocation -> {
             final IndexInitializer indexInitializer = mock(IndexInitializer.class);
             doAnswer(i -> {
-                IndexInitializationListener listener = i.getArgumentAt(1, IndexInitializationListener.class);
-                String alias = i.getArgumentAt(0, String.class);
+                final IndexInitializationListener listener = i.getArgumentAt(1, IndexInitializationListener.class);
+                final String alias = i.getArgumentAt(0, String.class);
                 listener.updateProgress(new IndexInitializationListener.Event(alias, IndexInitializationListener.Event.Type.END, 0, 0));
                 return null;
             }).when(indexInitializer).init(anyString(), any(IndexInitializationListener.class));

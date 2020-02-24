@@ -100,11 +100,13 @@ public class SingleIndexElasticsearchServiceIT {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testAddFieldConfiguration() throws IOException {
         indexName = singleIndexElasticsearchService.createIndexWithAlias();
 
         final String fieldName = "add_field_test";
-        singleIndexElasticsearchService.addFieldConfiguration(StandardFieldConfiguration.builder(fieldName, ElasticsearchType.TEXT).copyToFulltext(true).build());
+        singleIndexElasticsearchService.addFieldConfiguration(StandardFieldConfiguration.builder(fieldName, ElasticsearchType.TEXT).copyToFulltext(true)
+                .build());
 
         final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
         final MappingMetaData mapping = response.mappings().get(indexName);
@@ -255,7 +257,7 @@ public class SingleIndexElasticsearchServiceIT {
 
     private Map<String, Object> createDocument(long id, String title, Date createDate, String location) {
         final Map<String, Object> doc = new HashMap<>();
-        doc.put("id",id);
+        doc.put("id", id);
         doc.put("name", "name-" + id);
         doc.put("title", title);
         doc.put("caption", "Document caption #" + id + "\nThis document was created for testing purposes.\nÄÖÜäöüß");

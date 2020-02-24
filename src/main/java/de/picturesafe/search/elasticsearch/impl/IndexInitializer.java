@@ -105,8 +105,7 @@ class IndexInitializer {
                 updateProgress(listener,
                         new IndexInitializationListener
                                 .Event(indexAlias, IndexInitializationListener.Event.Type.DELETE_OLD_INDEX, documentCount, documentCount));
-                for (String oldIndexName : oldIndexNames)
-                elasticsearchService.deleteIndex(oldIndexName);
+                oldIndexNames.forEach(elasticsearchService::deleteIndex);
                 sw.stop();
             }
 

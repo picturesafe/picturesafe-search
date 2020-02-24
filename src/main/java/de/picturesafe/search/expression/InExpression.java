@@ -59,7 +59,7 @@ public class InExpression extends AbstractExpression implements FieldExpression 
      * @param name Field name
      * @param ids IDs to match
      */
-    public InExpression(String name, int[] ids) {
+    public InExpression(String name, long[] ids) {
         this.name = name;
         this.values = ArrayUtils.toObject(ids);
     }
