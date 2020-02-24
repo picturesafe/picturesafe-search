@@ -307,8 +307,8 @@
                 <version>3.2.0</version>
                 <executions>
                     <execution>
+                        <id>build-test-jar</id>
                         <goals>
-                            <goal>jar</goal>
                             <goal>test-jar</goal>
                         </goals>
                     </execution>
