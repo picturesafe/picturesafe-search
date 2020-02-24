@@ -24,6 +24,7 @@ import java.util.Set;
  */
 public interface FieldConfiguration {
 
+    String FIELD_NAME_ID = "id";
     String FIELD_NAME_FULLTEXT = "fulltext";
     String FIELD_NAME_SUGGEST = "suggest";
 
