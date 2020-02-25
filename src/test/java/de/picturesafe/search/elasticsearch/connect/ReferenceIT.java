@@ -68,7 +68,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
      */
     @Before
     public void begin() throws Exception {
-        indexSetup.setupIndex(indexAlias);
+        indexSetup.createIndex(indexAlias);
 
         final Map<String, Object> data = new HashMap<>();
         data.put("id", "20");

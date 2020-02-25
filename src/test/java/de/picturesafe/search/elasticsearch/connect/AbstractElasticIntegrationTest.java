@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -69,7 +70,7 @@ public abstract class AbstractElasticIntegrationTest {
     }
 
     @After
-    public final void tearDown() {
+    public final void baseTearDown() {
         TimeZone.setDefault(tzBeforeTest);
     }
 
@@ -83,6 +84,14 @@ public abstract class AbstractElasticIntegrationTest {
 
     public static Date yesterday() {
         return DateUtils.addDays(today(), -1);
+    }
+
+    public static Date problemDay() {
+        try {
+            return DateUtils.parseDate("01.01.1923", STANDARD_DATE_FORMAT);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 

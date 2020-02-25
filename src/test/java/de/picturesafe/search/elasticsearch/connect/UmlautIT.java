@@ -52,8 +52,8 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
     Elasticsearch elasticsearch;
 
     @Before
-    public void begin() throws Exception {
-        indexSetup.setupIndex(indexAlias);
+    public void begin() {
+        indexSetup.createIndex(indexAlias);
 
         final Map<String, Object> document = new HashMap<>();
         document.put("id", 42);
