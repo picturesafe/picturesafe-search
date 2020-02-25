@@ -118,7 +118,8 @@ public class IndexSetup {
     }
 
     private IndexRequest createIndexRequest(String indexAlias, int id, Date createDate, String title, String caption, String facetResolved,
-                                            String[] systemField, int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location) throws IOException {
+                                            String[] systemField, int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location)
+            throws IOException {
 
         return createIndexRequest(indexAlias, id, createTestDocument(id, createDate, title, caption, facetResolved, systemField,
                 allowedCountryIds, lockedCountryIds, roleRightIds, location));
@@ -130,11 +131,14 @@ public class IndexSetup {
 
     private XContentBuilder createTestDocument(int id, Date createDate, String title, String caption, String facetResolved, String[] systemField,
                                            int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location) throws IOException {
-        return createTestDocument(id, createDate, title, caption, facetResolved, systemField, allowedCountryIds, lockedCountryIds, roleRightIds, location, null);
+        return createTestDocument(id, createDate, title, caption, facetResolved, systemField, allowedCountryIds, lockedCountryIds, roleRightIds, location,
+                null);
     }
 
     private XContentBuilder createTestDocument(int id, Date createDate, String title, String caption, String facetResolved, String[] systemField,
-                                           int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location, Boolean released) throws IOException {
+                                           int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location, Boolean released)
+            throws IOException {
+
         final XContentBuilder xContentBuilder = jsonBuilder().startObject();
         xContentBuilder.field("title.de", title);
         xContentBuilder.field("id", id);

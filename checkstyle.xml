@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <module name="FileLength">
+        <property name="severity" value="error"/>
+        <property name="max" value="1500"/>
+    </module>
+    <module name="LineLength">
+        <property name="severity" value="error"/>
+        <property name="max" value="160"/>
+        <property name="tabWidth" value="4"/>
+    </module>
+    <module name="TreeWalker">
+        <module name="MethodLength">
+            <property name="severity" value="warning"/>
+            <property name="max" value="200"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+		<module name="TypeName">
+            <property name="severity" value="error"/>
+            <!--
+              * Minimum length two characters in camel case
+              * Ending "IT" is allowed if there is not capital before it
+            -->
+            <property name="format" value="^[A-Z][a-z0-9]([a-z0-9]*[A-Z])?([a-z0-9]+[A-Z]?)*((?&lt;![A-Z])IT)?$"/>
+		</module>
+        <module name="MemberName">
+            <property name="severity" value="warning"/>
+            <property name="format" value="^[a-z]([a-z0-9]*[A-Z])?([a-z0-9]+[A-Z]?)*$"/>
+
+            <property name="applyToPublic" value="true"/>
+            <property name="applyToProtected" value="true"/>
+            <property name="applyToPackage" value="true"/>
+            <property name="applyToPrivate" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="severity" value="error"/>
+            <property name="format" value="\.printStackTrace\(\)"/>
+            <property name="message" value="Not allowed usage of printStackTrace(). Use suitable LOGGER instead."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="severity" value="error"/>
+            <property name="format" value="System\.out"/>
+            <property name="message" value="Not allowed usage of System.out. Use suitable LOGGER instead."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="NeedBraces">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="PackageName">
+            <property name="severity" value="error"/>
+            <property name="format" value="^[a-z]+(\.[a-zA-Z_][a-zA-Z0-9_]*)*$"/>
+        </module>
+        <module name="RightCurly">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="ConstantName">
+            <property name="severity" value="warning"/>
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+            <property name="applyToPublic" value="true"/>
+            <property name="applyToProtected" value="true"/>
+            <property name="applyToPackage" value="true"/>
+            <property name="applyToPrivate" value="true"/>
+        </module>
+        <module name="IllegalImport">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="RedundantImport">
+            <property name="severity" value="info"/>
+        </module>
+        <module name="UnusedImports">
+            <property name="severity" value="info"/>
+            <property name="processJavadoc" value="false"/>
+        </module>
+        <module name="LeftCurly">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="MethodName">
+            <property name="severity" value="error"/>
+            <property name="format" value="^[a-z]([a-z0-9]*[A-Z])?([a-z0-9]+[A-Z]?)*$"/>
+            <property name="allowClassName" value="false"/>
+        </module>
+        <module name="AvoidNestedBlocks">
+            <property name="severity" value="warning"/>
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
+        <module name="MissingOverride">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="AvoidStarImport">
+            <property name="severity" value="error"/>
+            <property name="allowClassImports" value="false"/>
+            <property name="allowStaticMemberImports" value="false"/>
+        </module>
+        <module name="ParameterNumber">
+            <property name="max" value="7"/>
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="UpperEll">
+            <property name="severity" value="info"/>
+        </module>
+		<module name="FinalLocalVariable">
+            <property name="severity" value="info"/>
+			<!-- Not supported by IDEA
+		    <property name="token" value="VARIABLE_DEF"/>
+			-->
+		</module>
+
+		<module name="LocalFinalVariableName">
+            <property name="severity" value="warning"/>
+		    <property name="format" value="^[a-z]([a-z0-9]*[A-Z])?([a-z0-9]+[A-Z]?)*$"/>
+        </module>
+
+		<module name="LocalVariableName">
+            <property name="severity" value="warning"/>
+		    <property name="format" value="^[a-z]([a-z0-9]*[A-Z])?([a-z0-9]+[A-Z]?)*$"/>
+        </module>
+
+        <module name="ParameterName">
+            <property name="severity" value="error"/>
+		    <property name="format" value="^[a-z]([a-z0-9]*[A-Z])?([a-z0-9]+[A-Z]?)*$"/>
+        </module>
+
+		<!-- Checks for whitespace -->
+        <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+        <module name="GenericWhitespace">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="MethodParamPad">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="NoWhitespaceAfter">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="NoWhitespaceBefore">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="OperatorWrap">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="ParenPad">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="TypecastParenPad">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="WhitespaceAfter">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="WhitespaceAround">
+            <property name="severity" value="warning"/>
+            <property name="tokens"
+                      value="ASSIGN,BAND,BAND_ASSIGN,BOR,BOR_ASSIGN,BSR,BSR_ASSIGN,BXOR,BXOR_ASSIGN,COLON,DIV,DIV_ASSIGN,EQUAL,GE,GT,
+                             LAND,LE,LITERAL_ASSERT,LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_RETURN,
+                             LITERAL_SYNCHRONIZED,LITERAL_TRY,LITERAL_WHILE,LOR,LT,MINUS,MINUS_ASSIGN,MOD,MOD_ASSIGN,NOT_EQUAL,PLUS,PLUS_ASSIGN,
+                             QUESTION,SL,SLIST,SL_ASSIGN,SR,SR_ASSIGN,STAR,STAR_ASSIGN,TYPE_EXTENSION_AND"/>
+        </module>
+
+
+        <!-- Modifier Checks -->
+        <!-- See http://checkstyle.sf.net/config_modifiers.html -->
+        <module name="ModifierOrder">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="RedundantModifier">
+            <property name="severity" value="info"/>
+        </module>
+
+		<module name="ArrayTypeStyle">
+		    <property name="javaStyle" value="true"/>
+		</module>
+    </module>
+
+</module>

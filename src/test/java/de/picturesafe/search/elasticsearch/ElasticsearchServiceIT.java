@@ -118,12 +118,14 @@ public class ElasticsearchServiceIT {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testAddFieldConfiguration() throws IOException {
         indexName = elasticsearchService.createIndex(indexAlias);
         elasticsearchService.createAlias(indexAlias, indexName);
 
         final String fieldName = "add_field_test";
-        elasticsearchService.addFieldConfiguration(indexAlias, StandardFieldConfiguration.builder(fieldName, ElasticsearchType.TEXT).copyToFulltext(true).build());
+        elasticsearchService.addFieldConfiguration(indexAlias, StandardFieldConfiguration.builder(fieldName, ElasticsearchType.TEXT).copyToFulltext(true)
+                .build());
 
         final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
         final MappingMetaData mapping = response.mappings().get(indexName);
@@ -295,7 +297,7 @@ public class ElasticsearchServiceIT {
         final Map<String, Object> doc = createDocument(4711, "Der Hund beißt sich in den Schwanz in Hamburg");
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, doc);
 
-        SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
+        final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new ValueExpression("title", "Hund"), new SearchParameter());
         assertEquals(1, result.getTotalHitCount());
 
@@ -391,7 +393,7 @@ public class ElasticsearchServiceIT {
                 DateUtils.parseDate("28.07.2018", "dd.MM.yyyy"), "Buchholz");
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
-        SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("name", "name"),
+        final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("name", "name"),
                 new SearchParameter(new AggregationField("createDate", 1000), new AggregationField("location", 10)));
         assertEquals(4, result.getTotalHitCount());
         assertEquals(4, result.getResultCount());
@@ -427,26 +429,23 @@ public class ElasticsearchServiceIT {
         final Map<String, Object> doc4 = createDocument(4714);
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
-        final int[] intArray = new int[] {4711, 4714};
         SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new InExpression("id", intArray),
+                new InExpression("id", 4711, 4714),
                 new SearchParameter());
         assertEquals(2, result.getResultCount());
 
-        final String[] stringArray = new String[] {"name-4711", "name-4713", "name-4714"};
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new InExpression("name", stringArray),
-                new SearchParameter());
-        assertEquals(3, result.getResultCount());
-
-        final Long[] longArray = new Long[] {4711L, 4712L, 4714L};
-        result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new InExpression("id", longArray),
+                new InExpression("name", "name-4711", "name-4713", "name-4714"),
                 new SearchParameter());
         assertEquals(3, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new InExpression("id", new int[] {4711}),
+                new InExpression("id", 4711L, 4712L, 4714L),
+                new SearchParameter());
+        assertEquals(3, result.getResultCount());
+
+        result = elasticsearchService.search(indexAlias, new AccountContext(),
+                new InExpression("id", new long[] {4711}),
                 new SearchParameter());
         assertEquals(1, result.getResultCount());
         assertEquals(4711, result.getSearchResultItems().get(0).getId());
@@ -458,7 +457,7 @@ public class ElasticsearchServiceIT {
         assertEquals(4711, result.getSearchResultItems().get(0).getId());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new InExpression("name", "name-4711","name-4714"),
+                new InExpression("name", "name-4711", "name-4714"),
                 new SearchParameter());
         assertEquals(2, result.getResultCount());
         assertEquals(4711, result.getSearchResultItems().get(0).getId());
@@ -475,28 +474,25 @@ public class ElasticsearchServiceIT {
         final Map<String, Object> doc4 = createDocument(4714);
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
-        final int[] intArray = new int[] {4711, 4712, 4714};
         SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new MustNotExpression(new InExpression("id", intArray)),
+                new MustNotExpression(new InExpression("id", 4711, 4712, 4714)),
                 new SearchParameter());
         assertEquals(1, result.getResultCount());
         assertEquals(4713, result.getSearchResultItems().get(0).getId());
 
-        final String[] stringArray = new String[] {"name-4711", "name-4713", "name-4714"};
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new MustNotExpression(new InExpression("name", stringArray)),
+                new MustNotExpression(new InExpression("name", "name-4711", "name-4713", "name-4714")),
                 new SearchParameter());
         assertEquals(1, result.getResultCount());
         assertEquals(4712, result.getSearchResultItems().get(0).getId());
 
-        final Long[] longArray = new Long[] {4711L, 4712L, 4714L};
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new MustNotExpression(new InExpression("id", longArray)),
+                new MustNotExpression(new InExpression("id", 4711L, 4712L, 4714L)),
                 new SearchParameter());
         assertEquals(1, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new MustNotExpression(new InExpression("id", new int[] {4711})),
+                new MustNotExpression(new InExpression("id", new long[] {4711})),
                 new SearchParameter());
         assertEquals(3, result.getResultCount());
         assertEquals(4712, result.getSearchResultItems().get(0).getId());
@@ -509,7 +505,7 @@ public class ElasticsearchServiceIT {
         assertEquals(3, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new MustNotExpression(new InExpression("name", "name-4711","name-4714")),
+                new MustNotExpression(new InExpression("name", "name-4711", "name-4714")),
                 new SearchParameter());
         assertEquals(2, result.getResultCount());
         assertEquals(4712, result.getSearchResultItems().get(0).getId());
@@ -539,7 +535,7 @@ public class ElasticsearchServiceIT {
         final SearchParameter searchParameter = new SearchParameter();
         searchParameter.setMaxResults(1);
         searchParameter.setMaxTrackTotalHits(2L);
-        SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("title", "Hund"),
+        final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("title", "Hund"),
                 searchParameter);
         assertEquals(1, result.getResultCount());
         assertEquals(2, result.getTotalHitCount());
@@ -567,7 +563,7 @@ public class ElasticsearchServiceIT {
 
     private Map<String, Object> createDocument(long id, String title, Date createDate, String location) {
         final Map<String, Object> doc = new HashMap<>();
-        doc.put("id",id);
+        doc.put("id", id);
         doc.put("name", "name-" + id);
         doc.put("title", title);
         doc.put("caption", "Document caption #" + id + "\nThis document was created for testing purposes.\nÄÖÜäöüß");

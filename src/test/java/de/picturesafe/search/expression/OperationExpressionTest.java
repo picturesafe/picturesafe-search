@@ -138,29 +138,28 @@ public class OperationExpressionTest {
 
     @Test
     public void testInExpressionOptimization() {
-
-        final int[] intArray1 = new int[]{1, 2, 3};
-        final int[] intArray2 = new int[]{3, 4, 5};
+        final long[] ids1 = new long[]{1, 2, 3};
+        final long[] ids2 = new long[]{3, 4, 5};
 
         OperationExpression op = OperationExpression.builder()
-                .add(new InExpression("intArray1", intArray1))
-                .add(new InExpression("intArray2", intArray2)).build();
+                .add(new InExpression("ids1", ids1))
+                .add(new InExpression("ids2", ids2)).build();
         Expression optimzedExpression = op.optimize();
         assertEquals(2, ((OperationExpression) optimzedExpression).getOperands().size());
         assertTrue(((OperationExpression) optimzedExpression).getOperands().get(0) instanceof InExpression);
         assertTrue(((OperationExpression) optimzedExpression).getOperands().get(1) instanceof InExpression);
 
         op = OperationExpression.builder()
-                .add(new InExpression("intArray", intArray1))
-                .add(new InExpression("intArray", intArray2)).build();
+                .add(new InExpression("ids", ids1))
+                .add(new InExpression("ids", ids2)).build();
         optimzedExpression = op.optimize();
         assertTrue(optimzedExpression instanceof InExpression);
         assertEquals(1, ((InExpression) optimzedExpression).getValues().length);
-        assertEquals(3, ((InExpression) optimzedExpression).getValues()[0]);
+        assertEquals(3L, ((InExpression) optimzedExpression).getValues()[0]);
 
         op = OperationExpression.builder(OperationExpression.Operator.OR)
-                .add(new InExpression("intArray", intArray1))
-                .add(new InExpression("intArray", intArray2)).build();
+                .add(new InExpression("ids", ids1))
+                .add(new InExpression("ids", ids2)).build();
         optimzedExpression = op.optimize();
         assertTrue(optimzedExpression instanceof InExpression);
         assertEquals(5, ((InExpression) optimzedExpression).getValues().length);
@@ -191,33 +190,32 @@ public class OperationExpressionTest {
 
     @Test
     public void testMustNotExpressionOptimization() {
-
-        final int[] intArray1 = new int[]{1, 2, 3};
-        final int[] intArray2 = new int[]{3, 4, 5};
+        final long[] ids1 = new long[]{1, 2, 3};
+        final long[] ids2 = new long[]{3, 4, 5};
 
         OperationExpression op = OperationExpression.builder()
-                .add(new MustNotExpression(new InExpression("intArray1", intArray1)))
-                .add(new MustNotExpression(new InExpression("intArray2", intArray2))).build();
+                .add(new MustNotExpression(new InExpression("ids1", ids1)))
+                .add(new MustNotExpression(new InExpression("ids2", ids2))).build();
         Expression optimzedExpression = op.optimize();
         assertEquals(2, ((OperationExpression) optimzedExpression).getOperands().size());
         assertTrue(((OperationExpression) optimzedExpression).getOperands().get(0) instanceof MustNotExpression);
         assertTrue(((OperationExpression) optimzedExpression).getOperands().get(1) instanceof MustNotExpression);
 
         op = OperationExpression.builder()
-                .add(new MustNotExpression(new InExpression("intArray", intArray1)))
-                .add(new MustNotExpression(new InExpression("intArray", intArray2))).build();
+                .add(new MustNotExpression(new InExpression("ids", ids1)))
+                .add(new MustNotExpression(new InExpression("ids", ids2))).build();
         optimzedExpression = op.optimize();
         assertTrue(optimzedExpression instanceof MustNotExpression);
         assertTrue(((MustNotExpression) optimzedExpression).getExpression() instanceof InExpression);
         assertEquals(5, ((InExpression) (((MustNotExpression) optimzedExpression)).getExpression()).getValues().length);
 
         op = OperationExpression.builder(OperationExpression.Operator.OR)
-                .add(new MustNotExpression(new InExpression("intArray", intArray1)))
-                .add(new MustNotExpression(new InExpression("intArray", intArray2))).build();
+                .add(new MustNotExpression(new InExpression("ids", ids1)))
+                .add(new MustNotExpression(new InExpression("ids", ids2))).build();
         optimzedExpression = op.optimize();
         assertTrue(optimzedExpression instanceof MustNotExpression);
         assertEquals(1, ((InExpression) (((MustNotExpression) optimzedExpression)).getExpression()).getValues().length);
-        assertEquals(3, ((InExpression) (((MustNotExpression) optimzedExpression)).getExpression()).getValues()[0]);
+        assertEquals(3L, ((InExpression) (((MustNotExpression) optimzedExpression)).getExpression()).getValues()[0]);
     }
 
     @Test

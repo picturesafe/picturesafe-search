@@ -679,7 +679,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                             fieldSortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
                         }
                     }
-                    if (fieldSortBuilder == null){
+                    if (fieldSortBuilder == null) {
                         fieldSortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
                     }
 
