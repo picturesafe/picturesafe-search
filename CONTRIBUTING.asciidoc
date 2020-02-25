@@ -60,4 +60,4 @@ Please add the following license header line at the beginning of new Java classe
 
 == Code of Conduct
 
-Please read the https://github.com/picturesafe/picturesafe-search/CODE_OF_CONDUCT.asciidoc[Code of Conduct].
+Please read the https://github.com/picturesafe/picturesafe-search/blob/master/CODE_OF_CONDUCT.asciidoc[Code of Conduct].
