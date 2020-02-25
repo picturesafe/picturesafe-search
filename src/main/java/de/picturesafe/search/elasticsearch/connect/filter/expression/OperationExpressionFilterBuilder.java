@@ -71,24 +71,4 @@ public class OperationExpressionFilterBuilder implements ExpressionFilterBuilder
 
         return null;
     }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
-        final Expression expression = expressionFilterBuilderContext.getExpression();
-        final QueryDto queryDto = expressionFilterBuilderContext.getQueryDto();
-        final MappingConfiguration mappingConfiguration = expressionFilterBuilderContext.getMappingConfiguration();
-        if (expression instanceof OperationExpression) {
-            final List<Expression> operands = ((OperationExpression) expression).getOperands();
-            boolean result = true;
-            for (Expression subExpression : operands) {
-                final QueryDto fake = new QueryDto(subExpression, queryDto.getQueryRangeDto(), queryDto.getQueryFilterDtos(), queryDto.getSortOptions(),
-                        queryDto.getQueryFacetDtos(), queryDto.getLocale(), queryDto.getFieldsToResolve(), queryDto.getFieldResolverType());
-                result = result && expressionFilterBuilderContext.getInitiator().canHandleSearch(fake, mappingConfiguration);
-            }
-
-            return result;
-        }
-
-        return false;
-    }
 }

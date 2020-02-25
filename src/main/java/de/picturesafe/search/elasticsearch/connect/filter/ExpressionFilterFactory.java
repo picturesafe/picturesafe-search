@@ -37,8 +37,10 @@ public class ExpressionFilterFactory implements FilterFactory {
     @Override
     public List<QueryBuilder> create(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
         final List<QueryBuilder> result = new ArrayList<>();
-        result.add(buildFilter(queryDto.getExpression(), queryDto, mappingConfiguration));
-
+        final QueryBuilder filter = buildFilter(queryDto.getExpression(), queryDto, mappingConfiguration);
+        if (filter != null) {
+            result.add(filter);
+        }
         return result;
     }
 
@@ -54,19 +56,5 @@ public class ExpressionFilterFactory implements FilterFactory {
         }
 
         return null;
-    }
-
-    @Override
-    public boolean canHandleSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final ExpressionFilterBuilderContext expressionFilterBuilderContext = new ExpressionFilterBuilderContext(
-                queryDto.getExpression(), queryDto, mappingConfiguration, this
-        );
-        for (ExpressionFilterBuilder expressionFilterBuilder : expressionFilterBuilders) {
-            if (expressionFilterBuilder.canHandleSearch(expressionFilterBuilderContext)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

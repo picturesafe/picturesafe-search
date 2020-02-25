@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect.filter;
+package de.picturesafe.search.elasticsearch.connect.filter.util;
 
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;

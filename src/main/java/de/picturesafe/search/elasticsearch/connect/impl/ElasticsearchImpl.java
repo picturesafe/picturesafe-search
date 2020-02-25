@@ -45,7 +45,7 @@ import de.picturesafe.search.elasticsearch.connect.error.QuerySyntaxException;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.NullAwareAndFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.util.NullAwareAndFilterBuilder;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactoryCaller;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
@@ -421,20 +421,6 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     @Override
-    public boolean canHandleSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        for (FilterFactory filterFactory : filterFactories) {
-            if (filterFactory.canHandleSearch(queryDto, mappingConfiguration)) {
-                return true;
-            }
-        }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("elasticsearch can not handle search with expression " + queryDto.getExpression());
-        }
-
-        return false;
-    }
-
-    @Override
     public ElasticsearchResult search(final QueryDto queryDto, final MappingConfiguration mappingConfiguration,
                                       IndexPresetConfiguration indexPresetConfiguration) {
         return new WatchedTask<ElasticsearchResult>(LOG, "search") {
@@ -781,7 +767,10 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     protected QueryBuilder createFilter(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
         final List<QueryBuilder> queryBuilders = new ArrayList<>();
         for (FilterFactory filterFactory : filterFactories) {
-            queryBuilders.addAll(filterFactory.create(queryDto, mappingConfiguration));
+            final List<QueryBuilder> filters = filterFactory.create(queryDto, mappingConfiguration);
+            if (CollectionUtils.isNotEmpty(filters)) {
+                queryBuilders.addAll(filters);
+            }
         }
         final NullAwareAndFilterBuilder allFilterBuilder = new NullAwareAndFilterBuilder();
         for (QueryBuilder queryBuilder : queryBuilders) {

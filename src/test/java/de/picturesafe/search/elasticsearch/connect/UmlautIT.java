@@ -18,7 +18,6 @@ package de.picturesafe.search.elasticsearch.connect;
 
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFilterDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.expression.Expression;
@@ -72,9 +71,8 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
         for (String keyword : KEYWORDS) {
             final Expression expression = new ValueExpression("caption", keyword);
             final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-            final List<QueryFilterDto> queryFilterDtos = new ArrayList<>();
             final List<SortOption> sortOptionList = new ArrayList<>();
-            final QueryDto queryDto = new QueryDto(expression, queryRangeDto, queryFilterDtos, sortOptionList, null, Locale.GERMAN);
+            final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
             final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
@@ -88,9 +86,8 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
         for (String keyword : KEYWORDS) {
             final Expression expression = new FulltextExpression(keyword);
             final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-            final List<QueryFilterDto> queryFilterDtos = new ArrayList<>();
             final List<SortOption> sortOptionList = new ArrayList<>();
-            final QueryDto queryDto = new QueryDto(expression, queryRangeDto, queryFilterDtos, sortOptionList, null, Locale.GERMAN);
+            final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
             final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 

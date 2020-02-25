@@ -21,6 +21,4 @@ import org.elasticsearch.index.query.QueryBuilder;
 public interface ExpressionFilterBuilder {
 
     QueryBuilder buildFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext);
-
-    boolean canHandleSearch(ExpressionFilterBuilderContext expressionFilterBuilderContext);
 }

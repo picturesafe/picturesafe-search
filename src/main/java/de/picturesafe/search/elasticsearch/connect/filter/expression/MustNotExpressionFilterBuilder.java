@@ -44,9 +44,4 @@ public class MustNotExpressionFilterBuilder implements ExpressionFilterBuilder {
         final ExpressionFilterFactory expressionFilterFactory = expressionFilterBuilderContext.getInitiator();
         return expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), queryDto, mappingConfiguration);
     }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
-        return expressionFilterBuilderContext.getExpression() instanceof MustNotExpression;
-    }
 }

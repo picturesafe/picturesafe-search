@@ -112,7 +112,7 @@ public class MultilinguaCustomResolverlIT extends AbstractElasticIntegrationTest
     private ElasticsearchResult search(String term, Locale locale, List<SortOption> sortOptions) {
         final Expression expression = new ValueExpression("title", term);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, sortOptions, null, locale);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptions, null, locale);
 
         final ElasticsearchResult searchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("{}", searchResult);

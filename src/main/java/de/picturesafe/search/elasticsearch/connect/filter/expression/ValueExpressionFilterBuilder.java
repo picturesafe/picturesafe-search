@@ -21,11 +21,11 @@ import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
 import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
-import de.picturesafe.search.elasticsearch.connect.filter.InternalFilterBuilder;
-import de.picturesafe.search.elasticsearch.connect.filter.InternalNestedFilterBuilder;
-import de.picturesafe.search.elasticsearch.connect.filter.InternalPhraseMatchFilterBuilder;
-import de.picturesafe.search.elasticsearch.connect.filter.InternalQueryFilterBuilder;
-import de.picturesafe.search.elasticsearch.connect.filter.InternalTermFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalNestedFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalPhraseMatchFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalQueryFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalTermFilterBuilder;
 import de.picturesafe.search.elasticsearch.connect.filter.valuepreparation.ValuePrepareContext;
 import de.picturesafe.search.elasticsearch.connect.filter.valuepreparation.ValuePreparer;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
@@ -46,7 +46,7 @@ import static de.picturesafe.search.elasticsearch.connect.util.FieldConfiguratio
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_STARTS_WITH;
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_WILDCARD;
 
-public class ValueExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder implements TimeZoneAware {
+public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
 
     private final List<ValuePreparer> valuePreparers;
     private final String timeZone;
@@ -162,14 +162,5 @@ public class ValueExpressionFilterBuilder extends AbstractFieldExpressionFilterB
 
     private static boolean matchPhrase(ValueExpression expression) {
         return PhraseMatchHelper.matchPhrase((String) expression.getValue()) || expression.isMatchPhrase();
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        if (!(context.getExpression() instanceof KeywordExpression) && context.getExpression() instanceof ValueExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
-        }
     }
 }

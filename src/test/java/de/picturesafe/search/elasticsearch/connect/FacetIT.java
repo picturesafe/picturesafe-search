@@ -21,11 +21,12 @@ import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFilterDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
+import de.picturesafe.search.expression.OperationExpression;
+import de.picturesafe.search.expression.ValueExpression;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
@@ -83,14 +84,14 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
         Expression expression = new FulltextExpression("wert");
         QueryFacetDto queryFacetDto = new QueryFacetDto("caption", 10, 100);
         List<QueryFacetDto> queryFacetDtos = Collections.singletonList(queryFacetDto);
-        QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, queryFacetDtos, Locale.GERMAN);
+        QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 4, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
         expression = new FulltextExpression("released");
         queryFacetDto = new QueryFacetDto("released", 10, 100);
         queryFacetDtos = Collections.singletonList(queryFacetDto);
-        queryDto = new QueryDto(expression, defaultRange(), null, null, queryFacetDtos, Locale.GERMAN);
+        queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 2, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
@@ -98,15 +99,12 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
 
     @Test
     public void testFacetResolverOnTextFacet() {
-        final Expression expression = new FulltextExpression("wert");
+        final Expression expression
+                = OperationExpression.builder().add(new FulltextExpression("wert")).add(new ValueExpression("caption", "caption1")).build();
         final QueryFacetDto queryFacetDto = new QueryFacetDto("facetResolved", 10, 100);
         final List<QueryFacetDto> queryFacetDtos = new ArrayList<>();
         queryFacetDtos.add(queryFacetDto);
-        final QueryFilterDto queryFilterDto = new QueryFilterDto("caption", "caption1");
-        final List<QueryFilterDto> queryFilterDtos = new ArrayList<>();
-        queryFilterDtos.add(queryFilterDto);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), queryFilterDtos, null, queryFacetDtos,
-                Locale.GERMAN);
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         FacetDto facetDto = null;
@@ -172,8 +170,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
 
         final Expression expression = new FulltextExpression("DateFacetTest");
         final QueryFacetDto queryFacetDto = new QueryFacetDto("facetDate", 10, 100);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Collections.singletonList(queryFacetDto),
-                Locale.GERMAN);
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, Collections.singletonList(queryFacetDto), Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("Search result for time zone elastic='{}', system='{}':\n{}", elasticTimeZone, TimeZone.getDefault().getID(), result);
         assertEquals(id -100, result.getTotalHitCount());

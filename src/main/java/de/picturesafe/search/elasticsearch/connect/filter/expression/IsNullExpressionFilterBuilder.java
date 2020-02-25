@@ -25,7 +25,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-public class IsNullExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder {
+public class IsNullExpressionFilterBuilder implements ExpressionFilterBuilder {
 
     @Override
     public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
@@ -45,14 +45,5 @@ public class IsNullExpressionFilterBuilder extends AbstractFieldExpressionFilter
             query = QueryBuilders.nestedQuery(objectPath, query, ScoreMode.None);
         }
         return isNullExpression.isMatchNull() ? new BoolQueryBuilder().mustNot(query) : query;
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        if (context.getExpression() instanceof IsNullExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
-        }
     }
 }

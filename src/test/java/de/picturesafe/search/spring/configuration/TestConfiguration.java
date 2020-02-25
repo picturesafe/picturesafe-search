@@ -32,7 +32,6 @@ import de.picturesafe.search.elasticsearch.connect.facet.DateHistogramAggregatio
 import de.picturesafe.search.elasticsearch.connect.facet.DateRangeAggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.DefaultExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.InFilterFactory;
 import de.picturesafe.search.elasticsearch.connect.mock.FacetResolverMock;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,23 +60,8 @@ public class TestConfiguration {
 
     @Bean
     protected List<FilterFactory> filterFactories(QueryConfiguration queryConfiguration, String elasticsearchTimeZone) {
-
-        final InFilterFactory countryInFilterFactory = new InFilterFactory();
-        countryInFilterFactory.setQueryFieldName("country");
-        countryInFilterFactory.setElasticsearchInFieldName("allowedCountryIds");
-        countryInFilterFactory.setElasticsearchNotInFieldName("lockedCountryIds");
-        countryInFilterFactory.setElasticsearchMissingValueAllowed(true);
-
-        final InFilterFactory roleRightIdsInFilterFactory = new InFilterFactory();
-        roleRightIdsInFilterFactory.setQueryFieldName("roleRightIds");
-        roleRightIdsInFilterFactory.setElasticsearchInFieldName("roleRightIds");
-        roleRightIdsInFilterFactory.setElasticsearchMissingValueAllowed(true);
-
         final List<FilterFactory> filterFactories = new ArrayList<>();
         filterFactories.add(new DefaultExpressionFilterFactory(queryConfiguration, elasticsearchTimeZone));
-        filterFactories.add(countryInFilterFactory);
-        filterFactories.add(roleRightIdsInFilterFactory);
-
         return filterFactories;
     }
 

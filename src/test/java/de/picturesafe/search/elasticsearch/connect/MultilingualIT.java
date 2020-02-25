@@ -141,7 +141,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
     private ElasticsearchResult search(String term, Locale locale, List<SortOption> sortOptions, List<QueryFacetDto> facets) {
         final Expression expression = new ValueExpression("title", term);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, sortOptions, facets, locale);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptions, facets, locale);
 
         final ElasticsearchResult searchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("{}", searchResult);

@@ -31,7 +31,6 @@ import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFilterDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
@@ -429,7 +428,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         }
         final QueryRangeDto queryRangeDto = new QueryRangeDto(start, limit, searchParameter.getMaxTrackTotalHits());
 
-        final List<QueryFilterDto> queryFilterDtos = new ArrayList<>();
         final List<QueryFacetDto> queryFacetDtos = new ArrayList<>();
         final List<AggregationField> aggregationFields = searchParameter.getAggregationFields();
         if (!CollectionUtils.isEmpty(aggregationFields)) {
@@ -449,9 +447,7 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         final Locale locale = StringUtils.isNotBlank(searchParameter.getLanguage())
                 ? LocaleUtils.toLocale(searchParameter.getLanguage())
                 : accountContext.getCurrentLoginLanguage();
-        return new QueryDto(
-                expression, queryRangeDto, queryFilterDtos, searchParameter.getSortOptions(), queryFacetDtos,
-                locale, fieldsToResolve, fieldResolverType);
+        return new QueryDto(expression, queryRangeDto, searchParameter.getSortOptions(), queryFacetDtos, locale, fieldsToResolve, fieldResolverType);
     }
 
     protected int getMaxResults(String indexAlias, Integer maxResults, long totalHitCount) {

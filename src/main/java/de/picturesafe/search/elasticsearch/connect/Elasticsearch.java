@@ -206,15 +206,6 @@ public interface Elasticsearch {
     ElasticsearchInfo getElasticsearchInfo();
 
     /**
-     * Checks if the service can handle the given search query.
-     *
-     * @param queryDto                  {@link QueryDto}
-     * @param mappingConfiguration      {@link MappingConfiguration}
-     * @return                          true if the service can handle the given search query
-     */
-    boolean canHandleSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration);
-
-    /**
      * Searches for documents.
      *
      * @param queryDto                      {@link QueryDto}

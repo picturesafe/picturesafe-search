@@ -28,7 +28,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import java.util.Date;
 
-public class RangeValueExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder implements TimeZoneAware {
+public class RangeValueExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
 
     private String timeZone;
 
@@ -71,15 +71,6 @@ public class RangeValueExpressionFilterBuilder extends AbstractFieldExpressionFi
             return ElasticDateUtils.formatIso((Date) value, timeZone);
         } else {
             return value;
-        }
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        if (context.getExpression() instanceof RangeValueExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
         }
     }
 }
