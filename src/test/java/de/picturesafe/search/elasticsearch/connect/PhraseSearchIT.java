@@ -18,7 +18,6 @@ package de.picturesafe.search.elasticsearch.connect;
 
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFilterDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.expression.ValueExpression;
@@ -83,9 +82,8 @@ public class PhraseSearchIT extends AbstractElasticIntegrationTest {
         final ValueExpression expression = new ValueExpression("keyword", term);
         expression.setMatchPhrase(true);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-        final List<QueryFilterDto> queryFilterDtos = new ArrayList<>();
         final List<SortOption> sortOptionList = new ArrayList<>();
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, queryFilterDtos, sortOptionList, null, Locale.GERMAN);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
         return elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
     }

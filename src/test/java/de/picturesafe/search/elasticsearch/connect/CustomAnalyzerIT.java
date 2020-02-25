@@ -183,7 +183,7 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
 
     private ElasticsearchResult search(String fieldname, String value) {
         final Expression expression = new ValueExpression(fieldname, value);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, null, Locale.GERMAN);
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
         return elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
     }
 }

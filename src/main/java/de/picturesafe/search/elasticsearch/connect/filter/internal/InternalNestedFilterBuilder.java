@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect.filter;
+package de.picturesafe.search.elasticsearch.connect.filter.internal;
 
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilderContext;

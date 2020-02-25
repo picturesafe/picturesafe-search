@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect.filter;
+package de.picturesafe.search.elasticsearch.connect.filter.internal;
 
 import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilderContext;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
-public interface InternalFilterBuilder {
-    QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context);
+public class InternalTermFilterBuilder implements InternalFilterBuilder {
+
+    @Override
+    public QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context) {
+        return QueryBuilders.termQuery(key, value);
+    }
 }

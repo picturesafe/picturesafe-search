@@ -29,17 +29,7 @@ public interface FilterFactory {
      *
      * @param queryDto                  {@link QueryDto}
      * @param mappingConfiguration      {@link MappingConfiguration}
-     * @return                          A List of {@link QueryBuilder} (filter)
+     * @return                          A List of {@link QueryBuilder} (filter) - may be empty
      */
     List<QueryBuilder> create(QueryDto queryDto, MappingConfiguration mappingConfiguration);
-
-
-    /**
-     * Checks if the factory can handle the given search query.
-     *
-     * @param queryDto                  {@link QueryDto}
-     * @param mappingConfiguration      {@link MappingConfiguration}
-     * @return                          true if the service can handle the given search query
-     */
-    boolean canHandleSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration);
 }

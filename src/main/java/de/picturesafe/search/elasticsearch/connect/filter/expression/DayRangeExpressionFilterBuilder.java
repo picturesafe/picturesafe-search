@@ -19,7 +19,6 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.expression.DayRangeExpression;
-import de.picturesafe.search.expression.Expression;
 import org.apache.commons.lang3.time.DateUtils;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -27,7 +26,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import java.util.Date;
 
-public class DayRangeExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder implements TimeZoneAware {
+public class DayRangeExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
 
     private String timeZone;
 
@@ -54,15 +53,5 @@ public class DayRangeExpressionFilterBuilder extends AbstractFieldExpressionFilt
             return rangeFilterBuilder;
         }
         return null;
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        final Expression expression = context.getExpression();
-        if (expression instanceof DayRangeExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
-        }
     }
 }

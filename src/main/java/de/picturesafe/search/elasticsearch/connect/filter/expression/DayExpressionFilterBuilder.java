@@ -28,7 +28,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import java.util.Date;
 
-public class DayExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder implements TimeZoneAware {
+public class DayExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
 
     private String timeZone;
 
@@ -76,14 +76,5 @@ public class DayExpressionFilterBuilder extends AbstractFieldExpressionFilterBui
                 .boolQuery()
                 .should(rangeQueryBuilder.gte(isoDay).lt(isoNextDay))
                 .should(QueryBuilders.termQuery(mappedFieldName, isoDay));
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        if (context.getExpression() instanceof DayExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
-        }
     }
 }

@@ -26,7 +26,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-public class InExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder {
+public class InExpressionFilterBuilder implements ExpressionFilterBuilder {
 
     private QueryBuilder inFilter(final String fieldName, final Object[] values, ExpressionFilterBuilderContext filterBuilderContext) {
         Validate.notEmpty(fieldName, "Parameter 'fieldName' may be not empty!");
@@ -61,14 +61,5 @@ public class InExpressionFilterBuilder extends AbstractFieldExpressionFilterBuil
 
         final InExpression inExpression = (InExpression) expressionFilterBuilderContext.getExpression();
         return inFilter(inExpression.getName(), inExpression.getValues(), expressionFilterBuilderContext);
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        if (context.getExpression() instanceof InExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
-        }
     }
 }

@@ -39,7 +39,6 @@ public class QueryDto {
     }
 
     private final Expression expression;
-    private final List<QueryFilterDto> queryFilterDtos;
     private final QueryRangeDto queryRangeDto;
     private final List<SortOption> sortOptions;
     private final List<QueryFacetDto> queryFacetDtos;
@@ -49,17 +48,14 @@ public class QueryDto {
 
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
-                    List<QueryFilterDto> queryFilterDtos,
                     List<SortOption> sortOptions,
                     List<QueryFacetDto> queryFacetDtos,
                     Locale locale) {
-        this(expression, queryRangeDto, queryFilterDtos, sortOptions, queryFacetDtos, locale,
-                new ArrayList<>(), FieldResolverType.DOC_VALUES);
+        this(expression, queryRangeDto, sortOptions, queryFacetDtos, locale, new ArrayList<>(), FieldResolverType.DOC_VALUES);
     }
 
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
-                    List<QueryFilterDto> queryFilterDtos,
                     List<SortOption> sortOptions,
                     List<QueryFacetDto> queryFacetDtos,
                     Locale locale,
@@ -67,7 +63,6 @@ public class QueryDto {
                     FieldResolverType fieldResolverType) {
         this.expression = expression;
         this.queryRangeDto = queryRangeDto;
-        this.queryFilterDtos = queryFilterDtos;
         this.sortOptions = sortOptions;
         this.queryFacetDtos = queryFacetDtos;
         this.locale = locale;
@@ -83,10 +78,6 @@ public class QueryDto {
 
     public QueryRangeDto getQueryRangeDto() {
         return queryRangeDto;
-    }
-
-    public List<QueryFilterDto> getQueryFilterDtos() {
-        return queryFilterDtos;
     }
 
     public List<SortOption> getSortOptions() {
@@ -111,8 +102,7 @@ public class QueryDto {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(659, 293).append(expression).append(queryRangeDto).append(queryFilterDtos)
-                .append(sortOptions).append(queryFacetDtos).append(locale).append(fieldsToResolve).toHashCode();
+        return new HashCodeBuilder().append(expression).append(queryRangeDto).toHashCode();
     }
 
     @Override
@@ -120,11 +110,15 @@ public class QueryDto {
         if (!(o instanceof QueryDto)) {
             return false;
         } else {
-            final QueryDto target = (QueryDto) o;
-            return new EqualsBuilder().append(expression, target.getExpression()).append(queryRangeDto, target.getQueryRangeDto())
-                    .append(queryFilterDtos, target.queryFilterDtos).append(sortOptions, target.getSortOptions()).
-                            append(queryFacetDtos, target.getQueryFacetDtos()).append(locale, target.getLocale()).
-                            append(fieldsToResolve, target.getFieldsToResolve()).isEquals();
+            final QueryDto other = (QueryDto) o;
+            return new EqualsBuilder()
+                    .append(expression, other.expression)
+                    .append(queryRangeDto, other.queryRangeDto)
+                    .append(sortOptions, other.sortOptions)
+                    .append(queryFacetDtos, other.queryFacetDtos)
+                    .append(locale, other.locale)
+                    .append(fieldsToResolve, other.fieldsToResolve)
+                    .isEquals();
         }
     }
 
@@ -132,7 +126,6 @@ public class QueryDto {
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("expression", expression) //--
-                .append("queryFilterDtos", queryFilterDtos) //--
                 .append("queryRangeDto", queryRangeDto) //--
                 .append("sortOptions", sortOptions) //--
                 .append("queryFacetDtos", queryFacetDtos) //--
@@ -143,6 +136,6 @@ public class QueryDto {
     }
 
     public static QueryDto sortFilter(Expression expression, Locale locale) {
-        return new QueryDto(expression, new QueryRangeDto(-1, Integer.MAX_VALUE), null, null, null, locale);
+        return new QueryDto(expression, new QueryRangeDto(-1, Integer.MAX_VALUE), null, null, locale);
     }
 }

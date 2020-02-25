@@ -27,7 +27,7 @@ import org.elasticsearch.index.query.TermsQueryBuilder;
 
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.keywordFieldName;
 
-public class KeywordExpressionFilterBuilder extends AbstractFieldExpressionFilterBuilder {
+public class KeywordExpressionFilterBuilder implements ExpressionFilterBuilder {
 
     @Override
     public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
@@ -57,15 +57,6 @@ public class KeywordExpressionFilterBuilder extends AbstractFieldExpressionFilte
                 return QueryBuilders.boolQuery().mustNot(termsQueryBuilder);
             default:
                 throw new RuntimeException("Unsupported comparison " + keywordExpression.getComparison());
-        }
-    }
-
-    @Override
-    public boolean canHandleSearch(ExpressionFilterBuilderContext context) {
-        if (context.getExpression() instanceof KeywordExpression) {
-            return hasFieldConfiguration(context);
-        } else {
-            return false;
         }
     }
 }
