@@ -49,8 +49,8 @@ public class PhraseSearchIT extends AbstractElasticIntegrationTest {
     Elasticsearch elasticsearch;
 
     @Before
-    public void begin() throws Exception {
-        indexSetup.setupIndex(indexAlias);
+    public void begin() {
+        indexSetup.createIndex(indexAlias);
 
         final Map<String, Object> document = new HashMap<>();
         int i = 1;

@@ -21,36 +21,21 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.error.IndexMissingException;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.junit.Assert.fail;
 
 public class IndexSetup {
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexSetup.class);
-    private static final String STANDARD_DATE_FORMAT = "dd.MM.yyyy";
 
     private final MappingConfiguration mappingConfiguration;
     private final IndexPresetConfiguration indexPresetConfiguration;
@@ -62,52 +47,6 @@ public class IndexSetup {
         this.elasticsearchAdmin = elasticsearchAdmin;
     }
 
-    public void setupIndex(String indexAlias) throws Exception {
-        createIndex(indexAlias);
-
-        final BulkRequest request = new BulkRequest();
-        try {
-            final int[] allowedCountryIds = new int[]{1};
-            final int[] lockedCountryIds = new int[]{2};
-            final Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
-            final Date thatday = DateUtils.parseDate("01.01.1923", STANDARD_DATE_FORMAT); // Problematisches Datum: 01.01.1923
-            LOG.debug("thatday=" + thatday);
-            request.add(createIndexRequest(indexAlias, 1, null, "erster wert 1",
-                    "caption1", "1", new String[]{"system1", "system2"}, null, null,
-                    new int[]{4711}, "Hamburg Altona"));
-            request.add(createIndexRequest(indexAlias, 2, null, "zweiter wert 2",
-                    "caption2", "2", new String[]{}, null, lockedCountryIds,
-                    new int[]{4711}, "Bremen"));
-            request.add(createIndexRequest(indexAlias, 3, null, "dritter wert 3",
-                    "caption2", "3", new String[]{}, allowedCountryIds, null,
-                    new int[]{}, "Rostock"));
-            request.add(createIndexRequest(indexAlias, 4, thatday, "vierter wert 4",
-                    "Schleswig-Holstein liegt im Norden", "4", new String[]{}, allowedCountryIds, lockedCountryIds,
-                    new int[]{4711, 4712}, "Bosnien Herzegowina"));
-            request.add(createIndexRequest(indexAlias, 5, today, "fünfter wert 5",
-                    "Schleswig liegt nicht in Holstein", "5", new String[]{}, allowedCountryIds, lockedCountryIds,
-                    new int[]{4712}, null));
-            request.add(createIndexRequest(indexAlias, 6, createTestDocument(6, null, "Released",
-                    "Record released", null, null, null, null,
-                    new int[]{4712}, null, true)));
-            request.add(createIndexRequest(indexAlias, 7, createTestDocument(7, null, "Not released",
-                    "Record not released", null, null, null, null,
-                    new int[]{4712}, null, false)));
-
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create Index data", e);
-        }
-        request.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-        for (BulkItemResponse bulkItemResponse : elasticsearchAdmin.getRestClient().bulk(request, RequestOptions.DEFAULT).getItems()) {
-            if (bulkItemResponse.isFailed()) {
-                LOG.error(bulkItemResponse.getFailureMessage(), bulkItemResponse.getFailure().getCause());
-                fail("Index setup failed: " + bulkItemResponse.getFailureMessage());
-            } else {
-                LOG.debug("Inserted item with id " + bulkItemResponse.getId());
-            }
-        }
-    }
-
     public void createIndex(String indexAlias) {
         createIndex(elasticsearchAdmin, indexAlias);
     }
@@ -115,61 +54,6 @@ public class IndexSetup {
     public void createIndex(ElasticsearchAdmin elasticsearchAdmin, String indexAlias) {
         LOG.info("Creating index: indexAlias = " + indexAlias);
         elasticsearchAdmin.createIndexWithAlias(new StandardIndexPresetConfiguration(indexPresetConfiguration, indexAlias), mappingConfiguration);
-    }
-
-    private IndexRequest createIndexRequest(String indexAlias, int id, Date createDate, String title, String caption, String facetResolved,
-                                            String[] systemField, int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location)
-            throws IOException {
-
-        return createIndexRequest(indexAlias, id, createTestDocument(id, createDate, title, caption, facetResolved, systemField,
-                allowedCountryIds, lockedCountryIds, roleRightIds, location));
-    }
-
-    private IndexRequest createIndexRequest(String indexAlias, int id, XContentBuilder doc) {
-        return new IndexRequest(indexAlias).id(Integer.toString(id)).source(doc);
-    }
-
-    private XContentBuilder createTestDocument(int id, Date createDate, String title, String caption, String facetResolved, String[] systemField,
-                                           int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location) throws IOException {
-        return createTestDocument(id, createDate, title, caption, facetResolved, systemField, allowedCountryIds, lockedCountryIds, roleRightIds, location,
-                null);
-    }
-
-    private XContentBuilder createTestDocument(int id, Date createDate, String title, String caption, String facetResolved, String[] systemField,
-                                           int[] allowedCountryIds, int[] lockedCountryIds, int[] roleRightIds, String location, Boolean released)
-            throws IOException {
-
-        final XContentBuilder xContentBuilder = jsonBuilder().startObject();
-        xContentBuilder.field("title.de", title);
-        xContentBuilder.field("id", id);
-        xContentBuilder.field("caption", caption);
-        if (StringUtils.isNotEmpty(facetResolved)) {
-            xContentBuilder.field("facetResolved", facetResolved);
-        }
-        if (ArrayUtils.isNotEmpty(systemField)) {
-            xContentBuilder.field("systemField", systemField);
-        }
-        if (createDate != null) {
-            xContentBuilder.field("createDate", createDate);
-        }
-        if (allowedCountryIds != null && allowedCountryIds.length > 0) {
-            xContentBuilder.field("allowedCountryIds", allowedCountryIds);
-        }
-        if (lockedCountryIds != null && lockedCountryIds.length > 0) {
-            xContentBuilder.field("lockedCountryIds", lockedCountryIds);
-        }
-        if (roleRightIds != null && roleRightIds.length > 0) {
-            xContentBuilder.field("roleRightIds", roleRightIds);
-        }
-        if (!StringUtils.isEmpty(location)) {
-            xContentBuilder.field("location", location);
-        }
-        if (released != null) {
-            xContentBuilder.field("released", released);
-        }
-
-        xContentBuilder.endObject();
-        return xContentBuilder;
     }
 
     public void tearDownIndex(String indexAlias) {

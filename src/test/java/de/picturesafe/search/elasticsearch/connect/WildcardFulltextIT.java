@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
+import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
@@ -32,8 +33,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -51,12 +54,19 @@ public class WildcardFulltextIT extends AbstractElasticIntegrationTest {
     Elasticsearch elasticsearch;
 
     @Before
-    public void begin() throws Exception {
-        indexSetup.setupIndex(indexAlias);
+    public void setup() {
+        indexSetup.createIndex(indexAlias);
+
+        final List<Map<String, Object>> docs = Arrays.asList(
+            DocumentBuilder.id(1).put("location", "Hamburg Altona").build(),
+            DocumentBuilder.id(2).put("location", "Bremen").build(),
+            DocumentBuilder.id(3).put("location", "Rostock").build(),
+            DocumentBuilder.id(4).put("location", "Bosnien Herzegowina").build());
+        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
     }
 
     @After
-    public void end() {
+    public void tearDown() {
         indexSetup.tearDownIndex(indexAlias);
     }
 

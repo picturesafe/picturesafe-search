@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
+import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
@@ -38,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -70,12 +72,29 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     String elasticTimeZone;
 
     @Before
-    public void begin() throws Exception {
-        indexSetup.setupIndex(indexAlias);
+    public void setup() {
+        indexSetup.createIndex(indexAlias);
+
+        final List<Map<String, Object>> docs = Arrays.asList(
+            DocumentBuilder.id(1).put("title.de", "erster wert 1").put("caption", "caption1").put("facetResolved", "1")
+                .build(),
+            DocumentBuilder.id(2).put("title.de", "zweiter wert 2").put("caption", "caption2").put("facetResolved", "2")
+                .build(),
+            DocumentBuilder.id(3).put("title.de", "dritter wert 3").put("caption", "caption2").put("facetResolved", "3")
+                .build(),
+            DocumentBuilder.id(4).put("title.de", "vierter wert 4").put("caption", "Schleswig-Holstein liegt im Norden").put("facetResolved", "4")
+                .build(),
+            DocumentBuilder.id(5).put("title.de", "fünfter wert 5").put("caption", "Schleswig liegt nicht in Holstein").put("facetResolved", "5")
+                .build(),
+            DocumentBuilder.id(6).put("title.de", "Released").put("caption", "Record released").put("released", true)
+                .build(),
+            DocumentBuilder.id(7).put("title.de", "Not released").put("caption", "Record not released").put("released", false)
+                .build());
+        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
     }
 
     @After
-    public void end() {
+    public void tearDown() {
         indexSetup.tearDownIndex(indexAlias);
     }
 

@@ -141,8 +141,6 @@ public class TestConfiguration {
         testFields.add(StandardFieldConfiguration.builder(
                 "keywordField", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
         testFields.add(StandardFieldConfiguration.builder(
-                "systemField", ElasticsearchType.TEXT).build());
-        testFields.add(StandardFieldConfiguration.builder(
                 "facetResolved", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build());
         testFields.add(StandardFieldConfiguration.builder(
                 "treePaths", ElasticsearchType.TEXT).build());
