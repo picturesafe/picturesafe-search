@@ -24,7 +24,7 @@ services:
       retries: 5
 
   cerebro:
-    image: lmenezes/cerebro:0.8.4
+    image: lmenezes/cerebro:0.8.5
     ports:
       - 9100:9000
     healthcheck:
@@ -34,7 +34,7 @@ services:
       retries: 5
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.2.0
+    image: docker.elastic.co/kibana/kibana:7.6.0
     ports:
       - 5601:5601
     healthcheck:
