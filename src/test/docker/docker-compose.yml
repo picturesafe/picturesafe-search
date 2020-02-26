@@ -1,0 +1,47 @@
+version: '3'
+services:
+  elasticsearch:
+    build: elastic-7
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - elastic-test:/usr/share/elasticsearch/data
+    environment:
+      - node.name=es01
+      - cluster.name=elastic-test
+      - cluster.initial_master_nodes=es01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cerebro:
+    image: lmenezes/cerebro:0.8.4
+    ports:
+      - 9100:9000
+    healthcheck:
+      test: curl -s http://localhost:9000 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.2.0
+    ports:
+      - 5601:5601
+    healthcheck:
+      test: curl -s http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  elastic-test:
