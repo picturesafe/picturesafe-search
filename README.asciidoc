@@ -24,14 +24,25 @@ The following features are included:
 Only a few steps are necessary to get started with a standard configuration.
 A complete code example can be found https://github.com/picturesafe/picturesafe-search-samples[here].
 
-=== Installation
+=== Start Elasticsearch
 
 picturesafe-search requires a running Elasticsearch server from version 7.x.
+
+==== Local installation of Elasticsearch
 
 For a new application an Elasticsearch server must be installed first:
 
 * https://www.elastic.co/downloads/elasticsearch[Download] and unpack the Elasticsearch official distribution.
 * Run `bin/elasticsearch` on Linux or macOS. Run `bin\elasticsearch.bat` on Windows.
+
+==== Run Elasticsearch in a Docker container
+
+As an alternative to installing Elasticsearch you can run it in a Docker container. To do this you can use the provided Docker Compose file.
+
+* Install https://docs.docker.com/install/[Docker] and https://docs.docker.com/compose/install/[Docker Compose].
+* Clone the picturesafe-search GitHub repository.
+* Run `docker-compose -f src/test/docker/docker-compose.yml up -d` from the project directory to start Elasticsearch.
+* To stop Elasticsearch run `docker-compose -f src/test/docker/docker-compose.yml stop` from the project directory.
 
 === Include java library
 
