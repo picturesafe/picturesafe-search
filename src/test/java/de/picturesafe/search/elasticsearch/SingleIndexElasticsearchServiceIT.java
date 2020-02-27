@@ -207,7 +207,7 @@ public class SingleIndexElasticsearchServiceIT {
         singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2));
 
         SearchResult result = singleIndexElasticsearchService.search(new AccountContext(), new ValueExpression("title", "Hund"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         SearchResultItem item = result.getSearchResultItems().get(0);
@@ -215,7 +215,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc1, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new AccountContext(), new ValueExpression("title", "Katze"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -223,7 +223,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new AccountContext(), new FulltextExpression("Vögel"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -231,7 +231,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new AccountContext(), new FulltextExpression("Hamburg"),
-                new SearchParameter(new SortOption("id", SortOption.Direction.DESC)));
+                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.DESC)).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -239,7 +239,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new AccountContext(), new FulltextExpression("Hamburg"),
-                new SearchParameter(new SortOption("id", SortOption.Direction.ASC)));
+                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.ASC)).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);

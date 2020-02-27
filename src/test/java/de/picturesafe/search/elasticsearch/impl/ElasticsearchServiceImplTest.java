@@ -76,10 +76,12 @@ public class ElasticsearchServiceImplTest {
         final List<AggregationField> aggregationFields = Arrays.asList(new AggregationField("agg1", 5), new AggregationField("agg2", 10));
         final int start = 11;
         final int limit = 111;
-        final SearchParameter searchParameter = new SearchParameter("de");
-        searchParameter.setFieldsToResolve(fieldsToResolve);
-        searchParameter.setSortOptions(sortOptions);
-        searchParameter.setAggregationFields(aggregationFields);
+        final SearchParameter.Builder searchParameterBuilder = SearchParameter.builder()
+                .language("de")
+                .fieldsToResolve(fieldsToResolve)
+                .sortOptions(sortOptions)
+                .aggregationFields(aggregationFields);
+        SearchParameter searchParameter = searchParameterBuilder.build();
 
         QueryDto queryDto = elasticsearchService.createQueryDto(new AccountContext(), expression, start, limit, searchParameter);
         assertEquals(expression, queryDto.getExpression());
@@ -99,7 +101,7 @@ public class ElasticsearchServiceImplTest {
             assertEquals(aggregationField.getMaxCount(), facetDto.getSize());
         }
 
-        searchParameter.setLanguage("de_DE");
+        searchParameter = searchParameterBuilder.language("de_DE").build();
         queryDto = elasticsearchService.createQueryDto(new AccountContext(), expression, start, limit, searchParameter);
         assertEquals(Locale.GERMANY, queryDto.getLocale());
     }

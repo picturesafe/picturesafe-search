@@ -28,72 +28,41 @@ import java.util.List;
  */
 public class SearchParameter {
 
-    private List<SortOption> sortOptions = new ArrayList<>();
-    private Integer maxResults;
-    private Long maxTrackTotalHits;
-    private Integer pageSize;
-    private boolean permissionCheckEnabled = true;
-    private boolean ignoreState;
-    private boolean ignoreDeleted = true;
-    private Integer pageIndex;
-    private String language;
-    private List<AggregationField> aggregationFields = new ArrayList<>();
-    private int defaultAggregationMaxCount = 10;
-    private List<String> fieldsToResolve = new ArrayList<>();
-    private boolean optimizeExpressions;
+    public static final SearchParameter DEFAULT = builder().build();
 
-    /**
-     * Default constructor
-     */
-    public SearchParameter() {
-    }
+    private final List<SortOption> sortOptions;
+    private final Integer maxResults;
+    private final Long maxTrackTotalHits;
+    private final Integer pageSize;
+    private final Integer pageIndex;
+    private final boolean permissionCheckEnabled;
+    private final boolean ignoreState;
+    private final boolean ignoreDeleted;
+    private final String language;
+    private final List<AggregationField> aggregationFields;
+    private final int defaultAggregationMaxCount;
+    private final List<String> fieldsToResolve;
+    private final boolean optimizeExpressions;
 
-    /**
-     * Constructor
-     * @param sortOptions Result Sort options (in descending priority)
-     */
-    public SearchParameter(SortOption... sortOptions) {
-        this.sortOptions = Arrays.asList(sortOptions);
-    }
-
-    /**
-     * Constructor
-     * @param aggregationFields Aggregation fields
-     */
-    public SearchParameter(AggregationField... aggregationFields) {
-        this.aggregationFields = Arrays.asList(aggregationFields);
-    }
-
-    /**
-     * Constructor
-     * @param sortOptions Result Sort options (in descending priority)
-     * @param aggregationFields Aggregation fields
-     */
-    public SearchParameter(List<SortOption> sortOptions, List<AggregationField> aggregationFields) {
-        this.sortOptions = sortOptions;
-        this.aggregationFields = aggregationFields;
-    }
-
-    /**
-     * Constructor
-     * @param language Search language
-     */
-    public SearchParameter(String language) {
-        this.language = language;
-    }
-
-    /**
-     * Constructor
-     * @param language Search language
-     * @param sortOptions Result Sort options (in descending priority)
-     */
-    public SearchParameter(String language, SortOption... sortOptions) {
-        this(sortOptions);
-        this.language = language;
+    private SearchParameter(Builder builder) {
+        sortOptions = builder.sortOptions;
+        maxResults = builder.maxResults;
+        maxTrackTotalHits = builder.maxTrackTotalHits;
+        pageSize = builder.pageSize;
+        pageIndex = builder.pageIndex;
+        permissionCheckEnabled = builder.permissionCheckEnabled;
+        ignoreState = builder.ignoreState;
+        ignoreDeleted = builder.ignoreDeleted;
+        language = builder.language;
+        aggregationFields = builder.aggregationFields;
+        defaultAggregationMaxCount = builder.defaultAggregationMaxCount;
+        fieldsToResolve = builder.fieldsToResolve;
+        optimizeExpressions = builder.optimizeExpressions;
     }
 
     /**
      * Gets the result sort options (in descending priority)
+     *
      * @return Result sort options (in descending priority)
      */
     public List<SortOption> getSortOptions() {
@@ -101,23 +70,8 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the result sort options (in descending priority)
-     * @param sortOptions Result sort options (in descending priority)
-     */
-    public void setSortOptions(List<SortOption> sortOptions) {
-        this.sortOptions = sortOptions;
-    }
-
-    /**
-     * Adds a result sort option
-     * @param sortOption Result sort option to add
-     */
-    public void addSortOption(SortOption sortOption) {
-        sortOptions.add(sortOption);
-    }
-
-    /**
      * Gets the maximum number of results
+     *
      * @return Maximum number of results
      */
     public Integer getMaxResults() {
@@ -125,16 +79,9 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the maximum number of results
-     * @param maxResults Maximum number of results
-     */
-    public void setMaxResults(Integer maxResults) {
-        this.maxResults = maxResults;
-    }
-
-    /**
      * Gets the maximum number of total hits to track. If this number is exceeded by the number of current search hits tracking will be stopped and the total
      * hits count will be marked as not exact.
+     *
      * @return Maximum number of total hits to track (null = use default value)
      */
     public Long getMaxTrackTotalHits() {
@@ -142,16 +89,8 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the maximum number of total hits to track. If this number is exceeded by the number of current search hits tracking will be stopped and the total
-     * hits count will be marked as not exact.
-     * @param maxTrackTotalHits Maximum number of total hits to track (null = use default value)
-     */
-    public void setMaxTrackTotalHits(Long maxTrackTotalHits) {
-        this.maxTrackTotalHits = maxTrackTotalHits;
-    }
-
-    /**
      * Gets the pagination page size
+     *
      * @return Pagination page size
      */
     public Integer getPageSize() {
@@ -159,79 +98,50 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the pagination page size
-     * @param pageSize Pagination page size
-     */
-    public void setPageSize(Integer pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    /**
      * Gets the pagination page index
+     *
      * @return Pagination page index (starts with 1)
      */
     public Integer getPageIndex() {
         return pageIndex;
     }
 
-     /**
-     * Sets the pagination page index
-     * @param pageIndex Pagination page index (starts with 1)
-     */
-    public void setPageIndex(Integer pageIndex) {
-        this.pageIndex = pageIndex;
-    }
-
     /**
      * Gets if permission checks are enabled (default=true)
+     *
      * @return TRUE if permission checks are enabled (default=true)
+     *
+     * NOT IMPLEMENTED AT THE MOMENT
      */
     public boolean isPermissionCheckEnabled() {
         return permissionCheckEnabled;
     }
 
     /**
-     * Sets if permission checks are enabled (default=true)
-     * @param permissionCheckEnabled TRUE if permission checks are enabled (default=true)
-     */
-    public void setPermissionCheckEnabled(boolean permissionCheckEnabled) {
-        this.permissionCheckEnabled = permissionCheckEnabled;
-    }
-
-    /**
      * Gets if the state of the record should be ignored (default=false)
+     *
      * @return TRUE if the state of the record should be ignored (default=false)
+     *
+     * NOT IMPLEMENTED AT THE MOMENT
      */
     public boolean isIgnoreState() {
         return ignoreState;
     }
 
     /**
-     * Sets if the state of the record should be ignored (default=false)
-     * @param ignoreState TRUE if the state of the record should be ignored (default=false)
-     */
-    public void setIgnoreState(boolean ignoreState) {
-        this.ignoreState = ignoreState;
-    }
-
-    /**
      * Gets if deleted records (state) should be ignored (default=false)
+     *
      * @return TRUE if deleted records (state) should be ignored (default=false)
+     *
+     * NOT IMPLEMENTED AT THE MOMENT
      */
     public boolean isIgnoreDeleted() {
         return ignoreDeleted;
     }
 
     /**
-     * Sets if deleted records (state) should be ignored (default=false)
-     * @param ignoreDeleted TRUE if deleted records (state) should be ignored (default=false)
-     */
-    public void setIgnoreDeleted(boolean ignoreDeleted) {
-        this.ignoreDeleted = ignoreDeleted;
-    }
-
-    /**
      * Gets the search language
+     *
      * @return Search language
      */
     public String getLanguage() {
@@ -239,15 +149,8 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the search language
-     * @param language Search language
-     */
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
-    /**
      * Gets the aggregation fields
+     *
      * @return List of aggregation fields
      */
     public List<AggregationField> getAggregationFields() {
@@ -255,15 +158,8 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the aggregation fields
-     * @param aggregationFields List of aggregation fields
-     */
-    public void setAggregationFields(List<AggregationField> aggregationFields) {
-        this.aggregationFields = aggregationFields;
-    }
-
-    /**
      * Gets default maximum count of aggregation results for a field
+     *
      * @return Default maximum count of aggregation results for a field
      */
     public int getDefaultAggregationMaxCount() {
@@ -271,17 +167,10 @@ public class SearchParameter {
     }
 
     /**
-     * Sets the default maximum count of aggregation results for a field
-     * @param defaultAggregationMaxCount default maximum count of aggregation results for a field
+     * Gets the names of the fields to be resolved in the search result.
+     *
+     * @return Names of the fields to be resolved
      */
-    public void setDefaultAggregationMaxCount(int defaultAggregationMaxCount) {
-        this.defaultAggregationMaxCount = defaultAggregationMaxCount;
-    }
-
-    public void setFieldsToResolve(List<String> fieldsToResolve) {
-        this.fieldsToResolve = fieldsToResolve;
-    }
-
     public List<String> getFieldsToResolve() {
         return fieldsToResolve;
     }
@@ -289,40 +178,251 @@ public class SearchParameter {
     /**
      * Checks if expressions should be optimized.
      *
-     * @see de.picturesafe.search.expression.Expression#optimize()
-     *
      * @return true if expressions should be optimized
+     * @see de.picturesafe.search.expression.Expression#optimize()
      */
     public boolean isOptimizeExpressions() {
         return optimizeExpressions;
     }
 
-    /**
-     * Sets if expressions should be optimized.
-     *
-     * @see de.picturesafe.search.expression.Expression#optimize()
-     *
-     * @param optimizeExpressions true if expressions should be optimized
-     */
-    public void setOptimizeExpressions(boolean optimizeExpressions) {
-        this.optimizeExpressions = optimizeExpressions;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this, new CustomJsonToStringStyle())
-                .append("sortOptions", sortOptions)
-                .append("maxResults", maxResults)
-                .append("maxTrackTotalHits", maxTrackTotalHits)
-                .append("pageSize", pageSize)
-                .append("pageIndex", pageIndex)
-                .append("permissionCheckEnabled", permissionCheckEnabled)
-                .append("ignoreState", ignoreState)
-                .append("ignoreDeleted", ignoreDeleted)
-                .append("aggregationFields", aggregationFields)
-                .append("defaultAggregationMaxCount", defaultAggregationMaxCount)
-                .append("language", language)
-                .append("fieldsToResolve", fieldsToResolve)
+        return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
+                .append("sortOptions", sortOptions) //--
+                .append("maxResults", maxResults) //--
+                .append("maxTrackTotalHits", maxTrackTotalHits) //--
+                .append("pageSize", pageSize) //--
+                .append("pageIndex", pageIndex) //--
+                .append("permissionCheckEnabled", permissionCheckEnabled) //--
+                .append("ignoreState", ignoreState) //--
+                .append("ignoreDeleted", ignoreDeleted) //--
+                .append("language", language) //--
+                .append("aggregationFields", aggregationFields) //--
+                .append("defaultAggregationMaxCount", defaultAggregationMaxCount) //--
+                .append("fieldsToResolve", fieldsToResolve) //--
+                .append("optimizeExpressions", optimizeExpressions) //--
                 .toString();
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        List<SortOption> sortOptions = new ArrayList<>();
+        Integer maxResults;
+        Long maxTrackTotalHits;
+        Integer pageSize;
+        boolean permissionCheckEnabled = true;
+        boolean ignoreState;
+        boolean ignoreDeleted = true;
+        Integer pageIndex;
+        String language;
+        List<AggregationField> aggregationFields = new ArrayList<>();
+        int defaultAggregationMaxCount = 10;
+        List<String> fieldsToResolve = new ArrayList<>();
+        boolean optimizeExpressions;
+
+        private Builder() {
+        }
+
+        /**
+         * Sets the result sort options (in descending priority)
+         *
+         * @param sortOptions Result sort options (in descending priority)
+         * @return Builder
+         */
+        public Builder sortOptions(List<SortOption> sortOptions) {
+            this.sortOptions = sortOptions;
+            return this;
+        }
+
+        /**
+         * Sets the result sort options (in descending priority)
+         *
+         * @param sortOptions Result sort options (in descending priority)
+         * @return Builder
+         */
+        public Builder sortOptions(SortOption... sortOptions) {
+            this.sortOptions = Arrays.asList(sortOptions);
+            return this;
+        }
+
+        /**
+         * Adds a result sort option
+         *
+         * @param sortOption Result sort option to add
+         * @return Builder
+         */
+        public Builder addSortOption(SortOption sortOption) {
+            sortOptions.add(sortOption);
+            return this;
+        }
+
+        /**
+         * Sets the maximum number of results
+         *
+         * @param maxResults Maximum number of results
+         * @return Builder
+         */
+        public Builder maxResults(Integer maxResults) {
+            this.maxResults = maxResults;
+            return this;
+        }
+
+        /**
+         * Sets the maximum number of total hits to track. If this number is exceeded by the number of current search hits tracking will be stopped and the
+         * total hits count will be marked as not exact.
+         *
+         * @param maxTrackTotalHits Maximum number of total hits to track (null = use default value)
+         * @return Builder
+         */
+        public Builder maxTrackTotalHits(Long maxTrackTotalHits) {
+            this.maxTrackTotalHits = maxTrackTotalHits;
+            return this;
+        }
+
+        /**
+         * Sets the pagination page size
+         *
+         * @param pageSize Pagination page size
+         * @return Builder
+         */
+        public Builder pageSize(Integer pageSize) {
+            this.pageSize = pageSize;
+            return this;
+        }
+
+        /**
+         * Sets the pagination page index
+         *
+         * @param pageIndex Pagination page index (starts with 1)
+         * @return Builder
+         */
+        public Builder pageIndex(Integer pageIndex) {
+            this.pageIndex = pageIndex;
+            return this;
+        }
+
+        /**
+         * Sets if permission checks are enabled (default=true)
+         *
+         * @param permissionCheckEnabled TRUE if permission checks are enabled (default=true)
+         * @return Builder
+         *
+         * NOT IMPLEMENTED AT THE MOMENT
+         */
+        public Builder permissionCheckEnabled(boolean permissionCheckEnabled) {
+            this.permissionCheckEnabled = permissionCheckEnabled;
+            return this;
+        }
+
+        /**
+         * Sets if the state of the record should be ignored (default=false)
+         *
+         * @param ignoreState TRUE if the state of the record should be ignored (default=false)
+         * @return Builder
+         *
+         * NOT IMPLEMENTED AT THE MOMENT
+         */
+        public Builder ignoreState(boolean ignoreState) {
+            this.ignoreState = ignoreState;
+            return this;
+        }
+
+        /**
+         * Sets if deleted records (state) should be ignored (default=false)
+         *
+         * @param ignoreDeleted TRUE if deleted records (state) should be ignored (default=false)
+         * @return Builder
+         *
+         * NOT IMPLEMENTED AT THE MOMENT
+         */
+        public Builder ignoreDeleted(boolean ignoreDeleted) {
+            this.ignoreDeleted = ignoreDeleted;
+            return this;
+        }
+
+        /**
+         * Sets the search language
+         *
+         * @param language Search language
+         * @return Builder
+         */
+        public Builder language(String language) {
+            this.language = language;
+            return this;
+        }
+
+        /**
+         * Sets the aggregation fields
+         *
+         * @param aggregationFields List of aggregation fields
+         * @return Builder
+         */
+        public Builder aggregationFields(List<AggregationField> aggregationFields) {
+            this.aggregationFields = aggregationFields;
+            return this;
+        }
+
+        /**
+         * Sets the aggregation fields
+         *
+         * @param aggregationFields List of aggregation fields
+         * @return Builder
+         */
+        public Builder aggregationFields(AggregationField... aggregationFields) {
+            this.aggregationFields = Arrays.asList(aggregationFields);
+            return this;
+        }
+
+        /**
+         * Sets the default maximum count of aggregation results for a field
+         *
+         * @param defaultAggregationMaxCount default maximum count of aggregation results for a field
+         * @return Builder
+         */
+        public Builder defaultAggregationMaxCount(int defaultAggregationMaxCount) {
+            this.defaultAggregationMaxCount = defaultAggregationMaxCount;
+            return this;
+        }
+
+        /**
+         * Sets the names of the fields to be resolved in the search result.
+         *
+         * @param fieldsToResolve Names of the fields to be resolved
+         * @return Builder
+         */
+        public Builder fieldsToResolve(List<String> fieldsToResolve) {
+            this.fieldsToResolve = fieldsToResolve;
+            return this;
+        }
+
+        /**
+         * Sets the names of the fields to be resolved in the search result.
+         *
+         * @param fieldsToResolve Names of the fields to be resolved
+         * @return Builder
+         */
+        public Builder fieldsToResolve(String... fieldsToResolve) {
+            this.fieldsToResolve = Arrays.asList(fieldsToResolve);
+            return this;
+        }
+
+        /**
+         * Sets if expressions should be optimized.
+         *
+         * @param optimizeExpressions true if expressions should be optimized
+         * @see de.picturesafe.search.expression.Expression#optimize()
+         * @return Builder
+         */
+        public Builder optimizeExpressions(boolean optimizeExpressions) {
+            this.optimizeExpressions = optimizeExpressions;
+            return this;
+        }
+
+        public SearchParameter build() {
+            return new SearchParameter(this);
+        }
     }
 }

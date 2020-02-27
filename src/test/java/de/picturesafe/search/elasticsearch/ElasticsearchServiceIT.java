@@ -250,7 +250,7 @@ public class ElasticsearchServiceIT {
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2));
 
         SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("title", "Hund"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         SearchResultItem item = result.getSearchResultItems().get(0);
@@ -258,7 +258,7 @@ public class ElasticsearchServiceIT {
         assertDocsAreEqual(doc1, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("title", "Katze"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -266,7 +266,7 @@ public class ElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new FulltextExpression("Vögel"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -274,7 +274,7 @@ public class ElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new FulltextExpression("Hamburg"),
-                new SearchParameter(new SortOption("id", SortOption.Direction.DESC)));
+                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.DESC)).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -282,7 +282,7 @@ public class ElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new FulltextExpression("Hamburg"),
-                new SearchParameter(new SortOption("id", SortOption.Direction.ASC)));
+                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.ASC)).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -298,12 +298,12 @@ public class ElasticsearchServiceIT {
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, doc);
 
         final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
-                new ValueExpression("title", "Hund"), new SearchParameter());
+                new ValueExpression("title", "Hund"), SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
 
         try {
             elasticsearchService.search(indexAlias, new AccountContext(),
-                    new ValueExpression("title", "/"), new SearchParameter());
+                    new ValueExpression("title", "/"), SearchParameter.DEFAULT);
             fail("Expected an QuerySyntaxException to be thrown!");
         } catch (QuerySyntaxException qse) {
             assertEquals("/", qse.getInvalidQueryString());
@@ -311,7 +311,7 @@ public class ElasticsearchServiceIT {
 
         try {
             elasticsearchService.search(indexAlias, new AccountContext(),
-                    new ValueExpression("title", "(Hund OR Schwanz) AND (Hamburg"), new SearchParameter());
+                    new ValueExpression("title", "(Hund OR Schwanz) AND (Hamburg"), SearchParameter.DEFAULT);
             fail("Expected an QuerySyntaxException to be thrown!");
         } catch (QuerySyntaxException qse) {
             assertEquals("(Hund OR Schwanz) AND (Hamburg", qse.getInvalidQueryString());
@@ -331,27 +331,27 @@ public class ElasticsearchServiceIT {
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2));
 
         SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("text_multilang", "deutsch"),
-                new SearchParameter("de"));
+                SearchParameter.builder().language("de").build());
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("text_multilang", "deutsch"),
-                new SearchParameter("en"));
+                SearchParameter.builder().language("en").build());
         assertEquals(0, result.getTotalHitCount());
         assertEquals(0, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("text_multilang", "english"),
-                new SearchParameter("en"));
+                SearchParameter.builder().language("en").build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new FulltextExpression("deutscher"),
-                new SearchParameter("de"));
+                SearchParameter.builder().language("de").build());
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(), new FulltextExpression("english"),
-                new SearchParameter("en"));
+                SearchParameter.builder().language("en").build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
     }
@@ -371,7 +371,7 @@ public class ElasticsearchServiceIT {
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
         final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("title", "Multilang"),
-                new SearchParameter("de", new SortOption("text_multilang")));
+                SearchParameter.builder().language("de").sortOptions(new SortOption("text_multilang")).build());
         assertEquals(4, result.getResultCount());
         assertEquals(4713, result.getSearchResultItems().get(0).getId());
         assertEquals(4712, result.getSearchResultItems().get(1).getId());
@@ -394,7 +394,8 @@ public class ElasticsearchServiceIT {
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
         final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("name", "name"),
-                new SearchParameter(new AggregationField("createDate", 1000), new AggregationField("location", 10)));
+                SearchParameter.builder().aggregationFields(
+                        new AggregationField("createDate", 1000), new AggregationField("location", 10)).build());
         assertEquals(4, result.getTotalHitCount());
         assertEquals(4, result.getResultCount());
         assertEquals(3, result.getFacets().size());
@@ -431,34 +432,34 @@ public class ElasticsearchServiceIT {
 
         SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new InExpression("id", 4711, 4714),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(2, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new InExpression("name", "name-4711", "name-4713", "name-4714"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(3, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new InExpression("id", 4711L, 4712L, 4714L),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(3, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new InExpression("id", new long[] {4711}),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
         assertEquals(4711, result.getSearchResultItems().get(0).getId());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new InExpression("name", "name-4711"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
         assertEquals(4711, result.getSearchResultItems().get(0).getId());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new InExpression("name", "name-4711", "name-4714"),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(2, result.getResultCount());
         assertEquals(4711, result.getSearchResultItems().get(0).getId());
         assertEquals(4714, result.getSearchResultItems().get(1).getId());
@@ -476,24 +477,24 @@ public class ElasticsearchServiceIT {
 
         SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new MustNotExpression(new InExpression("id", 4711, 4712, 4714)),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
         assertEquals(4713, result.getSearchResultItems().get(0).getId());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new MustNotExpression(new InExpression("name", "name-4711", "name-4713", "name-4714")),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
         assertEquals(4712, result.getSearchResultItems().get(0).getId());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new MustNotExpression(new InExpression("id", 4711L, 4712L, 4714L)),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new MustNotExpression(new InExpression("id", new long[] {4711})),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(3, result.getResultCount());
         assertEquals(4712, result.getSearchResultItems().get(0).getId());
         assertEquals(4713, result.getSearchResultItems().get(1).getId());
@@ -501,12 +502,12 @@ public class ElasticsearchServiceIT {
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new MustNotExpression(new InExpression("name", "name-4711")),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(3, result.getResultCount());
 
         result = elasticsearchService.search(indexAlias, new AccountContext(),
                 new MustNotExpression(new InExpression("name", "name-4711", "name-4714")),
-                new SearchParameter());
+                SearchParameter.DEFAULT);
         assertEquals(2, result.getResultCount());
         assertEquals(4712, result.getSearchResultItems().get(0).getId());
         assertEquals(4713, result.getSearchResultItems().get(1).getId());
@@ -532,9 +533,7 @@ public class ElasticsearchServiceIT {
         final Map<String, Object> doc3 = createDocument(4713, "Der Hund kackt auf den Gehweg Hamburg");
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3));
 
-        final SearchParameter searchParameter = new SearchParameter();
-        searchParameter.setMaxResults(1);
-        searchParameter.setMaxTrackTotalHits(2L);
+        final SearchParameter searchParameter = SearchParameter.builder().maxResults(1).maxTrackTotalHits(2L).build();
         final SearchResult result = elasticsearchService.search(indexAlias, new AccountContext(), new ValueExpression("title", "Hund"),
                 searchParameter);
         assertEquals(1, result.getResultCount());

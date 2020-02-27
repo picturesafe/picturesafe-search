@@ -460,9 +460,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final List<String> fieldsToResolve = new ArrayList<>();
         fieldsToResolve.add("caption");
 
-        final SearchParameter searchParameter = new SearchParameter();
-        searchParameter.setFieldsToResolve(fieldsToResolve);
-
+        final SearchParameter searchParameter = SearchParameter.builder().fieldsToResolve(fieldsToResolve).build();
         final Expression expression = new FulltextExpression("wert");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 1000);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null,
@@ -482,9 +480,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final List<String> fieldsToResolve = new ArrayList<>();
         fieldsToResolve.add("id");
 
-        final SearchParameter searchParameter = new SearchParameter();
-        searchParameter.setFieldsToResolve(fieldsToResolve);
-
+        final SearchParameter searchParameter = SearchParameter.builder().fieldsToResolve(fieldsToResolve).build();
         final Expression expression = new FulltextExpression("wert");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 1000);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null,
