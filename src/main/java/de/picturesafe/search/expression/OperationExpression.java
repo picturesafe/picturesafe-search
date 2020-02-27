@@ -21,6 +21,7 @@ import de.picturesafe.search.expression.internal.FalseExpression;
 import de.picturesafe.search.expression.internal.TrueExpression;
 import de.picturesafe.search.util.ArrayUtils;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -54,11 +55,10 @@ public class OperationExpression extends AbstractExpression {
     }
 
     private Operator operator;
-    private List<Expression> operands;
+    private final List<Expression> operands = new ArrayList<>();
 
-    private OperationExpression(Builder builder) {
-        this.operator = builder.operator;
-        this.operands = builder.operands;
+    private OperationExpression(Operator operator) {
+        this.operator = operator;
     }
 
     public Operator getOperator() {
@@ -69,49 +69,38 @@ public class OperationExpression extends AbstractExpression {
         return operands;
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public OperationExpression add(Expression... expressions) {
+        CollectionUtils.addAll(operands, expressions);
+        return this;
     }
 
-    public static Builder builder(Operator operator) {
-        return new Builder(operator);
+    public OperationExpression addAll(Collection<Expression> expressions) {
+        operands.addAll(expressions);
+        return this;
     }
 
-    public static Builder builder(Operator operator, List<Expression> operands) {
-        return new Builder(operator, operands);
+    public static OperationExpression and() {
+        return new OperationExpression(Operator.AND);
     }
 
-    public static final class Builder {
-        private final Operator operator;
-        private final List<Expression> operands;
+    public static OperationExpression and(Expression... expressions) {
+        return new OperationExpression(Operator.AND).add(expressions);
+    }
 
-        public Builder() {
-            this(Operator.AND);
-        }
+    public static OperationExpression and(Collection<Expression> expressions) {
+        return new OperationExpression(Operator.AND).addAll(expressions);
+    }
 
-        public Builder(Operator operator) {
-            this.operator = operator;
-            this.operands = new ArrayList<>();
-        }
+    public static OperationExpression or() {
+        return new OperationExpression(Operator.OR);
+    }
 
-        public Builder(Operator operator, List<Expression> operands) {
-            this.operator = operator;
-            this.operands = operands;
-        }
+    public static OperationExpression or(Expression... expressions) {
+        return new OperationExpression(Operator.OR).add(expressions);
+    }
 
-        public Builder add(Expression expression) {
-            this.operands.add(expression);
-            return this;
-        }
-
-        public Builder addAll(List<Expression> expressions) {
-            this.operands.addAll(expressions);
-            return this;
-        }
-
-        public OperationExpression build() {
-            return new OperationExpression(this);
-        }
+    public static OperationExpression or(Collection<Expression> expressions) {
+        return new OperationExpression(Operator.OR).addAll(expressions);
     }
 
     @Override
@@ -120,7 +109,7 @@ public class OperationExpression extends AbstractExpression {
             throw new IllegalStateException("The argument 'operator' must not be null!");
         } else {
             final Expression ret;
-            if (operands == null  ||  operands.isEmpty()) {
+            if (CollectionUtils.isEmpty(operands)) {
                 ret = new EmptyExpression();
             } else {
                 final List<Expression> optimizedOperands = optimizeOperands();
@@ -130,7 +119,7 @@ public class OperationExpression extends AbstractExpression {
                 } else if (optimizedOperands.size() == 1) {
                     ret = optimizedOperands.get(0);
                 } else {
-                    ret = OperationExpression.builder(operator).addAll(optimizedOperands).build();
+                    ret = new OperationExpression(operator).addAll(optimizedOperands);
                 }
             }
             return ret;

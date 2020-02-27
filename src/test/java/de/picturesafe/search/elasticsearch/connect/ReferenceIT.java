@@ -42,8 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
-import static de.picturesafe.search.expression.OperationExpression.Operator.AND;
-import static de.picturesafe.search.expression.OperationExpression.Operator.OR;
 import static org.junit.Assert.assertEquals;
 
 public class ReferenceIT extends AbstractElasticIntegrationTest {
@@ -195,10 +193,9 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
 
         elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
 
-        final OperationExpression expression = OperationExpression.builder()
-                .add(new ValueExpression("caption", "SearchEmptyIn"))
-                .add(new InExpression("referenceWithSort." + FIELD_TARGET_ID))
-                .build();
+        final OperationExpression expression = OperationExpression.and(
+                new ValueExpression("caption", "SearchEmptyIn"),
+                new InExpression("referenceWithSort." + FIELD_TARGET_ID));
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
@@ -220,10 +217,9 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
 
         elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
 
-        final OperationExpression expression = OperationExpression.builder()
-                .add(new ValueExpression("caption", "SearchIsNull"))
-                .add(new IsNullExpression("referenceWithSort." + FIELD_TARGET_ID))
-                .build();
+        final OperationExpression expression = OperationExpression.and(
+                new ValueExpression("caption", "SearchIsNull"),
+                new IsNullExpression("referenceWithSort." + FIELD_TARGET_ID));
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
@@ -355,14 +351,12 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     @Test
     public void testWithAdditionalExpression() {
 
-        final OperationExpression idExpression = OperationExpression.builder(OR)
-                .add(new ValueExpression("id", "20"))
-                .add(new ValueExpression("id", "21")).build();
-
-        final OperationExpression expression = OperationExpression.builder(AND)
-                .add(idExpression)
-                .add(new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 5))
-                .build();
+        final OperationExpression idExpression = OperationExpression.or(
+                new ValueExpression("id", "20"),
+                new ValueExpression("id", "21"));
+        final OperationExpression expression = OperationExpression.and(
+                idExpression,
+                new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 5));
 
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final List<SortOption> sortOptionsAsc = new ArrayList<>();
