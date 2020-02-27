@@ -24,7 +24,6 @@ import de.picturesafe.search.elasticsearch.config.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
-import de.picturesafe.search.elasticsearch.model.AccountContext;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.FulltextExpression;
@@ -206,7 +205,7 @@ public class SingleIndexElasticsearchServiceIT {
         final Map<String, Object> doc2 = createDocument(4712, "Die Katze jagt Vögel in Hamburg");
         singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2));
 
-        SearchResult result = singleIndexElasticsearchService.search(new AccountContext(), new ValueExpression("title", "Hund"),
+        SearchResult result = singleIndexElasticsearchService.search(new ValueExpression("title", "Hund"),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
@@ -214,7 +213,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(4711, item.getId());
         assertDocsAreEqual(doc1, item.getAttributes());
 
-        result = singleIndexElasticsearchService.search(new AccountContext(), new ValueExpression("title", "Katze"),
+        result = singleIndexElasticsearchService.search(new ValueExpression("title", "Katze"),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
@@ -222,7 +221,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(4712, item.getId());
         assertDocsAreEqual(doc2, item.getAttributes());
 
-        result = singleIndexElasticsearchService.search(new AccountContext(), new FulltextExpression("Vögel"),
+        result = singleIndexElasticsearchService.search(new FulltextExpression("Vögel"),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
@@ -230,7 +229,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(4712, item.getId());
         assertDocsAreEqual(doc2, item.getAttributes());
 
-        result = singleIndexElasticsearchService.search(new AccountContext(), new FulltextExpression("Hamburg"),
+        result = singleIndexElasticsearchService.search(new FulltextExpression("Hamburg"),
                 SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.DESC)).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
@@ -238,7 +237,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(4712, item.getId());
         assertDocsAreEqual(doc2, item.getAttributes());
 
-        result = singleIndexElasticsearchService.search(new AccountContext(), new FulltextExpression("Hamburg"),
+        result = singleIndexElasticsearchService.search(new FulltextExpression("Hamburg"),
                 SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.ASC)).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());

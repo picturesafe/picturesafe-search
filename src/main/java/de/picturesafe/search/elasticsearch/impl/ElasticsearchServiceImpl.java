@@ -34,7 +34,7 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
-import de.picturesafe.search.elasticsearch.model.AccountContext;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
@@ -313,7 +313,12 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
     }
 
     @Override
-    public SearchResult search(String indexAlias, AccountContext accountContext, Expression expression, SearchParameter searchParameter) {
+    public SearchResult search(String indexAlias, Expression expression, SearchParameter searchParameter) {
+        return search(indexAlias, new AccountContext<>(), expression, searchParameter);
+    }
+
+    @Override
+    public SearchResult search(String indexAlias, AccountContext<?> accountContext, Expression expression, SearchParameter searchParameter) {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
 
         final StopWatch sw = new StopWatch();
@@ -395,7 +400,7 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         return pageSize;
     }
 
-    protected ElasticsearchResult getElasticSearchResult(String indexAlias, AccountContext accountContext, Expression expression,
+    protected ElasticsearchResult getElasticSearchResult(String indexAlias, AccountContext<?> accountContext, Expression expression,
                                                          SearchParameter searchParameter, int pageSize, StopWatch sw) {
         if (searchParameter == null) {
             searchParameter = SearchParameter.DEFAULT;
@@ -418,7 +423,7 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         return result;
     }
 
-    protected QueryDto createQueryDto(AccountContext accountContext, Expression expression, int start, int limit, SearchParameter searchParameter) {
+    protected QueryDto createQueryDto(AccountContext<?> accountContext, Expression expression, int start, int limit, SearchParameter searchParameter) {
         Validate.notNull(accountContext, "Parameter 'accountContext' may not be null!");
         Validate.notNull(expression, "Parameter 'expression' may not be null!");
         Validate.notNull(searchParameter, "Parameter 'searchParameter' may not be null!");
@@ -446,8 +451,9 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         final QueryDto.FieldResolverType fieldResolverType = QueryDto.FieldResolverType.SOURCE_VALUES;
         final Locale locale = StringUtils.isNotBlank(searchParameter.getLanguage())
                 ? LocaleUtils.toLocale(searchParameter.getLanguage())
-                : accountContext.getCurrentLoginLanguage();
-        return new QueryDto(expression, queryRangeDto, searchParameter.getSortOptions(), queryFacetDtos, locale, fieldsToResolve, fieldResolverType);
+                : accountContext.getUserLanguage();
+        return new QueryDto(expression, queryRangeDto, searchParameter.getSortOptions(), queryFacetDtos, locale, fieldsToResolve, fieldResolverType)
+                .withAccountContext(accountContext);
     }
 
     protected int getMaxResults(String indexAlias, Integer maxResults, long totalHitCount) {

@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.dto;
 
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
@@ -45,6 +46,7 @@ public class QueryDto {
     private final Locale locale;
     private final List<String> fieldsToResolve;
     private final FieldResolverType fieldResolverType;
+    private AccountContext<?> accountContext;
 
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
@@ -98,6 +100,15 @@ public class QueryDto {
 
     public FieldResolverType getFieldResolverType() {
         return fieldResolverType;
+    }
+
+    public AccountContext<?> getAccountContext() {
+        return accountContext;
+    }
+
+    public QueryDto withAccountContext(AccountContext<?> accountContext) {
+        this.accountContext = accountContext;
+        return this;
     }
 
     @Override
