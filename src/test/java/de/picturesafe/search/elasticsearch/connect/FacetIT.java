@@ -118,8 +118,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
 
     @Test
     public void testFacetResolverOnTextFacet() {
-        final Expression expression
-                = OperationExpression.builder().add(new FulltextExpression("wert")).add(new ValueExpression("caption", "caption1")).build();
+        final Expression expression = OperationExpression.and(new FulltextExpression("wert"), new ValueExpression("caption", "caption1"));
         final QueryFacetDto queryFacetDto = new QueryFacetDto("facetResolved", 10, 100);
         final List<QueryFacetDto> queryFacetDtos = new ArrayList<>();
         queryFacetDtos.add(queryFacetDto);

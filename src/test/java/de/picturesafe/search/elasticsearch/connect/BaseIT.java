@@ -135,10 +135,9 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testAndExpression() {
-        final OperationExpression andExpression = OperationExpression.builder()
-                .add(new FulltextExpression("wert"))
-                .add(new ValueExpression("caption", "caption1"))
-                .build();
+        final OperationExpression andExpression = OperationExpression.and(
+                new FulltextExpression("wert"),
+                new ValueExpression("caption", "caption1"));
         final QueryDto queryDto = new QueryDto(andExpression, defaultRange(), null, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
@@ -561,19 +560,16 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testMustNotExpression() {
-        OperationExpression operationExpression = OperationExpression.builder()
-                .add(new ValueExpression("title", "wert"))
-                .add(new MustNotExpression(new ValueExpression("caption", "caption1")))
-                .build();
+        OperationExpression operationExpression = OperationExpression.and(
+                new ValueExpression("title", "wert"),
+                new MustNotExpression(new ValueExpression("caption", "caption1")));
         QueryDto queryDto = new QueryDto(operationExpression, defaultRange(), null, null, Locale.GERMAN);
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Expression does not work: indexAlias = " + indexAlias, 4, result.getTotalHitCount());
 
-        final OperationExpression innerOpExpression = OperationExpression.builder()
-                .add(new ValueExpression("caption", "caption1")).build();
+        final OperationExpression innerOpExpression = OperationExpression.and(new ValueExpression("caption", "caption1"));
         final MustNotExpression mustNotExpression = new MustNotExpression(innerOpExpression);
-        operationExpression = OperationExpression.builder()
-            .add(new ValueExpression("title", "wert")).add(mustNotExpression).build();
+        operationExpression = OperationExpression.and(new ValueExpression("title", "wert"), mustNotExpression);
         queryDto = new QueryDto(operationExpression, defaultRange(), null, null, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Expression does not work: indexAlias = " + indexAlias, 4, result.getTotalHitCount());
@@ -581,14 +577,10 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testFulltextWithInnerMustNotExpression() {
-
-        final OperationExpression innerOpExpression = OperationExpression.builder()
-                .add(new KeywordExpression("caption", "caption1")).build();
-
-        final OperationExpression operationExpression = OperationExpression.builder()
-                .add(new FulltextExpression("wert"))
-                .add(new MustNotExpression(innerOpExpression))
-                .build();
+        final OperationExpression innerOpExpression = OperationExpression.and(
+                new KeywordExpression("caption", "caption1"));
+        final OperationExpression operationExpression = OperationExpression.and(
+                new FulltextExpression("wert"), new MustNotExpression(innerOpExpression));
 
         QueryDto queryDto = new QueryDto(operationExpression, defaultRange(), null, null, Locale.GERMAN);
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);

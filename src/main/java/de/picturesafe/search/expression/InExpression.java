@@ -114,14 +114,14 @@ public class InExpression extends AbstractExpression implements FieldExpression 
     }
 
     OperationExpression optimizeBatches(int batchSize) {
-        final OperationExpression.Builder opeBuilder = OperationExpression.builder(OperationExpression.Operator.OR);
+        final OperationExpression operationExpression = OperationExpression.or();
         for (int i = 0; i < values.length; i += currentBatchSize(batchSize, i)) {
             final int size = currentBatchSize(batchSize, i);
             final Object[] batch = new Object[size];
             System.arraycopy(values, i, batch, 0, size);
-            opeBuilder.add(new InExpression(name, batch));
+            operationExpression.add(new InExpression(name, batch));
         }
-        return opeBuilder.build();
+        return operationExpression;
     }
 
     private int currentBatchSize(int batchSize, int valuesIdx) {

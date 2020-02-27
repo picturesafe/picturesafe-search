@@ -146,10 +146,9 @@ public class GettingStarted {
         singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
                 DocumentBuilder.id(3).put("title", "This is one more test title").build());
 
-        final Expression expression = OperationExpression.builder()
-                .add(new FulltextExpression("test title"))
-                .add(new ValueExpression("id", ValueExpression.Comparison.GE, 2))
-                .build();
+        final Expression expression = OperationExpression.and(
+                new FulltextExpression("test title"),
+                new ValueExpression("id", ValueExpression.Comparison.GE, 2));
 
         final SearchResult searchResult = singleIndexElasticsearchService
             .search(new AccountContext(), expression, new SearchParameter());
@@ -186,10 +185,9 @@ Expression expression = new ValueExpression("id", ValueExpression.Comparison.GE,
 .Search with two terms
 [source,java]
 ----
-Expression expression = OperationExpression.builder()
-                .add(new FulltextExpression("test title"))
-                .add(new ValueExpression("id", ValueExpression.Comparison.GE, 2))
-                .build();
+Expression expression = OperationExpression.and(
+        new FulltextExpression("test title"),
+        new ValueExpression("id", ValueExpression.Comparison.GE, 2));
 ----
 
 In addition there are further expressions like `InExpression`, `MustNotExpression`, `RangeValueExpression`, `DayExpression`, ...
