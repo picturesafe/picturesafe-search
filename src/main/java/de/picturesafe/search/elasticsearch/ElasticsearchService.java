@@ -18,7 +18,7 @@ package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
-import de.picturesafe.search.elasticsearch.model.AccountContext;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
@@ -190,12 +190,22 @@ public interface ElasticsearchService {
      * Searches for documents.
      *
      * @param indexAlias        Name of the alias of the index
+     * @param expression        Expression defining the search criteria
+     * @param searchParameter   Parameters for the search execution
+     * @return                  {@link SearchResult}
+     */
+    SearchResult search(String indexAlias, Expression expression, SearchParameter searchParameter);
+
+    /**
+     * Searches for documents in the context of an user account.
+     *
+     * @param indexAlias        Name of the alias of the index
      * @param accountContext    {@link AccountContext} of the current user
      * @param expression        Expression defining the search criteria
      * @param searchParameter   Parameters for the search execution
      * @return                  {@link SearchResult}
      */
-    SearchResult search(String indexAlias, AccountContext accountContext, Expression expression, SearchParameter searchParameter);
+    SearchResult search(String indexAlias, AccountContext<?> accountContext, Expression expression, SearchParameter searchParameter);
 
     /**
      * Gets a document from the index.

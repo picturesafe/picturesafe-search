@@ -5,7 +5,7 @@ import de.picturesafe.search.elasticsearch.ElasticsearchService;
 import de.picturesafe.search.elasticsearch.SingleIndexElasticsearchService;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
-import de.picturesafe.search.elasticsearch.model.AccountContext;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
@@ -100,7 +100,12 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     }
 
     @Override
-    public SearchResult search(AccountContext accountContext, Expression expression, SearchParameter searchParameter) {
+    public SearchResult search(Expression expression, SearchParameter searchParameter) {
+        return elasticsearchService.search(indexAlias, expression, searchParameter);
+    }
+
+    @Override
+    public SearchResult search(AccountContext<?> accountContext, Expression expression, SearchParameter searchParameter) {
         return elasticsearchService.search(indexAlias, accountContext, expression, searchParameter);
     }
 

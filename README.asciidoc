@@ -151,7 +151,7 @@ public class GettingStarted {
                 new ValueExpression("id", ValueExpression.Comparison.GE, 2));
 
         final SearchResult searchResult = singleIndexElasticsearchService
-            .search(new AccountContext(), expression, SearchParameter.DEFAULT);
+            .search(expression, SearchParameter.DEFAULT);
 
         LOGGER.info(searchResult.toString());
 

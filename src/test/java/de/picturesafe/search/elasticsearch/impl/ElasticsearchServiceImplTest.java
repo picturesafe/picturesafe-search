@@ -22,7 +22,7 @@ import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
-import de.picturesafe.search.elasticsearch.model.AccountContext;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.internal.EmptyExpression;
 import de.picturesafe.search.parameter.AggregationField;
