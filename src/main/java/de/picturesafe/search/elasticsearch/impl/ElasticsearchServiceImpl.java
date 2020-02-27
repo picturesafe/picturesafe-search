@@ -137,7 +137,7 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
      * Sets if expressions should be optimized.
      *
      * @see Expression#optimize()
-     * @see SearchParameter#setOptimizeExpressions(boolean)
+     * @see SearchParameter#isOptimizeExpressions()
      *
      * @param optimizeExpressionsEnabled true if expressions should be optimized
      */
@@ -398,7 +398,7 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
     protected ElasticsearchResult getElasticSearchResult(String indexAlias, AccountContext accountContext, Expression expression,
                                                          SearchParameter searchParameter, int pageSize, StopWatch sw) {
         if (searchParameter == null) {
-            searchParameter = new SearchParameter();
+            searchParameter = SearchParameter.DEFAULT;
         }
         final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
 
