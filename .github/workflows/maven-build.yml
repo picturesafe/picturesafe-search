@@ -20,7 +20,7 @@ jobs:
       - name: Build project
         run: mvn clean package
       - name: Upload Maven build artifact
-          uses: actions/upload-artifact@v1
-          with:
-            name: artifact
-            path: target/*.jar
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifact
+          path: target/*.jar
