@@ -19,8 +19,10 @@ jobs:
           java-version: 1.8
       - name: Build project
         run: mvn clean package
+      - id: getfilename
+        run: echo "::set-output name=file::$(ls target/picturesafe-search-*.jar)"
       - name: Upload Maven build artifact
         uses: actions/upload-artifact@v1
         with:
           name: artifact
-          path: target/*.jar
+          path: ${{ steps.getfilename.outputs.file }}
