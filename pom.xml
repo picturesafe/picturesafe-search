@@ -263,6 +263,7 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -311,50 +312,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>build-test-jar</id>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                            <goal>test-jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.1.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <executions>
                     <execution>
@@ -373,6 +330,93 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>build-all</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>build-test-jar</id>
+                                <goals>
+                                    <goal>test-jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                    <goal>test-jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-site-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>build-jar-only</id>
+        </profile>
+        <profile>
+            <id>test-connect-localhost</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <elasticsearch.hosts>localhost:9200</elasticsearch.hosts>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-connect-localhost-9292</id>
+            <properties>
+                <elasticsearch.hosts>localhost:9292</elasticsearch.hosts>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-connect-gitlab</id>
+            <properties>
+                <elasticsearch.hosts>elasticsearch:9200</elasticsearch.hosts>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-timezone-utc+0</id>
+            <properties>
+                <user.timezone>UTC+00:00</user.timezone>
+            </properties>
+        </profile>
+    </profiles>
 
     <reporting>
         <plugins>
@@ -414,36 +458,6 @@
             </plugin>
         </plugins>
     </reporting>
-
-    <profiles>
-        <profile>
-            <id>test-connect-localhost</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <elasticsearch.hosts>localhost:9200</elasticsearch.hosts>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-connect-localhost-9292</id>
-            <properties>
-                <elasticsearch.hosts>localhost:9292</elasticsearch.hosts>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-connect-gitlab</id>
-            <properties>
-                <elasticsearch.hosts>elasticsearch:9200</elasticsearch.hosts>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-timezone-utc+0</id>
-            <properties>
-                <user.timezone>UTC+00:00</user.timezone>
-            </properties>
-        </profile>
-    </profiles>
 
     <distributionManagement>
         <snapshotRepository>

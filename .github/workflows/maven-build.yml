@@ -1,0 +1,28 @@
+name: Maven Build
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build Maven project
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Build project
+        run: mvn -P build-jar-only clean package
+      - id: getfilename
+        run: echo "::set-output name=file::$(ls target/picturesafe-search-*.jar)"
+      - name: Upload Maven build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifact
+          path: ${{ steps.getfilename.outputs.file }}
