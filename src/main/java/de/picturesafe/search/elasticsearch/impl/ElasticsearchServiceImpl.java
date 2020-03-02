@@ -34,7 +34,6 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
-import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
@@ -44,6 +43,7 @@ import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.SuggestExpression;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
@@ -81,6 +81,7 @@ import static de.picturesafe.search.elasticsearch.DataChangeProcessingMode.BACKG
 public class ElasticsearchServiceImpl implements InternalElasticsearchService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceImpl.class);
+    protected static final int DEFAULT_PAGE_SIZE = 100;
     protected static final int DEFAULT_MAX_PAGE_SIZE = 2000;
     protected static final int DEFAULT_SHARD_SIZE_FACTOR = 5;
 
@@ -93,6 +94,9 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
 
     @Autowired(required = false)
     protected DocumentProvider documentProvider;
+
+    @Value("${elasticsearch.service.default_page_size:" + DEFAULT_PAGE_SIZE + "}")
+    protected int defaultPageSize = DEFAULT_PAGE_SIZE;
 
     @Value("${elasticsearch.service.max_page_size:" + DEFAULT_MAX_PAGE_SIZE + "}")
     protected int maxPageSize = DEFAULT_MAX_PAGE_SIZE;
@@ -122,6 +126,15 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
      */
     public void setDocumentProvider(DocumentProvider documentProvider) {
         this.documentProvider = documentProvider;
+    }
+
+    /**
+     * Sets the default page size to be retrieved.
+     *
+     * @param defaultPageSize   The default page size to be retrieved
+     */
+    public void setDefaultPageSize(int defaultPageSize) {
+        this.defaultPageSize = defaultPageSize;
     }
 
     /**
@@ -391,9 +404,9 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
 
     protected int getPageSize(SearchParameter searchParameter) {
         if (searchParameter == null) {
-            return maxPageSize;
+            return defaultPageSize;
         }
-        int pageSize = (searchParameter.getPageSize() != null) ? searchParameter.getPageSize() : maxPageSize;
+        int pageSize = (searchParameter.getPageSize() != null) ? Math.min(searchParameter.getPageSize(), maxPageSize) : defaultPageSize;
         if (searchParameter.getMaxResults() != null) {
             pageSize = Math.min(pageSize, searchParameter.getMaxResults());
         }
