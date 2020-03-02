@@ -18,7 +18,7 @@ jobs:
         with:
           java-version: 1.8
       - name: Build project
-        run: mvn clean package
+        run: mvn -P build-jar-only clean package
       - id: getfilename
         run: echo "::set-output name=file::$(ls target/picturesafe-search-*.jar)"
       - name: Upload Maven build artifact
