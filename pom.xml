@@ -328,6 +328,36 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Deploy to maven central -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>picturesafe-search@picturesafe.de</keyname>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -461,19 +491,8 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>nexus-snapshots</id>
-            <url>https://nexus.picturesafe.cloud/repository/maven-snapshots/</url>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
-        <repository>
-            <id>nexus-releases</id>
-            <url>https://nexus.picturesafe.cloud/repository/maven-releases/</url>
-        </repository>
     </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>nexus-public</id>
-            <url>https://nexus.picturesafe.cloud/repository/maven-public/</url>
-        </repository>
-    </repositories>
 </project>
