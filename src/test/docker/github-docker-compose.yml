@@ -1,0 +1,20 @@
+version: '3'
+services:
+  elasticsearch:
+    build: elastic-7
+    ports:
+      - 9200:9200
+    environment:
+      - node.name=es01
+      - cluster.name=elastic-test
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 20s
+      timeout: 10s
+      retries: 5
