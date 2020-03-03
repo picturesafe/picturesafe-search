@@ -19,10 +19,50 @@ jobs:
           java-version: 1.8
       - name: Build project
         run: mvn -P build-jar-only clean package
-      - id: getfilename
-        run: echo "::set-output name=file::$(ls target/picturesafe-search-*.jar)"
-      - name: Upload Maven build artifact
-        uses: actions/upload-artifact@v1
+#      - id: getfilename
+#        run: echo "::set-output name=file::$(ls target/picturesafe-search-*.jar)"
+#      - name: Upload Maven build artifact
+#        uses: actions/upload-artifact@v1
+#        with:
+#          name: artifact
+#          path: ${{ steps.getfilename.outputs.file }}
+  integrationtest:
+    runs-on: ubuntu-latest
+    needs: build
+    name: Run integration tests
+#    services:
+#      elasticsearch:
+#        image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+#        ports:
+#          - 9200:9200
+#        env:
+#          node.name: es01
+#          cluster.name: elastic-test
+#          discovery.type: single-node
+#          bootstrap.memory_lock: true
+##        options: --name elasticsearch --health-cmd "curl -sS http://localhost:9200 || exit 1" --health-interval 10s --health-timeout 10s --health-retries 10
+#        options: --name elasticsearch
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v1
+      - name: Start elasticsearch
+        run: docker-compose -f src/test/docker/github-docker-compose.yml up -d
+      - name: Use cached dependencies
+        uses: actions/cache@v1
         with:
-          name: artifact
-          path: ${{ steps.getfilename.outputs.file }}
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Wait for elasticsearch start
+        run: while [ "`curl -sS http://localhost:9200 || echo starting`" == "starting" ]; do sleep 5; done
+      - name: Wait for elasticsearch cluster status
+        run: curl -s "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s&pretty"
+      - name: Run tests
+        run: mvn -P build-jar-only,test-github clean verify
+      - name: Stop elasticsearch
+        run: docker-compose -f src/test/docker/github-docker-compose.yml stop

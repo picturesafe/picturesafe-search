@@ -262,6 +262,11 @@
                         <linkXRef>false</linkXRef>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -313,6 +318,7 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <executions>
                     <execution>
@@ -334,7 +340,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.6</version>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
@@ -419,7 +424,7 @@
             <id>build-jar-only</id>
         </profile>
         <profile>
-            <id>test-connect-localhost</id>
+            <id>test-localhost</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -428,16 +433,28 @@
             </properties>
         </profile>
         <profile>
-            <id>test-connect-localhost-9292</id>
+            <id>test-github</id>
             <properties>
-                <elasticsearch.hosts>localhost:9292</elasticsearch.hosts>
+                <elasticsearch.hosts>localhost:9200</elasticsearch.hosts>
             </properties>
-        </profile>
-        <profile>
-            <id>test-connect-gitlab</id>
-            <properties>
-                <elasticsearch.hosts>elasticsearch:9200</elasticsearch.hosts>
-            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>test-timezone-utc+0</id>
