@@ -102,6 +102,22 @@ public class SearchResult {
     }
 
     /**
+     * Gets the page count.
+     *
+     * @return  Page count (number of result pages) depending on the result count and the page size
+     */
+    public int getPageCount() {
+        int pageCount = 1;
+        if (resultCount > 0 && pageSize > 0) {
+            pageCount = resultCount / pageSize;
+            if (resultCount % pageSize > 0) {
+                pageCount += 1;
+            }
+        }
+        return Math.max(1, pageCount);
+    }
+
+    /**
      * Gets the count of result items.
      *
      * @return Count of result items
@@ -122,7 +138,7 @@ public class SearchResult {
     /**
      * Checks if total hit count exact number.
      *
-     * @return TRUE if total hit count exact number, FALSE if total hit count is greater or equal the given number.
+     * @return TRUE if total hit count exact number, FALSE if total hit count is greater or equal the given number
      */
     public boolean isExactHitCount() {
         return exactHitCount;
