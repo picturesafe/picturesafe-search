@@ -6,6 +6,7 @@
 
     <name>picturesafe-search</name>
     <description>Service API for Elasticsearch integration</description>
+    <url>https://github.com/picturesafe/picturesafe-search</url>
 
     <groupId>de.picturesafe.search</groupId>
     <artifactId>picturesafe-search</artifactId>
@@ -388,7 +389,6 @@
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
-                                <phase>verify</phase>
                                 <goals>
                                     <goal>jar-no-fork</goal>
                                     <goal>test-jar-no-fork</goal>
@@ -403,7 +403,6 @@
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
-                                <phase>verify</phase>
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
@@ -488,6 +487,12 @@
             </plugin>
         </plugins>
     </reporting>
+
+    <scm>
+        <connection>scm:git:ssh://github.com:picturesafe/picturesafe-search.git</connection>
+        <developerConnection>scm:git:ssh://github.com:picturesafe/picturesafe-search.git</developerConnection>
+        <url>https://github.com/picturesafe/picturesafe-search</url>
+    </scm>
 
     <distributionManagement>
         <snapshotRepository>
