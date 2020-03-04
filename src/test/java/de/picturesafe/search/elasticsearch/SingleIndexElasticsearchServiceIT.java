@@ -289,6 +289,7 @@ public class SingleIndexElasticsearchServiceIT {
         List<FieldConfiguration> fieldConfiguration() {
             final List<FieldConfiguration> testFields = new ArrayList<>();
             testFields.add(createFieldConfiguration("id", ElasticsearchType.LONG, false, false, true, false));
+            testFields.add(createFieldConfiguration(FieldConfiguration.FIELD_NAME_FULLTEXT, ElasticsearchType.TEXT, false, false, false, false));
             testFields.add(createFieldConfiguration("name", ElasticsearchType.TEXT, false, false, true, false));
             testFields.add(createFieldConfiguration("title", ElasticsearchType.TEXT, true, false, false, false));
             testFields.add(createFieldConfiguration("caption", ElasticsearchType.TEXT, true, false, false, false));

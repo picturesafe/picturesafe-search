@@ -19,6 +19,8 @@ package de.picturesafe.search.elasticsearch.connect.util;
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
@@ -32,7 +34,9 @@ import static de.picturesafe.search.elasticsearch.connect.mapping.MappingConstan
 public class FieldConfigurationUtils {
 
     public static FieldConfiguration fieldConfiguration(List<FieldConfiguration> fieldConfigurations, String elasticFieldName) {
-        Validate.notEmpty(fieldConfigurations, "Parameter 'fieldConfiguration' may not be null or empty!");
+        if (CollectionUtils.isEmpty(fieldConfigurations)) {
+            return null;
+        }
 
         for (FieldConfiguration fieldConfiguration : fieldConfigurations) {
             if (fieldConfiguration.getName().equals(elasticFieldName)) {
@@ -64,16 +68,27 @@ public class FieldConfigurationUtils {
         return fieldName;
     }
 
+    public static String keywordFieldName(FieldConfiguration fieldConfig, String fieldName, Object... values) {
+        final boolean isTextField;
+        if (fieldConfig == null) {
+            isTextField = ArrayUtils.isNotEmpty(values) && values[0] instanceof String;
+        } else {
+            isTextField = isTextField(fieldConfig);
+        }
+        return isTextField ? fieldName + "." + KEYWORD_FIELD : fieldName;
+    }
+
     public static String keywordFieldName(FieldConfiguration fieldConfig, String fieldName) {
-        return isTextField(fieldConfig) ? fieldName + "." + KEYWORD_FIELD : fieldName;
+        return (fieldConfig != null && isTextField(fieldConfig)) ? fieldName + "." + KEYWORD_FIELD : fieldName;
     }
 
     public static String sortFieldName(FieldConfiguration fieldConfig, String fieldName) {
-        final String sortField = fieldConfig.isMultilingual() ? MULTILINGUAL_KEYWORD_FIELD : KEYWORD_FIELD;
-        return isTextField(fieldConfig) ? fieldName + "." + sortField : fieldName;
+        final String sortField = (fieldConfig != null && fieldConfig.isMultilingual()) ? MULTILINGUAL_KEYWORD_FIELD : KEYWORD_FIELD;
+        return (fieldConfig != null && isTextField(fieldConfig)) ? fieldName + "." + sortField : fieldName;
     }
 
     public static boolean isTextField(FieldConfiguration fieldConfig) {
+        Validate.notNull(fieldConfig, "Parameter 'fieldConfig' may not be null!");
         return fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.TEXT.toString());
     }
 
