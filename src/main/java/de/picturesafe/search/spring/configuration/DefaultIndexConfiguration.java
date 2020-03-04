@@ -37,7 +37,7 @@ public class DefaultIndexConfiguration {
     @Value("${elasticsearch.index.alias:default}")
     private String indexAlias;
 
-    @Value("${elasticsearch.index.name_prefix:default}")
+    @Value("${elasticsearch.index.name_prefix:#{null}}")
     private String indexNamePrefix;
 
     @Value("${elasticsearch.index.name_date_format:yyyyMMdd-HHmmss-SSS}")
