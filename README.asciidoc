@@ -127,33 +127,35 @@ public class GettingStarted {
     private SingleIndexElasticsearchService singleIndexElasticsearchService;
 
     public static void main(String[] args) {
-        final AnnotationConfigApplicationContext ctx
-            = new AnnotationConfigApplicationContext(GettingStarted.class);
-        final GettingStarted gettingStarted = ctx.getBean(GettingStarted.class);
-        gettingStarted.run();
-        ctx.close();
+        try (AnnotationConfigApplicationContext ctx
+                = new AnnotationConfigApplicationContext(GettingStarted.class)) {
+            final GettingStarted gettingStarted = ctx.getBean(GettingStarted.class);
+            gettingStarted.run();
+        }
     }
 
     private void run() {
-        singleIndexElasticsearchService.createIndexWithAlias();
+        try {
+            singleIndexElasticsearchService.createIndexWithAlias();
 
-        singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
-                DocumentBuilder.id(1).put("title", "This is a test title").build());
-        singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
-                DocumentBuilder.id(2).put("title", "This is another test title").build());
-        singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
-                DocumentBuilder.id(3).put("title", "This is one more test title").build());
+            singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
+                    DocumentBuilder.id(1).put("title", "This is a test title").build());
+            singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
+                    DocumentBuilder.id(2).put("title", "This is another test title").build());
+            singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
+                    DocumentBuilder.id(3).put("title", "This is one more test title").build());
 
-        final Expression expression = OperationExpression.and(
-                new FulltextExpression("test title"),
-                new ValueExpression("id", ValueExpression.Comparison.GE, 2));
+            final Expression expression = OperationExpression.and(
+                    new FulltextExpression("test title"),
+                    new ValueExpression("id", ValueExpression.Comparison.GE, 2));
 
-        final SearchResult searchResult = singleIndexElasticsearchService
-            .search(expression, SearchParameter.DEFAULT);
+            final SearchResult searchResult = singleIndexElasticsearchService
+                .search(expression, SearchParameter.DEFAULT);
 
-        LOGGER.info(searchResult.toString());
-
-        singleIndexElasticsearchService.deleteIndexWithAlias();
+            LOGGER.info(searchResult.toString());
+        } finally {
+            singleIndexElasticsearchService.deleteIndexWithAlias();
+        }
     }
 }
 ----
