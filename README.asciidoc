@@ -101,7 +101,7 @@ Add a file `elasticsearch.properties` to the classpath of your application and d
 .Property file
 [source]
 ----
-elasticsearch.index.alias_name=picturesafe-search-sample
+elasticsearch.index.alias=picturesafe-search-sample
 ----
 
 ==== Service implementation
