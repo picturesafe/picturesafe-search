@@ -36,7 +36,7 @@ public class InExpressionFilterBuilder implements ExpressionFilterBuilder {
 
         final MappingConfiguration mappingConfiguration = filterBuilderContext.getMappingConfiguration();
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
-        final String queryFieldName = FieldConfigurationUtils.keywordFieldName(fieldConfiguration, fieldName);
+        final String queryFieldName = FieldConfigurationUtils.keywordFieldName(fieldConfiguration, fieldName, values);
 
         QueryBuilder queryBuilder;
         if (values.length > 1) {

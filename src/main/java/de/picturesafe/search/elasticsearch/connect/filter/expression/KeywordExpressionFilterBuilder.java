@@ -47,7 +47,7 @@ public class KeywordExpressionFilterBuilder implements ExpressionFilterBuilder {
         String fieldName
                 = FieldConfigurationUtils
                 .getElasticFieldName(context.getMappingConfiguration(), keywordExpression.getName(), context.getQueryDto().getLocale());
-        fieldName = keywordFieldName(fieldConfig, fieldName);
+        fieldName = keywordFieldName(fieldConfig, fieldName, value);
 
         final TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(fieldName, value);
         switch (keywordExpression.getComparison()) {
