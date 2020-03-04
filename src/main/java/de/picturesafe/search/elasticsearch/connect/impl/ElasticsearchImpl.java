@@ -620,7 +620,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
 
                     final FieldConfiguration fieldConfig = mappingConfiguration.getFieldConfiguration(fieldName);
                     if (fieldConfig == null) {
-                        throw new RuntimeException("Missing field configuration for field: " + fieldName);
+                        LOG.warn("Missing field configuration for field '{}', aggregations will not work for text fields!", fieldName);
                     }
 
                     String aggFieldName = FieldConfigurationUtils.getElasticFieldName(mappingConfiguration, queryFacetDto.getField(), queryDto.getLocale());
