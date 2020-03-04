@@ -19,6 +19,8 @@ package de.picturesafe.search.elasticsearch.connect.query;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
+import de.picturesafe.search.elasticsearch.connect.error.ElasticsearchException;
+import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.PhraseMatchHelper;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
@@ -50,6 +52,11 @@ public class FulltextQueryFactory implements QueryFactory {
 
     @Override
     public QueryBuilder create(QueryFactoryCaller caller, MappingConfiguration mappingConfiguration, Expression parameter) {
+        final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, FieldConfiguration.FIELD_NAME_FULLTEXT, false);
+        if (fieldConfig == null) {
+            throw new ElasticsearchException("Missing field configuration for fulltext field, fulltext expressions are not supported without configuration!");
+        }
+
         final ValueExpression valueExpression = (ValueExpression) parameter;
         final String value = valueExpression.getValue().toString();
         if (!StringUtils.isBlank(value)) {

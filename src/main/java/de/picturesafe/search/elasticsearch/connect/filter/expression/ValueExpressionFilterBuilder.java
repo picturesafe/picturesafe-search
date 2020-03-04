@@ -115,7 +115,7 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
                         ? String.valueOf(value)
                         : (comparison == TERM_STARTS_WITH)
                                 ? value + "*" : "*" + value;
-                return QueryBuilders.wildcardQuery(keywordFieldName(fieldConfig, esFieldName), strValue);
+                return QueryBuilders.wildcardQuery(keywordFieldName(fieldConfig, esFieldName, value), strValue);
             default:
                 throw new RuntimeException("Unsupported comparison: " + comparison);
         }

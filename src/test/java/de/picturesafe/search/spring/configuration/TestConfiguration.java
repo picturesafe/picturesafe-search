@@ -131,6 +131,8 @@ public class TestConfiguration {
         testFields.add(StandardFieldConfiguration.builder(
                 "title", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).sortable(true).multilingual(true).build());
         testFields.add(StandardFieldConfiguration.builder(
+                FieldConfiguration.FIELD_NAME_FULLTEXT, ElasticsearchType.TEXT).build());
+        testFields.add(StandardFieldConfiguration.builder(
                 "caption", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
         testFields.add(StandardFieldConfiguration.builder(
                 "location", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
