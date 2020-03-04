@@ -19,6 +19,8 @@ package de.picturesafe.search.elasticsearch.config.impl;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexSettingsObject;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -82,8 +84,9 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
      */
     public StandardIndexPresetConfiguration(String indexAlias, String indexNamePrefix, String indexNameDateFormat, int numberOfShards, int numberOfReplicas,
                                             int maxResultWindow) {
+        Validate.notEmpty(indexAlias, "Argument 'indexAlias' must not be empty!");
         this.indexAlias = indexAlias;
-        this.indexNamePrefix = indexNamePrefix;
+        this.indexNamePrefix = (StringUtils.isEmpty(indexNamePrefix)) ? indexAlias : indexNamePrefix;
         this.indexNameDateFormat = indexNameDateFormat;
         this.numberOfShards = numberOfShards;
         this.numberOfReplicas = numberOfReplicas;
