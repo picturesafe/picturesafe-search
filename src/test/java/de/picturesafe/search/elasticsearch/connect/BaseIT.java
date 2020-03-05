@@ -272,7 +272,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
         assertNotNull("Should throw exception for non supported sort field: indexAlias = " + indexAlias, exception);
         assertEquals("Should throw exception for non supported sort field: indexAlias = " + indexAlias,
-                "The field 'caption' is not supported to be used as a sort field!", exception.getMessage());
+                "The field 'caption' is not configured as sortable!", exception.getMessage());
     }
 
     @Test

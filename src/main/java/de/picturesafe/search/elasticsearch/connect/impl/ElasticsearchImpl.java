@@ -207,12 +207,12 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     @Override
-    public Map<Long, Boolean> addToIndex(List<Map<String, Object>> docs, MappingConfiguration mappingConfiguration, String indexAlias,
+    public Map<String, Boolean> addToIndex(List<Map<String, Object>> docs, MappingConfiguration mappingConfiguration, String indexAlias,
                                          boolean applyIndexRefresh, boolean execeptionOnFailure) {
         Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null!");
         Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be empty!");
 
-        final Map<Long, Boolean> results = new HashMap<>();
+        final Map<String, Boolean> results = new HashMap<>();
         if (CollectionUtils.isEmpty(docs)) {
             return results;
         }
@@ -238,7 +238,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                     if (execeptionOnFailure && bulkResponse.hasFailures()) {
                         throw new ElasticsearchException("Add to index failed: " + bulkResponse.buildFailureMessage());
                     }
-                    bulkResponse.forEach(itemResponse -> results.put(Long.parseLong(itemResponse.getId()), itemResponse.getFailure() == null));
+                    bulkResponse.forEach(itemResponse -> results.put(itemResponse.getId(), itemResponse.getFailure() == null));
                     sw.stop();
 
                     bulkRequest = null;
@@ -640,37 +640,33 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     protected void addSortOptionsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfig, SearchSourceBuilder searchRequestBuilder) {
         if (queryDto.getSortOptions() != null) {
             for (SortOption sortOption : queryDto.getSortOptions()) {
-                if (!mappingConfig.getSortableFieldNames().contains(sortOption.getFieldName())) {
-                    throw new RuntimeException("The field '" + sortOption.getFieldName() + "' is not supported to be used as a sort field!");
+                final String fieldName = sortOption.getFieldName();
+                FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, fieldName, false);
+                final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+
+                if (fieldConfiguration == null) {
+                    fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, topFieldName, false);
                 }
 
-                if (mappingConfig.getSortableFieldNames().contains(sortOption.getFieldName())) {
-                    final String fieldName = sortOption.getFieldName();
-                    FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, fieldName, false);
-                    final String topFieldName = StringUtils.substringBefore(fieldName, ".");
-
-                    if (fieldConfiguration == null) {
-                        fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, topFieldName, false);
+                FieldSortBuilder fieldSortBuilder = null;
+                if (fieldConfiguration != null) {
+                    if (fieldConfiguration.getParent() != null) {
+                        fieldConfiguration = fieldConfiguration.getParent();
                     }
 
-                    FieldSortBuilder fieldSortBuilder = null;
-                    if (fieldConfiguration != null) {
-                        if (fieldConfiguration.getParent() != null) {
-                            fieldConfiguration = fieldConfiguration.getParent();
-                        }
-
-                        if (fieldConfiguration.isNestedObject()) {
-                            fieldSortBuilder = buildNestedSort(queryDto, fieldConfiguration, fieldName, sortOption, mappingConfig);
-                        } else if (isTextField(fieldConfiguration)) {
-                            fieldSortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
-                        }
+                    if (fieldConfiguration.isNestedObject()) {
+                        fieldSortBuilder = buildNestedSort(queryDto, fieldConfiguration, fieldName, sortOption, mappingConfig);
+                    } else if (isTextField(fieldConfiguration)) {
+                        fieldSortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
                     }
-                    if (fieldSortBuilder == null) {
-                        fieldSortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
-                    }
-
-                    searchRequestBuilder.sort(fieldSortBuilder);
+                } else {
+                    LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
                 }
+
+                if (fieldSortBuilder == null) {
+                    fieldSortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
+                }
+                searchRequestBuilder.sort(fieldSortBuilder);
             }
         }
     }
@@ -712,7 +708,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                     .missing("_" + missingValueSortPosition.getValue())
                     .order(sortOrder);
         } else {
-            throw new RuntimeException("An analyzed string field cant be used for sorting: " + fieldConfiguration.getName());
+            throw new RuntimeException("The field '" + fieldConfiguration.getName() + "' is not configured as sortable!");
         }
     }
 
@@ -789,16 +785,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         return searchSourceBuilder;
     }
 
-    protected IndexRequest createIndexRequest(Map<String, Object> doc, MappingConfiguration mappingConfiguration,
-                                            String indexName, boolean applyIndexRefresh)
+    protected IndexRequest createIndexRequest(Map<String, Object> doc, MappingConfiguration mappingConfiguration, String indexName, boolean applyIndexRefresh)
             throws IOException {
-        Validate.isTrue(doc.containsKey("id"), "Missing field 'id' in document!");
-
         final XContentBuilder contentBuilder = XContentFactory.jsonBuilder();
         contentBuilder.startObject();
         addToIndexRequestContent(contentBuilder, doc, mappingConfiguration);
         contentBuilder.endObject();
-        final String docId = String.valueOf(getId(doc));
+        final Long id = getId(doc);
+        final String docId = (id != null) ? String.valueOf(id) : null;
         final IndexRequest indexRequest = new IndexRequest(indexName).id(docId)
                 .source(contentBuilder).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
 

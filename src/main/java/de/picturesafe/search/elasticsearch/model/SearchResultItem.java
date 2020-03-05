@@ -44,11 +44,8 @@ public class SearchResultItem {
     }
 
     private long extractId(Map<String, Object> attributes) {
-        try {
-            return ElasticDocumentUtils.getId(attributes);
-        } catch (NullPointerException e) {
-            return -1;
-        }
+        final Long id = ElasticDocumentUtils.getId(attributes);
+        return (id != null) ? id : -1;
     }
 
     /**

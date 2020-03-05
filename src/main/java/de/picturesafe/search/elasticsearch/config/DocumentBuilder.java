@@ -28,6 +28,9 @@ public class DocumentBuilder {
 
     final Map<String, Object> doc = new HashMap<>();
 
+    private DocumentBuilder() {
+    }
+
     private DocumentBuilder(long id) {
         doc.put(FieldConfiguration.FIELD_NAME_ID, id);
     }
@@ -35,6 +38,10 @@ public class DocumentBuilder {
     public static DocumentBuilder id(long id) {
         Validate.isTrue(id > 0, "Argument 'id' must be > 0!");
         return new DocumentBuilder(id);
+    }
+
+    public static DocumentBuilder withoutId() {
+        return new DocumentBuilder();
     }
 
     public DocumentBuilder put(String fieldname, Object value) {

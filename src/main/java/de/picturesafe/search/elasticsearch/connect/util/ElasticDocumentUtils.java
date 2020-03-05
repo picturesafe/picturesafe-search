@@ -23,7 +23,12 @@ public class ElasticDocumentUtils {
     private ElasticDocumentUtils() {
     }
 
-    public static long getId(Map<String, Object> doc) {
+    public static long getId(Map<String, Object> doc, long fallbackValue) {
+        final Long id = getId(doc);
+        return (id != null) ? id : fallbackValue;
+    }
+
+    public static Long getId(Map<String, Object> doc) {
         final Object val = doc.get("id");
         if (val instanceof Number) {
             return ((Number) val).longValue();
@@ -32,7 +37,7 @@ public class ElasticDocumentUtils {
         } else if (val != null) {
             throw new IllegalArgumentException("Document field 'id' has unsupported type: " + val);
         } else {
-            throw new NullPointerException("Missing field 'id' in document!");
+            return null;
         }
     }
 }
