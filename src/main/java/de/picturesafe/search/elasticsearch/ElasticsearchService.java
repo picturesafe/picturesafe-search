@@ -17,13 +17,12 @@
 package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
-import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
-import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.SuggestExpression;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.SearchParameter;
 
 import java.util.Collection;
@@ -43,24 +42,6 @@ public interface ElasticsearchService {
      * @return  Elasticsearch infos
      */
     ElasticsearchInfo getElasticsearchInfo();
-
-    /**
-     * Creates a new index, fills up the index with data provided by a {@link DocumentProvider} and creates an alias for the index.
-     * <p>
-     * If the index exists and shall be rebuild, the new index is created in parallel to the existing one. After index creation has finished,
-     * the alias will be switched and the old index will be deleted. All modifications to index data which is done while index rebuild is
-     * processed will be stored temporarily and will be processed on the new index after rebuild has finished.
-     * </p>
-     *
-     * @param indexAlias                Name of the alias
-     * @param rebuildIfExists           TRUE if an existing index shall be rebuild, otherwise a {@link AliasAlreadyExistsException} will be thrown.
-     * @param listener                  Listener for index initialization progress
-     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
-     *
-     * @throws AliasAlreadyExistsException  If index exists and rebuildIfExists not true
-     */
-    void createAndInitializeIndex(String indexAlias, boolean rebuildIfExists, IndexInitializationListener listener,
-                                  DataChangeProcessingMode dataChangeProcessingMode) throws AliasAlreadyExistsException;
 
     /**
      * Tests if an alias exists.
