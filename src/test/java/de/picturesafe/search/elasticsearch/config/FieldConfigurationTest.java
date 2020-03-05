@@ -93,9 +93,8 @@ public class FieldConfigurationTest {
 
     @Test
     public void testSuggestFieldConfiguration() {
-        FieldConfiguration fieldConfiguration = new SuggestFieldConfiguration();
-
-        assertEquals(FieldConfiguration.FIELD_NAME_SUGGEST, fieldConfiguration.getName());
+        FieldConfiguration fieldConfiguration = new SuggestFieldConfiguration("mySuggestField");
+        assertEquals("mySuggestField", fieldConfiguration.getName());
         assertEquals(ElasticsearchType.COMPLETION.toString(), fieldConfiguration.getElasticsearchType());
         assertFalse(fieldConfiguration.isCopyToFulltext());
         assertFalse(fieldConfiguration.isAggregatable());
@@ -103,7 +102,8 @@ public class FieldConfigurationTest {
         assertFalse(fieldConfiguration.isMultilingual());
         assertFalse(fieldConfiguration.isNestedObject());
 
-        fieldConfiguration = new SuggestFieldConfiguration("mySuggestField");
-        assertEquals("mySuggestField", fieldConfiguration.getName());
+        fieldConfiguration = FieldConfiguration.SUGGEST_FIELD;
+        assertEquals(FieldConfiguration.FIELD_NAME_SUGGEST, fieldConfiguration.getName());
+        assertEquals(ElasticsearchType.COMPLETION.toString(), fieldConfiguration.getElasticsearchType());
     }
 }
