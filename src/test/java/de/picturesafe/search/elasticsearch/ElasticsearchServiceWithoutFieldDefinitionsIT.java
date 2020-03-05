@@ -9,6 +9,7 @@ import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
+import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.spring.configuration.TestConfiguration;
 import org.junit.After;
 import org.junit.Before;
@@ -21,6 +22,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -103,5 +105,26 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
         facetItem = specialFacet.getFacetItems().get(1);
         assertEquals("true", facetItem.getValue());
         assertEquals(1, facetItem.getCount());
+    }
+
+    @Test
+    public void testWithoutId() {
+        indexName = elasticsearchService.createIndex(indexAlias);
+        elasticsearchService.createAlias(indexAlias, indexName);
+        final List<Map<String, Object>> docs = Arrays.asList(
+                DocumentBuilder.withoutId().put("name", "name-1").put("ordinal", 1).build(),
+                DocumentBuilder.withoutId().put("name", "name-2").put("ordinal", 2).build(),
+                DocumentBuilder.withoutId().put("name", "name-3").put("ordinal", 3).build());
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, docs);
+
+        final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("name", "name"),
+                SearchParameter.builder().sortOptions(new SortOption("ordinal", SortOption.Direction.ASC)).build());
+        assertEquals(3, result.getTotalHitCount());
+        assertEquals(3, result.getResultCount());
+
+        final List<String> names = result.getSearchResultItems().stream().map(i -> (String) i.getAttribute("name")).collect(Collectors.toList());
+        assertEquals("name-1", names.get(0));
+        assertEquals("name-2", names.get(1));
+        assertEquals("name-3", names.get(2));
     }
 }

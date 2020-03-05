@@ -141,7 +141,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("should find only one doc", 1, result.getTotalHitCount());
-        assertEquals("did not find reference", 23, getId(result.getHits().get(0)));
+        assertEquals("did not find reference", 23, getId(result.getHits().get(0), -1));
     }
 
     @Test
@@ -166,7 +166,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("should find only one doc", 1, result.getTotalHitCount());
-        assertEquals("did not find reference", 123, getId(result.getHits().get(0)));
+        assertEquals("did not find reference", 123, getId(result.getHits().get(0), -1));
 
         expression = new InExpression("referenceWithSort." + FIELD_TARGET_ID, 7, 8);
         queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
@@ -239,8 +239,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug(searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0)));
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1)));
+        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
+        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
 
         final List<SortOption> sortOptionsDesc = new ArrayList<>();
         sortOptionsDesc.add(new SortOption("referenceWithSort." + FIELD_SORT_ORDER, SortOption.Direction.DESC));
@@ -252,8 +252,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug(searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0)));
-        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1)));
+        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0), -1));
+        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1), -1));
     }
 
     @Test
@@ -278,15 +278,15 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final SortOption sortOption =  new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(sortOption), null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
-        assertEquals("result is not sorted correctly", 1001, getId(result.getHits().get(0)));
-        assertEquals("result is not sorted correctly", 1002, getId(result.getHits().get(1)));
+        assertEquals("result is not sorted correctly", 1001, getId(result.getHits().get(0), -1));
+        assertEquals("result is not sorted correctly", 1002, getId(result.getHits().get(1), -1));
 
         final SortOption filteredSortOption =  new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC);
         filteredSortOption.setFilter(new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888));
         final QueryDto filteredQueryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(filteredSortOption), null, Locale.GERMAN);
         final ElasticsearchResult filteredResult = elasticsearch.search(filteredQueryDto, mappingConfiguration, indexPresetConfiguration);
-        assertEquals("result is not sorted correctly", 1002, getId(filteredResult.getHits().get(0)));
-        assertEquals("result is not sorted correctly", 1001, getId(filteredResult.getHits().get(1)));
+        assertEquals("result is not sorted correctly", 1002, getId(filteredResult.getHits().get(0), -1));
+        assertEquals("result is not sorted correctly", 1001, getId(filteredResult.getHits().get(1), -1));
     }
 
     @Test
@@ -302,8 +302,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug(searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(0)));
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(1)));
+        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(0), -1));
+        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(1), -1));
 
         final List<SortOption> sortOptionsDesc = new ArrayList<>();
         sortOptionsDesc.add(new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.DESC));
@@ -315,8 +315,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug("Hit: " + searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(0)));
-        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(1)));
+        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(0), -1));
+        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(1), -1));
     }
     @Test
     public void testSortOnNote() {
@@ -331,8 +331,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug(searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0)));
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1)));
+        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
+        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
 
         final List<SortOption> sortOptionsDesc = new ArrayList<>();
         sortOptionsDesc.add(new SortOption("referenceWithSort." + FIELD_NOTE, SortOption.Direction.DESC));
@@ -344,8 +344,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug(searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0)));
-        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1)));
+        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0), -1));
+        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1), -1));
     }
 
     @Test
@@ -368,8 +368,8 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
             LOG.debug(searchHit.toString());
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0)));
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1)));
+        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
+        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
     }
 
     @After

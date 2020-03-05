@@ -60,7 +60,7 @@ public interface Elasticsearch {
      * @param execeptionOnFailure       Throw Exception if update of at least one document fails
      * @return                          Status of indexing per document (id, true|false)
      */
-    Map<Long, Boolean> addToIndex(List<Map<String, Object>> documents,
+    Map<String, Boolean> addToIndex(List<Map<String, Object>> documents,
                                   MappingConfiguration mappingConfiguration,
                                   String indexAlias,
                                   boolean applyIndexRefresh,

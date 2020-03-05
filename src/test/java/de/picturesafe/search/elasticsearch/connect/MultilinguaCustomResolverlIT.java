@@ -83,7 +83,7 @@ public class MultilinguaCustomResolverlIT extends AbstractElasticIntegrationTest
         ElasticsearchResult result = search("Titel3", Locale.GERMANY);
         assertEquals(1, result.getTotalHitCount());
         Map<String, Object> hit = result.getHits().get(0);
-        assertEquals(3, getId(hit));
+        assertEquals(3, getId(hit, -1));
         assertEquals("Multilang Titel3 de", hit.get("title.de"));
         assertEquals("Multilang Titel3 en", hit.get("title.en"));
 
@@ -100,7 +100,7 @@ public class MultilinguaCustomResolverlIT extends AbstractElasticIntegrationTest
         final ElasticsearchResult result = search("Multilang", Locale.GERMANY, Collections.singletonList(sortOption));
         assertEquals(5, result.getTotalHitCount());
         final Map<String, Object> hit = result.getHits().get(0);
-        assertEquals(5, getId(hit));
+        assertEquals(5, getId(hit, -1));
         assertEquals("Multilang Titel5 de", hit.get("title.de"));
         assertEquals("Multilang Titel5 en", hit.get("title.en"));
     }

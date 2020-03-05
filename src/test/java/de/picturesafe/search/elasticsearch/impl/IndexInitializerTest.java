@@ -74,7 +74,7 @@ public class IndexInitializerTest {
         for (final List list : addedDocs) {
             for (final Object obj : list) {
                 final Map<String, Object> doc = (Map<String, Object>) obj;
-                assertEquals(++id, getId(doc));
+                assertEquals(++id, getId(doc, -1));
             }
         }
         assertEquals(12, id);

@@ -22,10 +22,8 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Definition of an elasticsearch index mapping
@@ -36,7 +34,6 @@ public class MappingConfiguration {
     private List<LanguageSortConfiguration> languageSortConfigurations;
 
     private Map<String, FieldConfiguration> fieldConfigurationMap = new HashMap<>();
-    private Set<String> sortableFieldNames = new HashSet<>();
 
     /**
      * Constructor
@@ -64,25 +61,6 @@ public class MappingConfiguration {
                                 List<LanguageSortConfiguration> languageSortConfigurations) {
         this(fieldConfigurations);
         this.languageSortConfigurations = languageSortConfigurations;
-        this.sortableFieldNames = getSortableFieldNames(fieldConfigurations);
-    }
-
-    private Set<String> getSortableFieldNames(List<FieldConfiguration> fieldConfigurations) {
-        final Set<String> sortableFieldNames = new HashSet<>();
-
-        for (final FieldConfiguration fieldConfig : fieldConfigurations) {
-            if (fieldConfig.isSortable()) {
-                sortableFieldNames.add(fieldConfig.getName());
-            }
-            if (fieldConfig.isNestedObject()) {
-                for (final FieldConfiguration nestedField : fieldConfig.getNestedFields()) {
-                    if (nestedField.isSortable()) {
-                        sortableFieldNames.add(fieldConfig.getName() + "." + nestedField.getName());
-                    }
-                }
-            }
-        }
-        return sortableFieldNames;
     }
 
     /**
@@ -110,21 +88,12 @@ public class MappingConfiguration {
         return languageSortConfigurations;
     }
 
-    /**
-     * Gets the sortable field names
-     * @return Sortable field names
-     */
-    public Set<String> getSortableFieldNames() {
-        return sortableFieldNames;
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("fieldConfigurations", fieldConfigurations) //--
                 .append("languageSortConfigurations", languageSortConfigurations) //--
                 .append("fieldConfigurationMap", fieldConfigurationMap) //--
-                .append("sortableFieldNames", sortableFieldNames) //--
                 .toString();
     }
 }
