@@ -23,7 +23,6 @@ import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
 import de.picturesafe.search.elasticsearch.config.StandardFieldConfiguration;
-import de.picturesafe.search.elasticsearch.config.SuggestFieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
@@ -126,12 +125,10 @@ public class TestConfiguration {
 
     protected List<FieldConfiguration> fieldConfigurations() {
         final List<FieldConfiguration> testFields = new ArrayList<>();
-        testFields.add(StandardFieldConfiguration.builder(
-                "id", ElasticsearchType.INTEGER).sortable(true).build());
+        testFields.add(FieldConfiguration.ID_FIELD);
+        testFields.add(FieldConfiguration.FULLTEXT_FIELD);
         testFields.add(StandardFieldConfiguration.builder(
                 "title", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).sortable(true).multilingual(true).build());
-        testFields.add(StandardFieldConfiguration.builder(
-                FieldConfiguration.FIELD_NAME_FULLTEXT, ElasticsearchType.TEXT).build());
         testFields.add(StandardFieldConfiguration.builder(
                 "caption", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
         testFields.add(StandardFieldConfiguration.builder(
@@ -151,7 +148,7 @@ public class TestConfiguration {
         testFields.add(StandardFieldConfiguration.builder(
                 "facetDate", ElasticsearchType.DATE).aggregatable(true).build());
         testFields.add(referenceWithSortFieldConfiguration());
-        testFields.add(new SuggestFieldConfiguration());
+        testFields.add(FieldConfiguration.SUGGEST_FIELD);
         return testFields;
     }
 

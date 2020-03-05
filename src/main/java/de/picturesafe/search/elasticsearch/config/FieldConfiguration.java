@@ -28,6 +28,10 @@ public interface FieldConfiguration {
     String FIELD_NAME_FULLTEXT = "fulltext";
     String FIELD_NAME_SUGGEST = "suggest";
 
+    FieldConfiguration ID_FIELD = StandardFieldConfiguration.builder(FIELD_NAME_ID, ElasticsearchType.LONG).sortable(true).build();
+    FieldConfiguration FULLTEXT_FIELD = StandardFieldConfiguration.builder(FIELD_NAME_FULLTEXT, ElasticsearchType.TEXT).build();
+    FieldConfiguration SUGGEST_FIELD = new SuggestFieldConfiguration(FIELD_NAME_SUGGEST);
+
     String getName();
 
     String getElasticsearchType();
