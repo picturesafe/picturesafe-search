@@ -68,6 +68,7 @@ This configuration can be extended later.
 The following example defines two fields for the Elasticsearch index:
 
 * Field 'id' (Elasticsearch type integer, sortable)
+* Field 'fulltext' (Elasticsearch type text)
 * Field 'title' (Elasticsearch type text, within fulltext, aggregatable, sortable)
 
 .Spring configuration
