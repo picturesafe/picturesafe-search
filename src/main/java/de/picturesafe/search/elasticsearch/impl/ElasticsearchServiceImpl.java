@@ -17,9 +17,8 @@
 package de.picturesafe.search.elasticsearch.impl;
 
 import de.picturesafe.search.elasticsearch.DataChangeProcessingMode;
-import de.picturesafe.search.elasticsearch.DocumentProvider;
+import de.picturesafe.search.elasticsearch.ElasticsearchService;
 import de.picturesafe.search.elasticsearch.FieldConfigurationProvider;
-import de.picturesafe.search.elasticsearch.IndexInitializationListener;
 import de.picturesafe.search.elasticsearch.api.RangeFacet;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
@@ -32,7 +31,6 @@ import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
-import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
@@ -51,7 +49,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,18 +64,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static de.picturesafe.search.elasticsearch.DataChangeProcessingMode.BACKGROUND;
 
 @Component
 @SuppressWarnings("unused")
-public class ElasticsearchServiceImpl implements InternalElasticsearchService {
+public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceImpl.class);
     protected static final int DEFAULT_PAGE_SIZE = 100;
@@ -88,12 +78,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
     protected final Elasticsearch elasticsearch;
     protected final FieldConfigurationProvider fieldConfigurationProvider;
     protected final Map<String, IndexPresetConfiguration> indexPresetConfigurationByAlias;
-
-    protected final Map<String, ExecutorService> executors = new ConcurrentHashMap<>();
-    protected final IndexRequestCache indexRequestCache = new IndexRequestCache();
-
-    @Autowired(required = false)
-    protected DocumentProvider documentProvider;
 
     @Value("${elasticsearch.service.default_page_size:" + DEFAULT_PAGE_SIZE + "}")
     protected int defaultPageSize = DEFAULT_PAGE_SIZE;
@@ -117,15 +101,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         for (final IndexPresetConfiguration conf : indexPresetConfigurations) {
             indexPresetConfigurationByAlias.put(conf.getIndexAlias(), conf);
         }
-    }
-
-    /**
-     * Sets the {@link DocumentProvider}
-     *
-     * @param documentProvider {@link DocumentProvider}
-     */
-    public void setDocumentProvider(DocumentProvider documentProvider) {
-        this.documentProvider = documentProvider;
     }
 
     /**
@@ -179,23 +154,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
     @Override
     public ElasticsearchInfo getElasticsearchInfo() {
         return elasticsearch.getElasticsearchInfo();
-    }
-
-    @Override
-    public void createAndInitializeIndex(String indexAlias, boolean rebuildIfExists, IndexInitializationListener listener,
-                                         DataChangeProcessingMode dataChangeProcessingMode) {
-        Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
-        Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
-        Validate.notNull(documentProvider, "DocumentProvider must be set when using index initialization feature!");
-
-        if (aliasExists(indexAlias) && !rebuildIfExists) {
-            throw new AliasAlreadyExistsException("Elasticsearch alias already exists: " + indexAlias);
-        }
-        if (dataChangeProcessingMode == BACKGROUND) {
-            executor(indexAlias).submit(() -> indexInitializer().init(indexAlias, listener));
-        } else {
-            indexInitializer().init(indexAlias, listener);
-        }
     }
 
     @Override
@@ -285,7 +243,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         Validate.notNull(document, "Parameter 'document' may not be null!");
 
         elasticsearch.addToIndex(document, getMappingConfiguration(indexAlias, true), indexAlias, dataChangeProcessingMode.isRefresh());
-        indexRequestCache.put(indexAlias, IndexRequest.add(document));
     }
 
     @Override
@@ -294,14 +251,7 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(documents, "Parameter 'documents' may not be null!");
 
-        addToIndex(getMappingConfiguration(indexAlias, true), indexAlias, dataChangeProcessingMode, documents);
-        indexRequestCache.put(indexAlias, IndexRequest.add(documents));
-    }
-
-    @Override
-    public void addToIndex(MappingConfiguration mappingConfiguration, String indexName, DataChangeProcessingMode dataChangeProcessingMode,
-                           List<Map<String, Object>> documents) {
-        elasticsearch.addToIndex(documents, mappingConfiguration, indexName, dataChangeProcessingMode.isRefresh(), true);
+        elasticsearch.addToIndex(documents, getMappingConfiguration(indexAlias, true), indexAlias, dataChangeProcessingMode.isRefresh(), true);
     }
 
     @Override
@@ -311,7 +261,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
 
         final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
         elasticsearch.removeFromIndex(getMappingConfiguration(indexAlias, false), indexPresetConfiguration, dataChangeProcessingMode.isRefresh(), id);
-        indexRequestCache.put(indexAlias, IndexRequest.remove(id));
     }
 
     @Override
@@ -322,7 +271,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
 
         final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
         elasticsearch.removeFromIndex(getMappingConfiguration(indexAlias, false), indexPresetConfiguration, dataChangeProcessingMode.isRefresh(), ids);
-        indexRequestCache.put(indexAlias, IndexRequest.remove(ids));
     }
 
     @Override
@@ -357,11 +305,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
     }
 
     @Override
-    public MappingConfiguration getMappingConfiguration(String indexAlias) {
-        return getMappingConfiguration(indexAlias, true);
-    }
-
-    @Override
     public Map<String, Object> getDocument(String indexAlias, long id) {
         return elasticsearch.getDocument(indexAlias, id);
     }
@@ -375,31 +318,6 @@ public class ElasticsearchServiceImpl implements InternalElasticsearchService {
 
     protected IndexPresetConfiguration getIndexPresetConfiguration(String indexAlias) {
         return indexPresetConfigurationByAlias.get(indexAlias);
-    }
-
-    protected ExecutorService executor(String indexAlias) {
-        return executors.computeIfAbsent(indexAlias, ElasticsearchServiceImpl::buildThreadExecutor);
-    }
-
-    protected static ThreadPoolExecutor buildThreadExecutor(String indexAlias) {
-        return new ThreadPoolExecutor(
-                0,
-                1,
-                10L,
-                TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(),
-                buildThreadFactoryForAlias(indexAlias)
-        );
-    }
-
-    protected static BasicThreadFactory buildThreadFactoryForAlias(String indexAlias) {
-        return new BasicThreadFactory.Builder()
-                .namingPattern("indexer-pool-" + indexAlias + "-worker-%d")
-                .build();
-    }
-
-    protected IndexInitializer indexInitializer() {
-        return new IndexInitializer(this, documentProvider, indexRequestCache);
     }
 
     protected int getPageSize(SearchParameter searchParameter) {
