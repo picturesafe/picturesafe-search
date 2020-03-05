@@ -27,10 +27,6 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     private String name;
     private String elasticsearchType;
 
-    public SuggestFieldConfiguration() {
-        this(FieldConfiguration.FIELD_NAME_SUGGEST);
-    }
-
     public SuggestFieldConfiguration(String name) {
         Validate.isTrue(!name.contains("."), "Parameter 'name' must not contain a '.'!");
         this.name = name;
