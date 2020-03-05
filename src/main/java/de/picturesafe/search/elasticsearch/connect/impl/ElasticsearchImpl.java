@@ -708,7 +708,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                     .missing("_" + missingValueSortPosition.getValue())
                     .order(sortOrder);
         } else {
-            throw new RuntimeException("An analyzed string field cant be used for sorting: " + fieldConfiguration.getName());
+            throw new RuntimeException("The field '" + fieldConfiguration.getName() + "' is not configured as sortable!");
         }
     }
 
