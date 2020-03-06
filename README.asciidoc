@@ -65,7 +65,7 @@ Add the current version of the picturesafe-search library to your project.
 Implement a configuration class that imports the `DefaultElasticConfiguration.class`.
 This configuration can be extended later.
 
-The following example defines two fields for the Elasticsearch index:
+The following example defines three fields for the Elasticsearch index:
 
 * Field 'id' (Elasticsearch type integer, sortable)
 * Field 'fulltext' (Elasticsearch type text)
