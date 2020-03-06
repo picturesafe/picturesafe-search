@@ -23,6 +23,8 @@ import de.picturesafe.search.elasticsearch.connect.query.FulltextQueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.NestedQueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.OperationExpressionQueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
+import de.picturesafe.search.elasticsearch.connect.query.QuerystringPreprocessor;
+import de.picturesafe.search.elasticsearch.connect.query.preprocessor.NoOpQuerystringPreprocessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,6 +52,11 @@ public class DefaultQueryConfiguration {
     @Bean
     public QueryConfiguration queryConfiguration() {
         return new QueryConfiguration();
+    }
+
+    @Bean
+    public QuerystringPreprocessor querystringPreprocessor() {
+        return new NoOpQuerystringPreprocessor();
     }
 
     @Bean
