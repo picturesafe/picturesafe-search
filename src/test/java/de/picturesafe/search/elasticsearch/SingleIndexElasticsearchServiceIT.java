@@ -230,7 +230,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new FulltextExpression("Hamburg"),
-                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.DESC)).build());
+                SearchParameter.builder().sortOptions(SortOption.desc("id")).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -238,7 +238,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new FulltextExpression("Hamburg"),
-                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.ASC)).build());
+                SearchParameter.builder().sortOptions(SortOption.asc("id")).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);

@@ -72,7 +72,7 @@ public class ElasticsearchServiceImplTest {
     public void testCreateQueryDto() {
         final Expression expression = new EmptyExpression();
         final List<String> fieldsToResolve = Arrays.asList("field1", "field2", "field3");
-        final List<SortOption> sortOptions = Arrays.asList(new SortOption("field3"), new SortOption("field2"));
+        final List<SortOption> sortOptions = Arrays.asList(SortOption.asc("field3"), SortOption.asc("field2"));
         final List<AggregationField> aggregationFields = Arrays.asList(new AggregationField("agg1", 5), new AggregationField("agg2", 10));
         final int start = 11;
         final int limit = 111;

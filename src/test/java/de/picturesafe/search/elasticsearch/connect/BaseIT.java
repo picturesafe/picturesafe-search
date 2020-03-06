@@ -47,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -232,10 +233,8 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     @Test
     public void testDescSortOrder() {
         final Expression expression = new ValueExpression("id", LE, 3);
-        final List<SortOption> sortOptionList = new ArrayList<>();
-        final SortOption sortOption = new SortOption("facetResolved", SortOption.Direction.DESC);
-        sortOptionList.add(sortOption);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptionList, null, Locale.GERMAN);
+        final List<SortOption> sortOptions = Collections.singletonList(SortOption.desc("facetResolved"));
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptions, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Desc sort option not working: indexAlias = " + indexAlias, "3", result.getHits().get(0).get("facetResolved"));
@@ -245,10 +244,8 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     @Test
     public void testAscSortOrder() {
         final Expression expression = new ValueExpression("id", LE, 3);
-        final List<SortOption> sortOptionList = new ArrayList<>();
-        final SortOption sortOption = new SortOption("facetResolved", SortOption.Direction.ASC);
-        sortOptionList.add(sortOption);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptionList, null, Locale.GERMAN);
+        final List<SortOption> sortOptions = Collections.singletonList(SortOption.asc("facetResolved"));
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptions, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Asc sort option not working: indexAlias = " + indexAlias, "1", result.getHits().get(0).get("facetResolved"));
@@ -258,10 +255,8 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     @Test
     public void testNonSupportedSortField() {
         final Expression expression = new FulltextExpression("wert");
-        final List<SortOption> sortOptionList = new ArrayList<>();
-        final SortOption sortOption = new SortOption("caption", SortOption.Direction.ASC);
-        sortOptionList.add(sortOption);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptionList, null, Locale.GERMAN);
+        final List<SortOption> sortOptions = Collections.singletonList(SortOption.asc("caption"));
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptions, null, Locale.GERMAN);
 
         Exception exception = null;
         try {

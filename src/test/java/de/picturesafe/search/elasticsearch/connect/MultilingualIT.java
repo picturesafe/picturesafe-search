@@ -97,7 +97,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testSort() {
-        final SortOption sortOption = new SortOption("title", SortOption.Direction.DESC);
+        final SortOption sortOption = SortOption.desc("title");
         final ElasticsearchResult result = search("Multilang", Locale.GERMANY, Collections.singletonList(sortOption));
         assertEquals(DOC_COUNT, result.getTotalHitCount());
         final Map<String, Object> hit = result.getHits().get(0);

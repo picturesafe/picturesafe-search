@@ -80,7 +80,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new FulltextExpression("Hamburg"),
-                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.DESC)).build());
+                SearchParameter.builder().sortOptions(SortOption.desc("id")).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -88,7 +88,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new FulltextExpression("Hamburg"),
-                SearchParameter.builder().sortOptions(new SortOption("id", SortOption.Direction.ASC)).build());
+                SearchParameter.builder().sortOptions(SortOption.asc("id")).build());
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
@@ -190,7 +190,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
         final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("title", "Multilang"),
-                SearchParameter.builder().language("de").sortOptions(new SortOption("text_multilang")).build());
+                SearchParameter.builder().language("de").sortOptions(SortOption.asc("text_multilang")).build());
         assertEquals(4, result.getResultCount());
         assertEquals(4713, result.getSearchResultItems().get(0).getId());
         assertEquals(4712, result.getSearchResultItems().get(1).getId());

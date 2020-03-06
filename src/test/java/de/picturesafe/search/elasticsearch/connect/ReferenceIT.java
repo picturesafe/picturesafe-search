@@ -230,8 +230,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     public void testSortOnSortOrder() {
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 5);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
-        final List<SortOption> sortOptionsAsc = new ArrayList<>();
-        sortOptionsAsc.add(new SortOption("referenceWithSort." + FIELD_SORT_ORDER, SortOption.Direction.ASC));
+        final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_SORT_ORDER));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
@@ -242,9 +241,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
         assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
 
-        final List<SortOption> sortOptionsDesc = new ArrayList<>();
-        sortOptionsDesc.add(new SortOption("referenceWithSort." + FIELD_SORT_ORDER, SortOption.Direction.DESC));
-
+        final List<SortOption> sortOptionsDesc = Collections.singletonList(SortOption.desc("referenceWithSort." + FIELD_SORT_ORDER));
         final QueryDto queryDtoDesc = new QueryDto(expression, queryRangeDto, sortOptionsDesc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
 
@@ -275,14 +272,14 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
 
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
-        final SortOption sortOption =  new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC);
+        final SortOption sortOption =  SortOption.asc("referenceWithSort." + FIELD_LINKING_TIME);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(sortOption), null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("result is not sorted correctly", 1001, getId(result.getHits().get(0), -1));
         assertEquals("result is not sorted correctly", 1002, getId(result.getHits().get(1), -1));
 
-        final SortOption filteredSortOption =  new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC);
-        filteredSortOption.setFilter(new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888));
+        final SortOption filteredSortOption =  SortOption.asc("referenceWithSort." + FIELD_LINKING_TIME)
+                .filter(new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888));
         final QueryDto filteredQueryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(filteredSortOption), null, Locale.GERMAN);
         final ElasticsearchResult filteredResult = elasticsearch.search(filteredQueryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("result is not sorted correctly", 1002, getId(filteredResult.getHits().get(0), -1));
@@ -293,8 +290,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     public void testSortOnLinkingTime() {
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 5);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
-        final List<SortOption> sortOptionsAsc = new ArrayList<>();
-        sortOptionsAsc.add(new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.ASC));
+        final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_LINKING_TIME));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
@@ -305,9 +301,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(0), -1));
         assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(1), -1));
 
-        final List<SortOption> sortOptionsDesc = new ArrayList<>();
-        sortOptionsDesc.add(new SortOption("referenceWithSort." + FIELD_LINKING_TIME, SortOption.Direction.DESC));
-
+        final List<SortOption> sortOptionsDesc = Collections.singletonList(SortOption.desc("referenceWithSort." + FIELD_LINKING_TIME));
         final QueryDto queryDtoDesc = new QueryDto(expression, queryRangeDto, sortOptionsDesc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
 
@@ -322,8 +316,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     public void testSortOnNote() {
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 5);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
-        final List<SortOption> sortOptionsAsc = new ArrayList<>();
-        sortOptionsAsc.add(new SortOption("referenceWithSort." + FIELD_NOTE, SortOption.Direction.ASC));
+        final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_NOTE));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
@@ -334,9 +327,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
         assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
 
-        final List<SortOption> sortOptionsDesc = new ArrayList<>();
-        sortOptionsDesc.add(new SortOption("referenceWithSort." + FIELD_NOTE, SortOption.Direction.DESC));
-
+        final List<SortOption> sortOptionsDesc = Collections.singletonList(SortOption.desc("referenceWithSort." + FIELD_NOTE));
         final QueryDto queryDtoDesc = new QueryDto(expression, queryRangeDto, sortOptionsDesc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
 
@@ -359,8 +350,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
                 new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 5));
 
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
-        final List<SortOption> sortOptionsAsc = new ArrayList<>();
-        sortOptionsAsc.add(new SortOption("referenceWithSort." + FIELD_SORT_ORDER, SortOption.Direction.ASC));
+        final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_SORT_ORDER));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
         final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 

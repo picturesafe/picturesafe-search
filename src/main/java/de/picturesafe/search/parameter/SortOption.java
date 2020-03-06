@@ -28,30 +28,29 @@ public class SortOption {
 
     public enum Direction {ASC, DESC}
 
-    private String fieldName;
-    private Direction sortDirection = Direction.ASC;
+    private final String fieldName;
+    private final Direction sortDirection;
     private Expression filter;
 
     /**
-     * Default constructor
+     * Creates a sort option with ascending direction.
+     * @param fieldName Name of field to sort by
+     * @return SortOption
      */
-    public SortOption() {
+    public static SortOption asc(String fieldName) {
+        return new SortOption(fieldName, Direction.ASC);
     }
 
     /**
-     * Constructor
-     * @param fieldName Field name
+     * Creates a sort option with descending direction.
+     * @param fieldName Name of field to sort by
+     * @return SortOption
      */
-    public SortOption(String fieldName) {
-        this.fieldName = fieldName;
+    public static SortOption desc(String fieldName) {
+        return new SortOption(fieldName, Direction.DESC);
     }
 
-    /**
-     * Constructor
-     * @param fieldName Field name
-     * @param sortDirection Sort direction
-     */
-    public SortOption(String fieldName, Direction sortDirection) {
+    private SortOption(String fieldName, Direction sortDirection) {
         this.fieldName = fieldName;
         this.sortDirection = sortDirection;
     }
@@ -65,27 +64,11 @@ public class SortOption {
     }
 
     /**
-     * Sets the field name
-     * @param fieldName Field name
-     */
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
-
-    /**
      * Gets the sort direction
      * @return Sort direction
      */
     public Direction getSortDirection() {
         return sortDirection;
-    }
-
-    /**
-     * Sets the sort direction
-     * @param sortDirection Sort direction
-     */
-    public void setSortDirection(Direction sortDirection) {
-        this.sortDirection = sortDirection;
     }
 
     /**
@@ -102,6 +85,16 @@ public class SortOption {
      */
     public void setFilter(Expression filter) {
         this.filter = filter;
+    }
+
+    /**
+     * Sets an optional filter expression (for nested objects).
+     * @param filter Filter expression
+     * @return SortOption
+     */
+    public SortOption filter(Expression filter) {
+        setFilter(filter);
+        return this;
     }
 
     @Override
