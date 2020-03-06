@@ -118,7 +118,7 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, docs);
 
         final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("name", "name"),
-                SearchParameter.builder().sortOptions(new SortOption("ordinal", SortOption.Direction.ASC)).build());
+                SearchParameter.builder().sortOptions(SortOption.asc("ordinal")).build());
         assertEquals(3, result.getTotalHitCount());
         assertEquals(3, result.getResultCount());
 
