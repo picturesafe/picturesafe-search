@@ -93,13 +93,15 @@ public class Config {
 
 ==== Configuration properties
 
-Add a file `elasticsearch.properties` to the classpath of your application and define the following key (this configuration can be extended later):
+Add a file `elasticsearch.properties` to the classpath of your application and define the following key:
 
 .Property file
 [source]
 ----
 elasticsearch.index.alias=picturesafe-search-sample
 ----
+
+This configuration can be extended later, see `src/main/resources/elasticsearch.template.properties`.
 
 ==== Service implementation
 
