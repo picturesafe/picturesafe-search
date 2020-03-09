@@ -15,32 +15,26 @@
  */
 package de.picturesafe.search.elasticsearch.connect.query.preprocessor;
 
-import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class StandardQuerystringPreprocessorTest {
+public abstract class AbstractStandardQuerystringPreprocessorTest {
 
-    private StandardQuerystringPreprocessor preprocessor;
-
-    @Before
-    public void before() {
-        preprocessor = new StandardQuerystringPreprocessor(new QueryConfiguration());
-        preprocessor.setAutoBracket(false);
-        preprocessor.setInsertMissingOperators(false);
-    }
+    protected StandardQuerystringPreprocessor preprocessor;
 
     @Test
     public void testNoPhrase() {
+        preprocessor.setAutoBracket(false);
+        preprocessor.setInsertMissingOperators(false);
+
         String query = "term1,term2";
         String processedQuery = preprocessor.process(query);
         assertEquals("term1 || term2", processedQuery);
 
         query = "term1 , term2";
         processedQuery = preprocessor.process(query);
-        assertEquals("term1  ||  term2", processedQuery);
+        assertEquals("term1 || term2", processedQuery);
 
         query = "term1 | term2";
         processedQuery = preprocessor.process(query);
@@ -121,6 +115,9 @@ public class StandardQuerystringPreprocessorTest {
 
     @Test
     public void testPhrase() {
+        preprocessor.setAutoBracket(false);
+        preprocessor.setInsertMissingOperators(false);
+
         String query = "\"term1,term2\"";
         String processedQuery = preprocessor.process(query);
         assertEquals(query, processedQuery);
@@ -162,6 +159,9 @@ public class StandardQuerystringPreprocessorTest {
 
     @Test
     public void testPhraseWithEscape() {
+        preprocessor.setAutoBracket(false);
+        preprocessor.setInsertMissingOperators(false);
+
         String query = "\"term1\\\"term2,term3\"";
         String processedQuery = preprocessor.process(query);
         assertEquals(query, processedQuery);
@@ -173,6 +173,9 @@ public class StandardQuerystringPreprocessorTest {
 
     @Test
     public void testUnclosedPhrase() {
+        preprocessor.setAutoBracket(false);
+        preprocessor.setInsertMissingOperators(false);
+
         String query = "\"term1 term2";
         String processedQuery = preprocessor.process(query);
         assertEquals(query, processedQuery);
@@ -184,6 +187,7 @@ public class StandardQuerystringPreprocessorTest {
 
     @Test
     public void testInsertMissingOperators() {
+        preprocessor.setAutoBracket(false);
         preprocessor.setInsertMissingOperators(true);
 
         String query = "term1 term2";
@@ -210,6 +214,7 @@ public class StandardQuerystringPreprocessorTest {
     @Test
     public void testAutoBracket() {
         preprocessor.setAutoBracket(true);
+        preprocessor.setInsertMissingOperators(false);
 
         String query = "term1 AND term2";
         String processedQuery = preprocessor.process(query);
@@ -267,6 +272,7 @@ public class StandardQuerystringPreprocessorTest {
     @Test
     public void testAutoBracketWithNot() {
         preprocessor.setAutoBracket(true);
+        preprocessor.setInsertMissingOperators(false);
 
         String query = "term1 AND NOT term2";
         String processedQuery = preprocessor.process(query);
@@ -338,6 +344,7 @@ public class StandardQuerystringPreprocessorTest {
     @Test
     public void testAutoBracketWithManualBrackets() {
         preprocessor.setAutoBracket(true);
+        preprocessor.setInsertMissingOperators(false);
 
         String query = "(term1 || term2)";
         String processedQuery = preprocessor.process(query);
@@ -355,6 +362,7 @@ public class StandardQuerystringPreprocessorTest {
     @Test
     public void testAutoBracketWithIncorrectQueries() {
         preprocessor.setAutoBracket(true);
+        preprocessor.setInsertMissingOperators(false);
 
         String query = "AND term1";
         String processedQuery = preprocessor.process(query);

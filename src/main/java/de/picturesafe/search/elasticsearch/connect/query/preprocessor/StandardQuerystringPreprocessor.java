@@ -21,11 +21,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.Operator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class StandardQuerystringPreprocessor implements QuerystringPreprocessor {
 
@@ -38,51 +41,43 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
     static final String TOKEN_NOT = "NOT";
     static final String TOKEN_NEAR_BY = "~";
 
-    private static final String DEFAULT_TOKEN_DELIMITERS = " ,\"(){}[]:=\\/^~";
-    private static final boolean DEFAULT_AUTO_BRACKET = true;
-    private static final boolean DEFAULT_INSERT_MISSING_OPERATORS = true;
-    private static final Map<String, String> DEFAULT_REPLACEMENTS;
+    private static final Logger LOGGER = LoggerFactory.getLogger(StandardQuerystringPreprocessor.class);
+    private static final List<String> REPLACABLE_SEPARATORS = Arrays.asList("/", "{", "}", "[", "]", "^");
 
-    private String tokenDelimiters = DEFAULT_TOKEN_DELIMITERS;
-    private Map<String, String> replacements = DEFAULT_REPLACEMENTS;
-    private boolean autoBracket = DEFAULT_AUTO_BRACKET;
-    private boolean insertMissingOperators = DEFAULT_INSERT_MISSING_OPERATORS;
+    @Value("${elasticsearch.querystring_preprocessor.enabled:true}")
+    private boolean enabled = true;
 
-    private final AutoBracketOptimizer queryAutoBracketOptimizer = new AutoBracketOptimizer();
-    private final DefaultOperatorOptimizer queryDefaultOperatorOptimizer;
+    @Value("${elasticsearch.querystring_preprocessor.auto_bracket:true}")
+    private boolean autoBracket = true;
 
-    static {
-        DEFAULT_REPLACEMENTS = new HashMap<>();
-        DEFAULT_REPLACEMENTS.put(",", " " + TOKEN_OR + " ");  // Blanks are necessary, do not remove!
-        DEFAULT_REPLACEMENTS.put("|", TOKEN_OR);
-        DEFAULT_REPLACEMENTS.put("oder", TOKEN_OR);
-        DEFAULT_REPLACEMENTS.put("or", TOKEN_OR);
-        DEFAULT_REPLACEMENTS.put("&", TOKEN_AND);
-        DEFAULT_REPLACEMENTS.put("+", TOKEN_AND);
-        DEFAULT_REPLACEMENTS.put("und", TOKEN_AND);
-        DEFAULT_REPLACEMENTS.put("and", TOKEN_AND);
-        DEFAULT_REPLACEMENTS.put("-", TOKEN_NOT);
-        DEFAULT_REPLACEMENTS.put("nicht", TOKEN_NOT);
-        DEFAULT_REPLACEMENTS.put("not", TOKEN_NOT); // Convert lowercase "not" to uppercase "NOT" because Elasticsearch only supports uppercase.
-        DEFAULT_REPLACEMENTS.put("/", " ");
-        DEFAULT_REPLACEMENTS.put("{", " ");
-        DEFAULT_REPLACEMENTS.put("}", " ");
-        DEFAULT_REPLACEMENTS.put("[", " ");
-        DEFAULT_REPLACEMENTS.put("]", " ");
-        DEFAULT_REPLACEMENTS.put("^", " ");
-    }
+    @Value("${elasticsearch.querystring_preprocessor.insert_missing_operators:true}")
+    private boolean insertMissingOperators = true;
+
+    @Value("${elasticsearch.querystring_preprocessor.token_delimiters:, \"(){}[]:=\\/^~}")
+    private String tokenDelimiters = ", \"(){}[]:=\\/^~";
+
+    @Value("#{'${elasticsearch.querystring_preprocessor.synonyms.AND:and und & +}'.split(' ')}")
+    private List<String> synonymsForAnd = Arrays.asList("and", "und", "&", "+");
+
+    @Value("#{'${elasticsearch.querystring_preprocessor.synonyms.OR:or oder | ,}'.split(' ')}")
+    private List<String> synonymsForOr = Arrays.asList("or", "oder", "|", ",");
+
+    @Value("#{'${elasticsearch.querystring_preprocessor.synonyms.NOT:not nicht -}'.split(' ')}")
+    private List<String> synonymsForNot = Arrays.asList("not", "nicht", "-");
+
+    private final Lock lock = new ReentrantLock();
+    private volatile Map<String, String> replacements;
+
+    private final AutoBracketOptimizer autoBracketOptimizer = new AutoBracketOptimizer();
+    private final DefaultOperatorOptimizer defaultOperatorOptimizer;
 
     public StandardQuerystringPreprocessor(QueryConfiguration queryConfiguration) {
         final String defaultOperator = (queryConfiguration.getDefaultQueryStringOperator() == Operator.OR) ? TOKEN_OR : TOKEN_AND;
-        queryDefaultOperatorOptimizer = new DefaultOperatorOptimizer(defaultOperator);
+        defaultOperatorOptimizer =  new DefaultOperatorOptimizer(defaultOperator);
     }
 
-    public void setTokenDelimiters(String tokenDelimiters) {
-        this.tokenDelimiters = tokenDelimiters;
-    }
-
-    public void setReplacements(Map<String, String> replacements) {
-        this.replacements = replacements;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public void setAutoBracket(boolean autoBracket) {
@@ -91,6 +86,10 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
 
     public void setInsertMissingOperators(boolean insertMissingOperators) {
         this.insertMissingOperators = insertMissingOperators;
+    }
+
+    public void setReplacements(Map<String, String> replacements) {
+        this.replacements = replacements;
     }
 
     public String process(String query) {
@@ -130,7 +129,26 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
         }
 
         finalizeContext(context);
-        return toString(context.tokens);
+        final String result = toString(context.tokens);
+        LOGGER.debug("{}: {} -> {}", this, query, result);
+        return result;
+    }
+
+    private void ensureInitialized() {
+        if (replacements == null) {
+            lock.lock();
+            try {
+                if (replacements == null) {
+                    replacements = new HashMap<>();
+                    synonymsForAnd.forEach(s -> replacements.put(s, TOKEN_AND));
+                    synonymsForOr.forEach(s -> replacements.put(s, TOKEN_OR));
+                    synonymsForNot.forEach(s -> replacements.put(s, TOKEN_NOT));
+                    REPLACABLE_SEPARATORS.stream().filter(s -> tokenDelimiters.contains(s)).forEach(s -> replacements.put(s, " "));
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
     }
 
     private void beginPhrase(PreprocessorContext context) {
@@ -172,30 +190,47 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
     }
 
     private void optimizeQuery(PreprocessorContext context) {
-        context.tokens = joinTokensWithoutBlanks(context.tokens);
+        context.tokens = normalizeTokens(context.tokens);
 
         if (insertMissingOperators) {
-            context.tokens = queryDefaultOperatorOptimizer.optimize(context.tokens);
+            context.tokens = defaultOperatorOptimizer.optimize(context.tokens);
         }
         if (autoBracket) {
-            context.tokens = queryAutoBracketOptimizer.optimize(context.tokens);
+            context.tokens = autoBracketOptimizer.optimize(context.tokens);
         }
     }
 
-    private List<String> joinTokensWithoutBlanks(List<String> tokens) {
+    private List<String> normalizeTokens(List<String> tokens) {
         final ArrayList<String> result = new ArrayList<>(tokens.size());
 
         StringBuilder joinedTokens = new StringBuilder();
-        for (String token : tokens) {
-            if (StringUtils.isNotBlank(token) && !(token.equals("(") | token.equals(")"))) {
-                joinedTokens.append(token);
-            } else {
+        String previousToken = " ";
+        String nextToken;
+        for (int i = 0; i < tokens.size(); i++) {
+            final String token = tokens.get(i);
+            if (isBinaryOperator(token)) {
+                if (joinedTokens.length() > 0) {
+                    result.add(joinedTokens.toString());
+                    joinedTokens = new StringBuilder();
+                }
+                if (!previousToken.endsWith(" ")) {
+                    result.add(" ");
+                }
+                result.add(token);
+                nextToken = (i < tokens.size() - 1) ? tokens.get(i + 1) : " ";
+                if (!nextToken.startsWith(" ")) {
+                    result.add(" ");
+                }
+            } else if (StringUtils.isBlank(token) || isBracket(token)) {
                 if (joinedTokens.length() > 0) {
                     result.add(joinedTokens.toString());
                     joinedTokens = new StringBuilder();
                 }
                 result.add(token);
+            } else {
+                joinedTokens.append(token);
             }
+            previousToken = token;
         }
 
         if (joinedTokens.length() > 0) {
@@ -203,6 +238,14 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
         }
 
         return result;
+    }
+
+    private boolean isBinaryOperator(String token) {
+        return token.equals(TOKEN_AND) || token.equals(TOKEN_OR);
+    }
+
+    private boolean isBracket(String token) {
+        return token.equals("(") || token.equals(")");
     }
 
     private String toString(List<String> tokens) {
@@ -213,11 +256,24 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
         return result.toString();
     }
 
-    private class PreprocessorContext {
+    private static class PreprocessorContext {
         List<String> tokens = new ArrayList<>();
         StringBuilder phrase = null;
         String token;
         boolean isPhrase = false;
         boolean isEscape = false;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
+                .append("enabled", enabled) //--
+                .append("autoBracket", autoBracket) //--
+                .append("insertMissingOperators", insertMissingOperators) //--
+                .append("tokenDelimiters", tokenDelimiters) //--
+                .append("synonymsForAnd", synonymsForAnd) //--
+                .append("synonymsForOr", synonymsForOr) //--
+                .append("synonymsForNot", synonymsForNot) //--
+                .toString();
     }
 }

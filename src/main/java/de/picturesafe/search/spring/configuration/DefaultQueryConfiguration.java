@@ -23,8 +23,7 @@ import de.picturesafe.search.elasticsearch.connect.query.FulltextQueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.NestedQueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.OperationExpressionQueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
-import de.picturesafe.search.elasticsearch.connect.query.QuerystringPreprocessor;
-import de.picturesafe.search.elasticsearch.connect.query.preprocessor.NoOpQuerystringPreprocessor;
+import de.picturesafe.search.elasticsearch.connect.query.preprocessor.StandardQuerystringPreprocessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +37,7 @@ import static de.picturesafe.search.elasticsearch.connect.TimeZoneAware.DEFAULT_
 
 @Configuration
 @PropertySource("classpath:elasticsearch.properties")
-@Import({FulltextQueryFactory.class, NestedQueryFactory.class, OperationExpressionQueryFactory.class})
+@Import({FulltextQueryFactory.class, NestedQueryFactory.class, OperationExpressionQueryFactory.class, StandardQuerystringPreprocessor.class})
 public class DefaultQueryConfiguration {
 
     @Value("${elasticsearch.service.time_zone:" + DEFAULT_TIME_ZONE + "}")
@@ -52,11 +51,6 @@ public class DefaultQueryConfiguration {
     @Bean
     public QueryConfiguration queryConfiguration() {
         return new QueryConfiguration();
-    }
-
-    @Bean
-    public QuerystringPreprocessor querystringPreprocessor() {
-        return new NoOpQuerystringPreprocessor();
     }
 
     @Bean
