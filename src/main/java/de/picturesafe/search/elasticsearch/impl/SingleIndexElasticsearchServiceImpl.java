@@ -5,12 +5,12 @@ import de.picturesafe.search.elasticsearch.ElasticsearchService;
 import de.picturesafe.search.elasticsearch.SingleIndexElasticsearchService;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
-import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.SuggestExpression;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.SearchParameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,11 +29,12 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
 
     @Autowired
     public SingleIndexElasticsearchServiceImpl(ElasticsearchService elasticsearchService,
-                                               IndexPresetConfiguration indexPresetConfiguration) {
+                                               List<IndexPresetConfiguration> indexPresetConfigurations) {
         this.elasticsearchService = elasticsearchService;
-        this.indexPresetConfiguration = indexPresetConfiguration;
+        this.indexPresetConfiguration = indexPresetConfigurations.get(0); // Compatibility to ElasticsearchServiceImpl
         this.indexAlias = indexPresetConfiguration.getIndexAlias();
     }
+
 
     public ElasticsearchService getElasticsearchService() {
         return elasticsearchService;
