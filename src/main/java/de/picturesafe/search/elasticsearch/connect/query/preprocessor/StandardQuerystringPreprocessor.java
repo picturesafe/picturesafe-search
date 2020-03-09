@@ -17,8 +17,14 @@ package de.picturesafe.search.elasticsearch.connect.query.preprocessor;
 
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
 import de.picturesafe.search.elasticsearch.connect.query.QuerystringPreprocessor;
+import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.elasticsearch.index.query.Operator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +36,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@Component
 public class StandardQuerystringPreprocessor implements QuerystringPreprocessor {
 
     static final String PHRASE_DELIMITER = "\"";
@@ -88,11 +95,29 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
         this.insertMissingOperators = insertMissingOperators;
     }
 
-    public void setReplacements(Map<String, String> replacements) {
-        this.replacements = replacements;
+    public void setTokenDelimiters(String tokenDelimiters) {
+        this.tokenDelimiters = tokenDelimiters;
     }
 
+    public void setSynonymsForAnd(List<String> synonymsForAnd) {
+        this.synonymsForAnd = synonymsForAnd;
+    }
+
+    public void setSynonymsForOr(List<String> synonymsForOr) {
+        this.synonymsForOr = synonymsForOr;
+    }
+
+    public void setSynonymsForNot(List<String> synonymsForNot) {
+        this.synonymsForNot = synonymsForNot;
+    }
+
+    @Override
     public String process(String query) {
+        return enabled ? doProcess(query) : query;
+    }
+
+    private String doProcess(String query) {
+        ensureInitialized();
         final PreprocessorContext context = new PreprocessorContext();
 
         for (final StringTokenizer st = new StringTokenizer(query, tokenDelimiters, true); st.hasMoreTokens();) {
