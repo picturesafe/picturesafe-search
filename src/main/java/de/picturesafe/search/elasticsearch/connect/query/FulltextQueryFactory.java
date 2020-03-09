@@ -38,10 +38,16 @@ import static de.picturesafe.search.expression.ConditionExpression.Comparison.NO
 public class FulltextQueryFactory implements QueryFactory {
 
     private QueryConfiguration queryConfig;
+    private QuerystringPreprocessor preprocessor;
 
     @Autowired
     public FulltextQueryFactory(QueryConfiguration queryConfig) {
         this.queryConfig = queryConfig;
+    }
+
+    @Autowired
+    public void setPreprocessor(QuerystringPreprocessor preprocessor) {
+        this.preprocessor = preprocessor;
     }
 
     @Override
@@ -60,7 +66,7 @@ public class FulltextQueryFactory implements QueryFactory {
         final ValueExpression valueExpression = (ValueExpression) parameter;
         final String value = valueExpression.getValue().toString();
         if (!StringUtils.isBlank(value)) {
-            QueryStringQueryBuilder result = QueryBuilders.queryStringQuery(adjustPhrase(value))
+            QueryStringQueryBuilder result = QueryBuilders.queryStringQuery(preprocess(value))
                     .field(FieldConfiguration.FIELD_NAME_FULLTEXT)
                     .defaultOperator(queryConfig.getDefaultQueryStringOperator());
             if (value.contains("*") || value.contains("?")) {
@@ -76,10 +82,11 @@ public class FulltextQueryFactory implements QueryFactory {
         return null;
     }
 
-    private String adjustPhrase(String value) {
-        if (PhraseMatchHelper.matchPhrase(value)) {
-            return PhraseMatchHelper.replacePhraseMatchChars(value);
+    private String preprocess(String queryString) {
+        queryString = PhraseMatchHelper.replacePhraseMatchChars(queryString);
+        if (preprocessor != null) {
+            queryString = preprocessor.process(queryString);
         }
-        return value;
+        return queryString;
     }
 }
