@@ -48,8 +48,8 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
     private boolean autoBracket = DEFAULT_AUTO_BRACKET;
     private boolean insertMissingOperators = DEFAULT_INSERT_MISSING_OPERATORS;
 
-    private final OptimizerAutoBracket queryOptimizerAutoBracket = new OptimizerAutoBracket();
-    private final OptimizerDefaultOperator queryOptimizerDefaultOperator;
+    private final AutoBracketOptimizer queryAutoBracketOptimizer = new AutoBracketOptimizer();
+    private final DefaultOperatorOptimizer queryDefaultOperatorOptimizer;
 
     static {
         DEFAULT_REPLACEMENTS = new HashMap<>();
@@ -74,7 +74,7 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
 
     public StandardQuerystringPreprocessor(QueryConfiguration queryConfiguration) {
         final String defaultOperator = (queryConfiguration.getDefaultQueryStringOperator() == Operator.OR) ? TOKEN_OR : TOKEN_AND;
-        queryOptimizerDefaultOperator = new OptimizerDefaultOperator(defaultOperator);
+        queryDefaultOperatorOptimizer = new DefaultOperatorOptimizer(defaultOperator);
     }
 
     public void setTokenDelimiters(String tokenDelimiters) {
@@ -175,10 +175,10 @@ public class StandardQuerystringPreprocessor implements QuerystringPreprocessor 
         context.tokens = joinTokensWithoutBlanks(context.tokens);
 
         if (insertMissingOperators) {
-            context.tokens = queryOptimizerDefaultOperator.optimize(context.tokens);
+            context.tokens = queryDefaultOperatorOptimizer.optimize(context.tokens);
         }
         if (autoBracket) {
-            context.tokens = queryOptimizerAutoBracket.optimize(context.tokens);
+            context.tokens = queryAutoBracketOptimizer.optimize(context.tokens);
         }
     }
 

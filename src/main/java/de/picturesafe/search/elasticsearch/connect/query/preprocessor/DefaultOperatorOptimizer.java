@@ -20,13 +20,13 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OptimizerDefaultOperator implements QueryTokenOptimizer {
+public class DefaultOperatorOptimizer implements QueryTokenOptimizer {
 
     private enum OptimizeState {TOKEN, OPERATOR_AND, OPERATOR_OTHER, NONE}
 
     private final String defaultOperator;
 
-    public OptimizerDefaultOperator(String defaultOperator) {
+    public DefaultOperatorOptimizer(String defaultOperator) {
         this.defaultOperator = defaultOperator;
     }
 

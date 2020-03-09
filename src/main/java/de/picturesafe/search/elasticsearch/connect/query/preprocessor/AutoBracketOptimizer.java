@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-public class OptimizerAutoBracket implements QueryTokenOptimizer {
+public class AutoBracketOptimizer implements QueryTokenOptimizer {
 
     private enum OptimizeState {TOKEN, OPERATOR_AND, OPERATOR_NOT}
 
