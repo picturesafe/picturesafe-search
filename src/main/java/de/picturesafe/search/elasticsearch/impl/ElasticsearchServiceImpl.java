@@ -413,7 +413,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         for (final Locale locale : fieldConfigurationProvider.getSupportedLocales()) {
             languageSortConfigurations.add(new LanguageSortConfiguration(locale));
         }
+        final List<FieldConfiguration> fieldConfigurations = addFieldConfigurations ? fieldConfigurationProvider.getFieldConfigurations(indexAlias) : null;
         return new MappingConfiguration(
-                addFieldConfigurations ? fieldConfigurationProvider.getFieldConfigurations(indexAlias) : Collections.emptyList(), languageSortConfigurations);
+                (fieldConfigurations != null) ? fieldConfigurations : Collections.emptyList(), languageSortConfigurations);
     }
 }
