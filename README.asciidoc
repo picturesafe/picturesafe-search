@@ -24,6 +24,8 @@ The following features are included:
 Only a few steps are necessary to get started with a standard configuration.
 A complete code example can be found https://github.com/picturesafe/picturesafe-search-samples[here].
 
+For more information, please see following https://picturesafe-search.io/docs/[documentation].
+
 === Start Elasticsearch
 
 picturesafe-search requires a running Elasticsearch server from version 7.x.
@@ -191,4 +193,4 @@ Expression expression = OperationExpression.and(
         new ValueExpression("id", ValueExpression.Comparison.GE, 2));
 ----
 
-In addition there are further expressions like `InExpression`, `MustNotExpression`, `RangeValueExpression`, `DayExpression`, ...
+In addition there are further expressions like `InExpression`, `MustNotExpression`, `RangeValueExpression`, `DayExpression`, https://picturesafe-search.io/docs/reference/expressions/[more]
