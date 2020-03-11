@@ -1,5 +1,6 @@
 package de.picturesafe.search.elasticsearch;
 
+import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
@@ -7,7 +8,10 @@ import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
+import de.picturesafe.search.expression.DayExpression;
+import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.FulltextExpression;
+import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
@@ -23,8 +27,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -94,6 +100,68 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         item = result.getSearchResultItems().get(0);
         assertEquals(4711, item.getId());
         assertDocsAreEqual(doc1, item.getAttributes());
+    }
+
+    @Test
+    public void testSearchRanges() {
+        indexName = elasticsearchService.createIndex(indexAlias);
+        elasticsearchService.createAlias(indexAlias, indexName);
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
+                DocumentBuilder.id(4711).put("createDate", getDate("01.01.2020")).build(),
+                DocumentBuilder.id(4712).put("createDate", getDate("01.05.2020")).build(),
+                DocumentBuilder.id(4713).put("createDate", getDate("01.06.2020")).build(),
+                DocumentBuilder.id(4714).put("createDate", getDate("31.12.2020")).build()
+        ));
+
+        SearchResult result = elasticsearchService.search(indexAlias, new RangeValueExpression("id", 4711, 4714), SearchParameter.DEFAULT);
+        assertEquals(4, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("id", 4711, 4713), SearchParameter.DEFAULT);
+        assertEquals(3, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("id", 4711, 4711), SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("id", 1, 1000), SearchParameter.DEFAULT);
+        assertEquals(0, result.getTotalHitCount());
+
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("createDate", getDate("01.01.2020"), getDate("31.12.2020")), SearchParameter.DEFAULT);
+        assertEquals(4, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("createDate", getDate("01.01.2020"), getDate("01.06.2020")), SearchParameter.DEFAULT);
+        assertEquals(3, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("createDate", getDate("01.01.2020"), getDate("01.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("createDate", getDate("01.01.2019"), getDate("12.01.2019")), SearchParameter.DEFAULT);
+        assertEquals(0, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new RangeValueExpression("createDate", getDate("01.01.2019"), getDate("01.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+    }
+
+    @Test
+    public void testSearchDays() {
+        indexName = elasticsearchService.createIndex(indexAlias);
+        elasticsearchService.createAlias(indexAlias, indexName);
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
+                DocumentBuilder.withoutId().put("createDate", getDate("01.01.2020")).build(),
+                DocumentBuilder.withoutId().put("createDate", getDate("01.05.2020")).build(),
+                DocumentBuilder.withoutId().put("createDate", getDate("01.06.2020")).build(),
+                DocumentBuilder.withoutId().put("createDate", getDate("31.12.2020")).build()
+        ));
+
+        SearchResult result = elasticsearchService.search(indexAlias, new DayRangeExpression("createDate", getDate("01.01.2020"), getDate("31.12.2020")), SearchParameter.DEFAULT);
+        assertEquals(4, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new DayRangeExpression("createDate", getDate("01.01.2020"), getDate("01.06.2020")), SearchParameter.DEFAULT);
+        assertEquals(3, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new DayRangeExpression("createDate", getDate("01.01.2020"), getDate("01.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new DayRangeExpression("createDate", getDate("01.01.2019"), getDate("12.01.2019")), SearchParameter.DEFAULT);
+        assertEquals(0, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new DayRangeExpression("createDate", getDate("01.01.2019"), getDate("01.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new DayRangeExpression("createDate", getDate("31.12.2020"), getDate("01.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(0, result.getTotalHitCount());
+
+        result = elasticsearchService.search(indexAlias, new DayExpression("createDate", getDate("01.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+        result = elasticsearchService.search(indexAlias, new DayExpression("createDate", getDate("02.01.2020")), SearchParameter.DEFAULT);
+        assertEquals(0, result.getTotalHitCount());
     }
 
     @Test
@@ -212,6 +280,14 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
             testFields.add(createFieldConfiguration("location", ElasticsearchType.TEXT, true, true, true, false));
             testFields.add(createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true));
             return testFields;
+        }
+    }
+
+    private Date getDate(String date) {
+        try {
+            return new SimpleDateFormat("dd.MM.yyyy").parse(date);
+        } catch (Exception e) {
+            throw new RuntimeException("Parsing date '" + date + "' failed!", e);
         }
     }
 }
