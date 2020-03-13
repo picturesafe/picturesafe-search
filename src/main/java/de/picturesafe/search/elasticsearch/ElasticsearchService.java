@@ -131,7 +131,6 @@ public interface ElasticsearchService {
 
     /**
      * Adds a document to the index. If a document with the same ID already exists it will be updated.
-     * NOTE: key "id" must be present in document.
      *
      * @param indexAlias                Name of the alias of the index
      * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
@@ -141,7 +140,6 @@ public interface ElasticsearchService {
 
     /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
-     * NOTE: key "id" must be present in documents.
      *
      * @param indexAlias                Name of the alias of the index
      * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
