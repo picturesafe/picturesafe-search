@@ -36,7 +36,7 @@ public class RangeValueExpression extends ConditionExpression {
      * Default constructor
      */
     public RangeValueExpression() {
-        super.setComparison(BETWEEN);
+        super(BETWEEN);
     }
 
     /**

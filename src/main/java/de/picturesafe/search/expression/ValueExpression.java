@@ -32,9 +32,11 @@ public class ValueExpression extends ConditionExpression {
     private boolean matchPhrase = false;
 
     /**
-     * Default constructor
+     * Constructor
+     * @param comparison Comparison operation
      */
-    public ValueExpression() {
+    public ValueExpression(Comparison comparison) {
+        super(comparison);
     }
 
     /**
@@ -49,11 +51,11 @@ public class ValueExpression extends ConditionExpression {
     /**
      * Constructor
      * @param name Field name
-     * @param comparision Comparison operation
+     * @param comparison Comparison operation
      * @param value Value to match
      */
-    public ValueExpression(String name, Comparison comparision, Object value) {
-        super(name, comparision);
+    public ValueExpression(String name, Comparison comparison, Object value) {
+        super(name, comparison);
         this.value = value;
     }
 

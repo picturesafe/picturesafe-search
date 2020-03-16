@@ -17,8 +17,6 @@
 package de.picturesafe.search.expression;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -63,7 +61,7 @@ public final class DayRangeExpression extends ConditionExpression {
      * Default constructor
      */
     public DayRangeExpression() {
-        super.setComparison(BETWEEN);
+        super(BETWEEN);
     }
 
     /**
@@ -109,12 +107,6 @@ public final class DayRangeExpression extends ConditionExpression {
      */
     public void setUntilDay(Date untilDay) {
         this.untilDay = (untilDay != null) ? DateUtils.truncate(untilDay, Calendar.DAY_OF_MONTH) : null;
-    }
-
-    @Override
-    public void setComparison(Comparison comparison) {
-        Validate.isTrue(comparison == BETWEEN, "Only comparison 'BETWEEN' is supported!");
-        super.setComparison(comparison);
     }
 
     @Override

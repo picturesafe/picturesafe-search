@@ -17,12 +17,19 @@
 package de.picturesafe.search.expression;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.EQ;
+import static de.picturesafe.search.expression.ConditionExpression.Comparison.NOT_EQ;
+import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_ENDS_WITH;
+import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_STARTS_WITH;
+import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_WILDCARD;
 
 /**
  * Expression to match values on keyword fields
@@ -31,10 +38,14 @@ import static de.picturesafe.search.expression.ConditionExpression.Comparison.EQ
  */
 public class KeywordExpression extends ValueExpression {
 
+    private static final Set<Comparison> ALLOWED_COMPARISONS = EnumSet.of(EQ, NOT_EQ, TERM_STARTS_WITH, TERM_ENDS_WITH, TERM_WILDCARD);
+
     /**
-     * Default constructor
+     * Constructor
+     * @param comparison Comparison operation
      */
-    public KeywordExpression() {
+    public KeywordExpression(Comparison comparison) {
+        super(comparison);
     }
 
     /**
@@ -54,6 +65,11 @@ public class KeywordExpression extends ValueExpression {
      */
     public KeywordExpression(String name, Comparison comparison, Object value) {
         super(name, comparison, value);
+        validateComparison();
+    }
+
+    private void validateComparison() {
+        Validate.isTrue(ALLOWED_COMPARISONS.contains(comparison), "Unsupported comparison for keyword expressions: " + comparison);
     }
 
     @Override
