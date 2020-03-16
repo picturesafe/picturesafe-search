@@ -92,12 +92,13 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
 
         switch (comparison) {
             case EQ:
-            case LIKE:
                 return internalFilterBuilder.build(esFieldName, value, context);
             case NOT_EQ:
                 return QueryBuilders.boolQuery().mustNot(internalFilterBuilder.build(esFieldName, value, context));
+            case LIKE:
+                return QueryBuilders.queryStringQuery(value.toString()).field(esFieldName);
             case NOT_LIKE:
-                return internalFilterBuilder.build(esFieldName, "NOT (" + value + ")", context);
+                return QueryBuilders.queryStringQuery("NOT (" + value + ")").field(esFieldName);
             case GT:
                 return QueryBuilders.rangeQuery(esFieldName).gt(value);
             case LT:
@@ -148,8 +149,7 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
     }
 
     private Object prepareValue(ValueExpression expression) {
-        final Object value;
-        value = expression.getValue();
+        final Object value = expression.getValue();
         final ValuePrepareContext valuePrepareContext = new ValuePrepareContext(value);
         if (!expression.isMatchPhrase()) {
             for (ValuePreparer valuePreparer : valuePreparers) {

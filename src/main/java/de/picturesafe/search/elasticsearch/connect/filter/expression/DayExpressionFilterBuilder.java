@@ -49,7 +49,6 @@ public class DayExpressionFilterBuilder implements ExpressionFilterBuilder, Time
         Date day = expression.getDay();
         switch (comparison) {
             case EQ:
-            case LIKE:
                 return createEqualsQueryBuilder(fieldName, day, rangeQueryBuilder);
             case NOT_EQ:
                 return QueryBuilders.boolQuery().mustNot(createEqualsQueryBuilder(fieldName, day, rangeQueryBuilder));
