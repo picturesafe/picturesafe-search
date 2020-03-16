@@ -17,7 +17,6 @@
 package de.picturesafe.search.expression;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -26,6 +25,8 @@ import org.apache.commons.lang3.time.DateUtils;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumSet;
+import java.util.Set;
 
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.EQ;
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.GE;
@@ -38,6 +39,8 @@ import static de.picturesafe.search.expression.ConditionExpression.Comparison.NO
  * Expression to match a specific day
  */
 public final class DayExpression extends ConditionExpression {
+
+    private static final Set<Comparison> ALLOWED_COMPARISONS = EnumSet.of(EQ, NOT_EQ, GT, GE, LT, LE);
 
     private Date day;
 
@@ -59,8 +62,12 @@ public final class DayExpression extends ConditionExpression {
      */
     public DayExpression(String name, Comparison comparison, Date day) {
         super(name, comparison);
-        validateComparision(comparison);
+        validateComparison();
         setDay(day);
+    }
+
+    private void validateComparison() {
+        Validate.isTrue(ALLOWED_COMPARISONS.contains(comparison), "Unsupported comparison for day expressions: " + comparison);
     }
 
     /**
@@ -84,29 +91,11 @@ public final class DayExpression extends ConditionExpression {
     }
 
     @Override
-    public void setComparison(Comparison comparison) {
-        validateComparision(comparison);
-        super.setComparison(comparison);
-    }
-
-    @Override
     public Expression optimize() {
         if (day == null) {
             return null;
         } else {
             return this;
-        }
-    }
-
-    private void validateComparision(Comparison comparison) {
-        Validate.notNull(comparison, "Comparison may not be null!");
-        if (comparison != EQ
-            && comparison != NOT_EQ
-            && comparison != GT
-            && comparison != GE
-            && comparison != LT
-            && comparison != LE) {
-            throw new IllegalStateException("Comparision '" + comparison + "' is not supported!");
         }
     }
 

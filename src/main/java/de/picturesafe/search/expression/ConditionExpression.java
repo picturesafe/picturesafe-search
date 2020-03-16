@@ -17,6 +17,7 @@
 package de.picturesafe.search.expression;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -41,13 +42,16 @@ public abstract class ConditionExpression extends AbstractExpression implements 
         TERM_WILDCARD
     }
 
-    private String name;
-    private Comparison comparison;
+    protected String name;
+    protected Comparison comparison;
 
     /**
-     * Default constructor
+     * Constructor
+     * @param comparison Comparison operation
      */
-    protected ConditionExpression() {
+    protected ConditionExpression(Comparison comparison) {
+        Validate.notNull(comparison, "Parameter 'comparison' may not be null!");
+        this.comparison = comparison;
     }
 
     /**
@@ -61,11 +65,12 @@ public abstract class ConditionExpression extends AbstractExpression implements 
 
     /**
      * Constructor
-     *
      * @param name Field name
      * @param comparison Comparison operation
      */
     protected ConditionExpression(String name, Comparison comparison) {
+        Validate.notEmpty(name, "Parameter 'name' may not be null or empty!");
+        Validate.notNull(comparison, "Parameter 'comparison' may not be null!");
         this.name = name;
         this.comparison = comparison;
     }
@@ -89,14 +94,6 @@ public abstract class ConditionExpression extends AbstractExpression implements 
      */
     public Comparison getComparison() {
         return comparison;
-    }
-
-    /**
-     * Sets the comparison operation
-     * @param comparison Comparison operation
-     */
-    public void setComparison(Comparison comparison) {
-        this.comparison = comparison;
     }
 
     @Override
