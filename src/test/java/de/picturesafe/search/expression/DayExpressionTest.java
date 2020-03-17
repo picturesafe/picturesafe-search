@@ -16,9 +16,9 @@
 package de.picturesafe.search.expression;
 
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -31,18 +31,18 @@ import static de.picturesafe.search.expression.ConditionExpression.Comparison.LE
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.LT;
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.NOT_EQ;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class DayExpressionTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeywordExpressionTest.class);
     private static final EnumSet<ConditionExpression.Comparison> VALID_COMPARISONS = EnumSet.of(EQ, NOT_EQ, GT, GE, LT, LE);
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void testAllowedComparisons() {
         final Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
         VALID_COMPARISONS.forEach(comparison -> {
+            LOGGER.debug("Testing comparison: {}", comparison);
             final DayExpression expression = new DayExpression("test", comparison, today);
             assertEquals(comparison, expression.getComparison());
         });
@@ -52,8 +52,13 @@ public class DayExpressionTest {
     public void testNotAllowedComparisons() {
         final Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
         EnumSet.complementOf(VALID_COMPARISONS).forEach(comparison -> {
-            exception.expect(IllegalArgumentException.class);
-            new DayExpression("test", comparison, today);
+            LOGGER.debug("Testing comparison: {}", comparison);
+            try {
+                new DayExpression("test", comparison, today);
+                fail("IllegalArgumentException should be thrown");
+            } catch (IllegalArgumentException e) {
+                LOGGER.debug("Caught expected exception", e);
+            }
         });
     }
 }
