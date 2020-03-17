@@ -15,9 +15,9 @@
  */
 package de.picturesafe.search.expression;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
 
@@ -27,17 +27,17 @@ import static de.picturesafe.search.expression.ConditionExpression.Comparison.TE
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_STARTS_WITH;
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_WILDCARD;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class KeywordExpressionTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeywordExpressionTest.class);
     private static final EnumSet<ConditionExpression.Comparison> VALID_COMPARISONS = EnumSet.of(EQ, NOT_EQ, TERM_STARTS_WITH, TERM_ENDS_WITH, TERM_WILDCARD);
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void testAllowedComparisons() {
         VALID_COMPARISONS.forEach(comparison -> {
+            LOGGER.debug("Testing comparison: {}", comparison);
             final KeywordExpression expression = new KeywordExpression("test", comparison, "anything");
             assertEquals(comparison, expression.getComparison());
         });
@@ -46,8 +46,13 @@ public class KeywordExpressionTest {
     @Test
     public void testNotAllowedComparisons() {
         EnumSet.complementOf(VALID_COMPARISONS).forEach(comparison -> {
-            exception.expect(IllegalArgumentException.class);
-            new KeywordExpression("test", comparison, "anything");
+            LOGGER.debug("Testing comparison: {}", comparison);
+            try {
+                new KeywordExpression("test", comparison, "anything");
+                fail("IllegalArgumentException should be thrown");
+            } catch (IllegalArgumentException e) {
+                LOGGER.debug("Caught expected exception", e);
+            }
         });
     }
 }
