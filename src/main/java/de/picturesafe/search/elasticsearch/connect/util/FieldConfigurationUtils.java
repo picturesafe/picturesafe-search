@@ -33,7 +33,7 @@ import static de.picturesafe.search.elasticsearch.connect.mapping.MappingConstan
 @SuppressWarnings("unused")
 public class FieldConfigurationUtils {
 
-    public static FieldConfiguration fieldConfiguration(List<FieldConfiguration> fieldConfigurations, String elasticFieldName) {
+    public static FieldConfiguration fieldConfiguration(List<? extends FieldConfiguration> fieldConfigurations, String elasticFieldName) {
         if (CollectionUtils.isEmpty(fieldConfigurations)) {
             return null;
         }

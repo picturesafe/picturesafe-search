@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public class MappingConfiguration {
 
-    private final List<FieldConfiguration> fieldConfigurations;
+    private final List<? extends FieldConfiguration> fieldConfigurations;
     private List<LanguageSortConfiguration> languageSortConfigurations;
 
     private Map<String, FieldConfiguration> fieldConfigurationMap = new HashMap<>();
@@ -41,7 +41,7 @@ public class MappingConfiguration {
      * Constructor
      * @param fieldConfigurations Field configurations
      */
-    public MappingConfiguration(List<FieldConfiguration> fieldConfigurations) {
+    public MappingConfiguration(List<? extends FieldConfiguration> fieldConfigurations) {
         Validate.notNull(fieldConfigurations, "Parameter 'fieldConfigurations' may not be null!");
         this.fieldConfigurations = fieldConfigurations;
         for (FieldConfiguration fieldConfiguration : fieldConfigurations) {
@@ -59,7 +59,7 @@ public class MappingConfiguration {
      * @param fieldConfigurations           Filed configurations
      * @param languageSortConfigurations    Language sort configurations
      */
-    public MappingConfiguration(List<FieldConfiguration> fieldConfigurations,
+    public MappingConfiguration(List<? extends FieldConfiguration> fieldConfigurations,
                                 List<LanguageSortConfiguration> languageSortConfigurations) {
         this(fieldConfigurations);
         this.languageSortConfigurations = languageSortConfigurations;
@@ -69,7 +69,7 @@ public class MappingConfiguration {
      * Gets the field configurations.
      * @return Field configurations
      */
-    public List<FieldConfiguration> getFieldConfigurations() {
+    public List<? extends FieldConfiguration> getFieldConfigurations() {
         return fieldConfigurations;
     }
 

@@ -52,11 +52,11 @@ public class MappingBuilder {
         return mappingConfiguration.getFieldConfiguration(FieldConfiguration.FIELD_NAME_FULLTEXT) != null;
     }
 
-    public XContentBuilder buildUpdate(List<FieldConfiguration> fieldConfigurations) {
+    public XContentBuilder buildUpdate(List<? extends FieldConfiguration> fieldConfigurations) {
         return build(fieldConfigurations, false);
     }
 
-    private XContentBuilder build(List<FieldConfiguration> fieldConfigurations, boolean addFulltextField) {
+    private XContentBuilder build(List<? extends FieldConfiguration> fieldConfigurations, boolean addFulltextField) {
         XContentBuilder mapping;
         try {
             mapping = jsonBuilder();
