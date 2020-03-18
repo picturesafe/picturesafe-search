@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.config;
+package de.picturesafe.search.elasticsearch.config.impl;
 
+import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
+import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -194,6 +198,21 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 copyToFields.remove(FIELD_NAME_SUGGEST);
             }
             return this;
+        }
+
+        public Builder copyTo(Collection<String> copyToFields) {
+            if (this.copyToFields == null) {
+                this.copyToFields = new TreeSet<>(copyToFields);
+            } else if (copyToFields != null){
+                this.copyToFields.addAll(copyToFields);
+            } else {
+                this.copyToFields = null;
+            }
+            return this;
+        }
+
+        public Builder copyTo(String... copyToFields) {
+            return copyTo(Arrays.asList(copyToFields));
         }
 
         public Builder nestedFields(List<StandardFieldConfiguration> nestedFields) {

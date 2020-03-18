@@ -37,15 +37,15 @@ import java.util.Map;
  */
 public class StandardIndexPresetConfiguration implements IndexPresetConfiguration, Cloneable {
 
-    private static final String DEFAULT_INDEX_NAME_DATE_FORMAT = "yyyyMMdd-HHmmss-SSS";
-    private static final int DEFAULT_MAX_RESULT_WINDOW = 500_000;
+    public static final String DEFAULT_INDEX_NAME_DATE_FORMAT = "yyyyMMdd-HHmmss-SSS";
+    public static final int DEFAULT_MAX_RESULT_WINDOW = 500_000;
 
     private final String indexAlias;
     private final String indexNamePrefix;
-    private final String indexNameDateFormat;
     private final int numberOfShards;
     private final int numberOfReplicas;
-    private final int maxResultWindow;
+    private int maxResultWindow;
+    private String indexNameDateFormat;
     private Integer fieldsLimit;
     private boolean useCompression;
     private Map<String, String> charMappings;
@@ -107,6 +107,14 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         this.customAnalyzers = (conf.getCustomAnalyzers() != null) ? new ArrayList<>(conf.getCustomAnalyzers()) : null;
     }
 
+    /**
+     * Sets the index name date format.
+     * @param indexNameDateFormat Index name date format
+     */
+    public void setIndexNameDateFormat(String indexNameDateFormat) {
+        this.indexNameDateFormat = indexNameDateFormat;
+    }
+
     @Override
     public String getIndexAlias() {
         return indexAlias;
@@ -125,6 +133,14 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     @Override
     public int getMaxResultWindow() {
         return maxResultWindow;
+    }
+
+    /**
+     * Sets the maximum result window size (maximum number of hits in a search result).
+     * @param maxResultWindow Maximum result window size
+     */
+    public void setMaxResultWindow(int maxResultWindow) {
+        this.maxResultWindow = maxResultWindow;
     }
 
     @Override
