@@ -19,6 +19,8 @@ package de.picturesafe.search.elasticsearch.config;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.HashMap;
@@ -86,6 +88,28 @@ public class MappingConfiguration {
      */
     public List<LanguageSortConfiguration> getLanguageSortConfigurations() {
         return languageSortConfigurations;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final MappingConfiguration that = (MappingConfiguration) o;
+        return new EqualsBuilder()
+                .append(fieldConfigurations, that.fieldConfigurations)
+                .append(languageSortConfigurations, that.languageSortConfigurations)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(fieldConfigurations).toHashCode();
     }
 
     @Override
