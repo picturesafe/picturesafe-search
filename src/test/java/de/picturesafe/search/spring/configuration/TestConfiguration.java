@@ -22,7 +22,7 @@ import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
-import de.picturesafe.search.elasticsearch.config.StandardFieldConfiguration;
+import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
