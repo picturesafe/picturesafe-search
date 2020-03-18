@@ -18,6 +18,8 @@ package de.picturesafe.search.elasticsearch.config;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Locale;
@@ -80,6 +82,28 @@ public class LanguageSortConfiguration {
      */
     public String getVariant() {
         return variant;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final LanguageSortConfiguration that = (LanguageSortConfiguration) o;
+        return new EqualsBuilder()
+                .append(locale, that.locale)
+                .append(variant, that.variant)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(locale).toHashCode();
     }
 
     @Override
