@@ -201,12 +201,12 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         }
 
         public Builder copyTo(Collection<String> copyToFields) {
-            if (this.copyToFields == null) {
-                this.copyToFields = new TreeSet<>(copyToFields);
-            } else if (copyToFields != null){
-                this.copyToFields.addAll(copyToFields);
-            } else {
+            if (copyToFields == null) {
                 this.copyToFields = null;
+            } else if (this.copyToFields == null) {
+                this.copyToFields = new TreeSet<>(copyToFields);
+            } else {
+                this.copyToFields.addAll(copyToFields);
             }
             return this;
         }

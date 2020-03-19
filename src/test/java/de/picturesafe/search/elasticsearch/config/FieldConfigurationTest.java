@@ -123,6 +123,9 @@ public class FieldConfigurationTest {
         fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo(Arrays.asList("1", "2", "3")).build();
         assertEquals(new TreeSet<>(Arrays.asList("1", "2", "3")), fieldConfiguration.getCopyToFields());
 
+        fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo((Collection<String>) null).build();
+        assertNull(fieldConfiguration.getCopyToFields());
+
         fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo("1", "2", "3")
                 .copyTo((Collection<String>) null).build();
         assertNull(fieldConfiguration.getCopyToFields());
