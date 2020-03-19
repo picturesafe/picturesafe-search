@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.config;
+package de.picturesafe.search.elasticsearch.config.impl;
 
+import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
+import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collections;
