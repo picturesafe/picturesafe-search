@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.config;
+package de.picturesafe.search.elasticsearch.model;
 
+import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.util.Map;
 
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getInt;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +37,7 @@ public class DocumentBuilderTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void testDocumentBuilder() {
+    public void test() {
         Map<String, Object> document = DocumentBuilder.id(1).put("title", "This is a title").build();
         assertTrue(document.get(FieldConfiguration.FIELD_NAME_ID) instanceof Long);
         assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
@@ -56,5 +61,62 @@ public class DocumentBuilderTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Argument 'id' must be > 0!");
         DocumentBuilder.id(-1).put("title", null).build();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testPutIndexObject() {
+        final TestObject testObject = new TestObject("the text", 17);
+        final Map<String, Object> document = DocumentBuilder.id(1).put("title", "This is a title").put("testObject", testObject).build();
+        assertEquals("This is a title", document.get("title"));
+        final Object testDoc = document.get("testObject");
+        assertTrue(testDoc instanceof Map);
+        final TestObject docObject = new TestObject().fromDocument((Map<String, Object>) testDoc);
+        assertEquals(testObject, docObject);
+    }
+
+    private static class TestObject implements IndexObject<TestObject> {
+
+        private String textField;
+        private int numberField;
+
+        public TestObject() {
+        }
+
+        public TestObject(String textField, int numberField) {
+            this.textField = textField;
+            this.numberField = numberField;
+        }
+
+        @Override
+        public Map<String, Object> toDocument() {
+            return DocumentBuilder.withoutId().put("textField", textField).put("numberField", numberField).build();
+        }
+
+        @Override
+        public TestObject fromDocument(Map<String, Object> document) {
+            textField = getString(document, "textField");
+            numberField = getInt(document, "numberField", 0);
+            return this;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final TestObject that = (TestObject) o;
+            return new EqualsBuilder().append(numberField, that.numberField).append(textField, that.textField).isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder().append(textField).toHashCode();
+        }
     }
 }

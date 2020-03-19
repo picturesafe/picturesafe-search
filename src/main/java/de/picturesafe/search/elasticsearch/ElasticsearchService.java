@@ -17,6 +17,7 @@
 package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
@@ -139,6 +140,15 @@ public interface ElasticsearchService {
     void addToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Map<String, Object> document);
 
     /**
+     * Adds an object to the index. If an object with the same ID already exists it will be updated.
+     *
+     * @param indexAlias                Name of the alias of the index
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param object                    Index object to be added
+     */
+    void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object);
+
+    /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
      *
      * @param indexAlias                Name of the alias of the index
@@ -146,6 +156,15 @@ public interface ElasticsearchService {
      * @param documents                 Documents to be added
      */
     void addToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents);
+
+    /**
+     * Adds multiple objects to the index. If an object with the same ID already exists it will be updated.
+     *
+     * @param indexAlias                Name of the alias of the index
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param objects                   Objects to be added
+     */
+    void addObjectsToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, List<IndexObject<?>> objects);
 
     /**
      * Removes a document from the index.
@@ -190,10 +209,20 @@ public interface ElasticsearchService {
      * Gets a document from the index.
      *
      * @param indexAlias    Name of the alias of the index
-     * @param id            ID of the documents
+     * @param id            ID of the document
      * @return              The document or <code>null</code> if the ID does not exist
      */
     Map<String, Object> getDocument(String indexAlias, long id);
+
+    /**
+     * Gets an object from the index.
+     *
+     * @param indexAlias    Name of the alias of the index
+     * @param id            ID of the object
+     * @param type          Type class of the object
+     * @return              The index object or <code>null</code> if the ID does not exist
+     */
+    <T extends IndexObject<T>> T getObject(String indexAlias, long id, Class<T> type);
 
     /**
      * Suggests text options for search-as-you-type functionality.

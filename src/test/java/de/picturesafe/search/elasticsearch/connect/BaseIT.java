@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
-import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
