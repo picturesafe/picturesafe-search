@@ -1,6 +1,6 @@
 package de.picturesafe.search.elasticsearch;
 
-import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;

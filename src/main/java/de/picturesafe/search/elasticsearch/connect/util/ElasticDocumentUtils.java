@@ -16,7 +16,10 @@
 
 package de.picturesafe.search.elasticsearch.connect.util;
 
+import java.util.Date;
 import java.util.Map;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils.parseIso;
 
 public class ElasticDocumentUtils {
 
@@ -39,5 +42,25 @@ public class ElasticDocumentUtils {
         } else {
             return null;
         }
+    }
+
+    public static String getString(Map<String, Object> doc, String name) {
+        final Object value = doc.get(name);
+        return (value != null) ? (String) value : null;
+    }
+
+    public static Date getDate(Map<String, Object> doc, String name) {
+        final String value = getString(doc, name);
+        return (value != null) ? parseIso(value) : null;
+    }
+
+    public static long getLong(Map<String, Object> doc, String name, long fallbackValue) {
+        final Object value = doc.get(name);
+        return (value instanceof Number) ? ((Number) value).longValue() : fallbackValue;
+    }
+
+    public static int getInt(Map<String, Object> doc, String name, int fallbackValue) {
+        final Object value = doc.get(name);
+        return (value instanceof Number) ? ((Number) value).intValue() : fallbackValue;
     }
 }

@@ -33,6 +33,7 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
 import de.picturesafe.search.elasticsearch.model.ResultRangeFacetItem;
@@ -246,12 +247,24 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
+    public void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object) {
+        Validate.notNull(object, "Parameter 'object' may not be null!");
+        addToIndex(indexAlias, dataChangeProcessingMode, object.toDocument());
+    }
+
+    @Override
     public void addToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents) {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(documents, "Parameter 'documents' may not be null!");
 
         elasticsearch.addToIndex(documents, getMappingConfiguration(indexAlias, true), indexAlias, dataChangeProcessingMode.isRefresh(), true);
+    }
+
+    @Override
+    public void addObjectsToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, List<IndexObject<?>> objects) {
+        Validate.notNull(objects, "Parameter 'objects' may not be null!");
+        addToIndex(indexAlias, dataChangeProcessingMode, objects.stream().map(IndexObject::toDocument).collect(Collectors.toList()));
     }
 
     @Override
@@ -307,6 +320,16 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Override
     public Map<String, Object> getDocument(String indexAlias, long id) {
         return elasticsearch.getDocument(indexAlias, id);
+    }
+
+    @Override
+    public <T extends IndexObject<T>> T getObject(String indexAlias, long id, Class<T> type) {
+        final Map<String, Object> doc = getDocument(indexAlias, id);
+        try {
+            return (doc != null) ? type.newInstance().fromDocument(doc) : null;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert document to object", e);
+        }
     }
 
     @Override

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.config;
+package de.picturesafe.search.elasticsearch.model;
 
+import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import org.apache.commons.lang3.Validate;
 
 import java.util.HashMap;
@@ -42,6 +43,10 @@ public class DocumentBuilder {
 
     public static DocumentBuilder withoutId() {
         return new DocumentBuilder();
+    }
+
+    public DocumentBuilder put(String fieldname, IndexObject<?> value) {
+        return put(fieldname, (value != null) ? value.toDocument() : null);
     }
 
     public DocumentBuilder put(String fieldname, Object value) {

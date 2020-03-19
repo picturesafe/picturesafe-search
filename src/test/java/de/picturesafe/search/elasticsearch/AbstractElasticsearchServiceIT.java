@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch;
 
-import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;

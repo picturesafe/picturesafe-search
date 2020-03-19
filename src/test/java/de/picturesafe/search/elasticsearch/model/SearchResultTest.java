@@ -16,7 +16,6 @@
 
 package de.picturesafe.search.elasticsearch.model;
 
-import de.picturesafe.search.elasticsearch.config.DocumentBuilder;
 import org.junit.Test;
 
 import java.util.ArrayList;
