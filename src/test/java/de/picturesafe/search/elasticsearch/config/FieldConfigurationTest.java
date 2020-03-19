@@ -17,6 +17,7 @@
 package de.picturesafe.search.elasticsearch.config;
 
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
+import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
