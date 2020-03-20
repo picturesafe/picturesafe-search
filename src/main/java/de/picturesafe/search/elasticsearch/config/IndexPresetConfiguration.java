@@ -16,13 +16,16 @@
 
 package de.picturesafe.search.elasticsearch.config;
 
+import de.picturesafe.search.elasticsearch.config.util.IndexPresetConfigurationDocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
+
 import java.util.List;
 import java.util.Map;
 
 /**
  * Presets for index creation
  */
-public interface IndexPresetConfiguration {
+public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfiguration> {
 
     /**
      * Gets the alias name.
@@ -83,4 +86,21 @@ public interface IndexPresetConfiguration {
      * @return New index name
      */
     String createNewIndexName();
+
+    @Override
+    default Map<String, Object> toDocument() {
+        return IndexPresetConfigurationDocumentBuilder.build(this);
+    }
+
+    @Override
+    default IndexPresetConfiguration fromDocument(Map<String, Object> document) {
+        final String className = IndexObject.classNameFromDocument(document);
+        try {
+            return ((IndexPresetConfiguration) Class.forName(className).newInstance()).internalFromDocument(document);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    IndexPresetConfiguration internalFromDocument(Map<String, Object> document);
 }

@@ -22,17 +22,27 @@ import org.apache.commons.lang3.Validate;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 public class SuggestFieldConfiguration implements FieldConfiguration {
 
     private String name;
     private String elasticsearchType;
 
+    /**
+     * ONLY FOR INTERNAL USAGE
+     */
+    public SuggestFieldConfiguration() {
+        elasticsearchType = ElasticsearchType.COMPLETION.toString();
+    }
+
     public SuggestFieldConfiguration(String name) {
+        this();
         Validate.isTrue(!name.contains("."), "Parameter 'name' must not contain a '.'!");
         this.name = name;
-        this.elasticsearchType = ElasticsearchType.COMPLETION.toString();
     }
 
     @Override
@@ -92,5 +102,12 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     @Override
     public FieldConfiguration getParent() {
         return null;
+    }
+
+    @Override
+    public FieldConfiguration internalFromDocument(Map<String, Object> document) {
+        name = getString(document, "name");
+        elasticsearchType = getString(document, "elasticsearchType");
+        return this;
     }
 }

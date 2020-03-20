@@ -19,8 +19,10 @@ package de.picturesafe.search.elasticsearch.model;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import org.apache.commons.lang3.Validate;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Simple builder for elasticsearch index documents.
@@ -49,8 +51,14 @@ public class DocumentBuilder {
         return put(fieldname, (value != null) ? value.toDocument() : null);
     }
 
+    public DocumentBuilder put(String fieldname, Collection<? extends IndexObject<?>> values) {
+        return put(fieldname, (values != null) ? values.stream().map(IndexObject::toDocument).collect(Collectors.toList()) : null);
+    }
+
     public DocumentBuilder put(String fieldname, Object value) {
-        doc.put(fieldname, value);
+        if (value != null) {
+            doc.put(fieldname, value);
+        }
         return this;
     }
 

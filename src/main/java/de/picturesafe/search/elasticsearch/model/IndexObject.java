@@ -16,7 +16,11 @@
 
 package de.picturesafe.search.elasticsearch.model;
 
+import org.apache.commons.lang3.Validate;
+
 import java.util.Map;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 /**
  * Interface for objects that can be converted to/from elasticsearch index documents.
@@ -37,4 +41,17 @@ public interface IndexObject<T extends IndexObject<T>> {
      * @return Object
      */
     T fromDocument(Map<String, Object> document);
+
+    /**
+     * Gets the class name from an elastcisearch index document.
+     * @param document Elasticsearch index document
+     * @return Class name
+     */
+    static String classNameFromDocument(Map<String, Object> document) {
+        Validate.notEmpty(document, "Parameter 'document' may not be null or empty!");
+
+        final String className = getString(document, "class");
+        Validate.notNull(className, "Missing field 'class' in document!");
+        return className;
+    }
 }

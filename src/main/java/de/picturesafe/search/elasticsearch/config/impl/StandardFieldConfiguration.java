@@ -26,8 +26,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getBoolean;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocuments;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getStringSet;
 
 /**
  * Definition of a field that will be stored in the elasticsearch index
@@ -45,6 +52,12 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private List<StandardFieldConfiguration> nestedFields;
     private Set<String> copyToFields;
     private FieldConfiguration parent;
+
+    /**
+     * ONLY FOR INTERNAL USAGE
+     */
+    public StandardFieldConfiguration() {
+    }
 
     private StandardFieldConfiguration(Builder builder) {
         this.name = builder.name;
@@ -238,6 +251,24 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
+    public StandardFieldConfiguration internalFromDocument(Map<String, Object> document) {
+        name = getString(document, "name");
+        elasticsearchType = getString(document, "elasticsearchType");
+        copyToFulltext = getBoolean(document, "copyToFulltext)");
+        sortable = getBoolean(document, "sortable)");
+        aggregatable = getBoolean(document, "aggregatable)");
+        multilingual = getBoolean(document, "multilingual)");
+        analyzer = getString(document, "analyzer)");
+        copyToFields = getStringSet(document, "copyToFields)");
+
+        final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "nestedFields)");
+        nestedFields = (nestedDocuments != null)
+                ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().internalFromDocument(doc)).collect(Collectors.toList())
+                : null;
+        return this;
+    }
+
+    @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("name", name) //--
@@ -248,8 +279,8 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append("aggregatable", aggregatable) //--
                 .append("multilingual", multilingual) //--
                 .append("analyzer", analyzer) //--
-                .append("nestedFields", nestedFields) //--
                 .append("copyToFields", copyToFields) //--
+                .append("nestedFields", nestedFields) //--
                 .append("parent", (parent != null) ? parent.getName() : null) //--
                 .toString();
     }
