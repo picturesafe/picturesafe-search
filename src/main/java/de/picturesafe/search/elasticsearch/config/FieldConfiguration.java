@@ -65,7 +65,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
     @Override
     default Map<String, Object> toDocument() {
         return DocumentBuilder.withoutId()
-                .put("class", getClass().getName())
+                .put(CLASS_NAME_FIELD, getClass().getName())
                 .put("name", getName())
                 .put("elasticsearchType", getElasticsearchType())
                 .put("copyToFulltext", isCopyToFulltext())

@@ -99,7 +99,7 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
      */
     static Map<String, Object> toDocument(IndexPresetConfiguration conf) {
         return DocumentBuilder.withoutId()
-                .put("class", conf.getClass().getName())
+                .put(CLASS_NAME_FIELD, conf.getClass().getName())
                 .put("indexAlias", conf.getIndexAlias())
                 .put("numberOfShards", conf.getNumberOfShards())
                 .put("numberOfReplicas", conf.getNumberOfReplicas())

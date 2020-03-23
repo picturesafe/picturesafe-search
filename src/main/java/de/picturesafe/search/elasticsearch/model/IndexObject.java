@@ -48,12 +48,23 @@ public interface IndexObject<T extends IndexObject<T>> {
     T fromDocument(Map<String, Object> document);
 
     /**
-     * Gets the class name from an elastcisearch index document.
-     * @param document Elasticsearch index document
-     * @return Class name
+     * Converts elasticsearch index document to object.
+     * @param document  Elasticsearch index document
+     * @param type      Type class of object
+     * @return          Object
      */
-    static String classNameFromDocument(Map<String, Object> document) {
+    @SuppressWarnings("unchecked")
+    static <T extends IndexObject<T>> T fromDocument(Map<String, Object> document, Class<T> type) {
         Validate.notEmpty(document, "Parameter 'document' may not be null or empty!");
-        return getString(document, CLASS_NAME_FIELD);
+        Validate.notNull(type, "Parameter 'type' may not be null!");
+
+        try {
+            final String className = getString(document, CLASS_NAME_FIELD);
+            return (className != null)
+                    ? ((T) Class.forName(className).newInstance()).fromDocument(document)
+                    : type.newInstance().fromDocument(document);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert document to object", e);
+        }
     }
 }

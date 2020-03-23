@@ -331,21 +331,9 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T extends IndexObject<T>> T getObject(String indexAlias, long id, Class<T> type) {
         final Map<String, Object> doc = getDocument(indexAlias, id);
-        if (doc == null) {
-            return null;
-        }
-
-        try {
-            final String className = IndexObject.classNameFromDocument(doc);
-            return (className != null)
-                    ? ((T) Class.forName(className).newInstance()).fromDocument(doc)
-                    : type.newInstance().fromDocument(doc);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert document to object", e);
-        }
+        return (doc != null) ? IndexObject.fromDocument(doc, type) : null;
     }
 
     @Override
