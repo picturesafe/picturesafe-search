@@ -24,6 +24,8 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.FulltextExpression;
@@ -31,6 +33,7 @@ import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.spring.configuration.TestConfiguration;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -50,6 +53,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -57,7 +61,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDate;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -246,6 +252,24 @@ public class SingleIndexElasticsearchServiceIT {
         assertDocsAreEqual(doc1, item.getAttributes());
     }
 
+    @Test
+    public void testAddGetIndexObject() {
+        indexName = singleIndexElasticsearchService.createIndexWithAlias();
+
+        final TestObject obj1 = new TestObject(666, "TestObject 1", parseDate("18.03.2020"));
+        singleIndexElasticsearchService.addObjectToIndex(DataChangeProcessingMode.BLOCKING, obj1);
+        TestObject indexObject = singleIndexElasticsearchService.getObject(obj1.id, TestObject.class);
+        assertEquals(obj1, indexObject);
+
+        final TestObject obj2 = new TestObject(667, "TestObject 2", parseDate("19.03.2020"));
+        final TestObject obj3 = new TestObject(668, "TestObject 3", parseDate("20.03.2020"));
+        singleIndexElasticsearchService.addObjectsToIndex(DataChangeProcessingMode.BLOCKING, Arrays.asList(obj2, obj3));
+        indexObject = singleIndexElasticsearchService.getObject(obj2.id, TestObject.class);
+        assertEquals(obj2, indexObject);
+        indexObject = singleIndexElasticsearchService.getObject(obj3.id, TestObject.class);
+        assertEquals(obj3, indexObject);
+    }
+
     private Map<String, Object> createDocument(long id) {
         return createDocument(id, "Document title #" + id);
     }
@@ -272,6 +296,62 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(doc1.get("caption"), doc2.get("caption"));
         assertEquals(doc1.get("createDate"), ElasticDateUtils.parseIso((String) doc2.get("createDate")));
         assertEquals(doc1.get("location"), doc2.get("location"));
+    }
+
+    private Date parseDate(String date) {
+        try {
+            return new SimpleDateFormat("dd.MM.yyyy").parse(date);
+        } catch (Exception e) {
+            throw new RuntimeException("Parsing date '" + date + "' failed!", e);
+        }
+    }
+
+    public static class TestObject implements IndexObject<TestObject> {
+
+        private long id;
+        private String title;
+        private Date createDate;
+
+        public TestObject() {
+        }
+
+        public TestObject(long id, String title, Date createDate) {
+            this.id = id;
+            this.title = title;
+            this.createDate = createDate;
+        }
+
+        @Override
+        public Map<String, Object> toDocument() {
+            return DocumentBuilder.id(id).put("title", title).put("createDate", createDate).build();
+        }
+
+        @Override
+        public TestObject fromDocument(Map<String, Object> document) {
+            id = getId(document, 0);
+            title = getString(document, "title");
+            createDate = getDate(document, "createDate");
+            return this;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            final TestObject that = (TestObject) o;
+            return new EqualsBuilder().append(id, that.id).append(title, that.title).append(createDate, that.createDate).isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            return (int) id;
+        }
     }
 
     @ComponentScan()

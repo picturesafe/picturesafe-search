@@ -19,20 +19,31 @@ package de.picturesafe.search.elasticsearch.config.impl;
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 public class SuggestFieldConfiguration implements FieldConfiguration {
 
     private String name;
     private String elasticsearchType;
 
+    /**
+     * ONLY FOR INTERNAL USAGE
+     */
+    public SuggestFieldConfiguration() {
+        elasticsearchType = ElasticsearchType.COMPLETION.toString();
+    }
+
     public SuggestFieldConfiguration(String name) {
+        this();
         Validate.isTrue(!name.contains("."), "Parameter 'name' must not contain a '.'!");
         this.name = name;
-        this.elasticsearchType = ElasticsearchType.COMPLETION.toString();
     }
 
     @Override
@@ -92,5 +103,31 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     @Override
     public FieldConfiguration getParent() {
         return null;
+    }
+
+    @Override
+    public FieldConfiguration fromDocument(Map<String, Object> document) {
+        name = getString(document, "name");
+        elasticsearchType = getString(document, "elasticsearchType");
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final SuggestFieldConfiguration that = (SuggestFieldConfiguration) o;
+        return new EqualsBuilder().append(name, that.name).append(elasticsearchType, that.elasticsearchType).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

@@ -16,8 +16,13 @@
 
 package de.picturesafe.search.elasticsearch.connect.util;
 
+import org.apache.commons.collections.MapUtils;
+
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils.parseIso;
 
@@ -44,23 +49,42 @@ public class ElasticDocumentUtils {
         }
     }
 
-    public static String getString(Map<String, Object> doc, String name) {
-        final Object value = doc.get(name);
-        return (value != null) ? (String) value : null;
-    }
-
     public static Date getDate(Map<String, Object> doc, String name) {
         final String value = getString(doc, name);
         return (value != null) ? parseIso(value) : null;
     }
 
-    public static long getLong(Map<String, Object> doc, String name, long fallbackValue) {
+    public static String getString(Map<String, Object> doc, String name) {
+        return MapUtils.getString(doc, name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Set<String> getStringSet(Map<String, Object> doc, String name) {
         final Object value = doc.get(name);
-        return (value instanceof Number) ? ((Number) value).longValue() : fallbackValue;
+        return (value instanceof Collection) ? new TreeSet<>(((Collection<String>) value)) : null;
+    }
+
+    public static long getLong(Map<String, Object> doc, String name, long fallbackValue) {
+        return MapUtils.getLongValue(doc, name, fallbackValue);
     }
 
     public static int getInt(Map<String, Object> doc, String name, int fallbackValue) {
+        return MapUtils.getIntValue(doc, name, fallbackValue);
+    }
+
+    public static boolean getBoolean(Map<String, Object> doc, String name) {
+        return MapUtils.getBooleanValue(doc, name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> getDocument(Map<String, Object> doc, String name) {
         final Object value = doc.get(name);
-        return (value instanceof Number) ? ((Number) value).intValue() : fallbackValue;
+        return (value != null) ? (Map<String, Object>) value : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Collection<Map<String, Object>> getDocuments(Map<String, Object> doc, String name) {
+        final Object value = doc.get(name);
+        return (value instanceof Collection) ? (Collection<Map<String, Object>>) value : null;
     }
 }

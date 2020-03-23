@@ -54,13 +54,13 @@ public class DocumentBuilderTest {
         assertTrue(document.get("available") instanceof Boolean);
         assertTrue((Boolean) document.get("available"));
 
-        document = DocumentBuilder.id(1).put("title", null).build();
+        document = DocumentBuilder.id(1).put("title", (String) null).build();
         assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertNull(document.get("title"));
 
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Argument 'id' must be > 0!");
-        DocumentBuilder.id(-1).put("title", null).build();
+        DocumentBuilder.id(-1).build();
     }
 
     @Test

@@ -26,11 +26,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getBoolean;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocument;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocuments;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getInt;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 /**
  * Standard implementation of a {@link IndexPresetConfiguration}
@@ -40,10 +48,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     public static final String DEFAULT_INDEX_NAME_DATE_FORMAT = "yyyyMMdd-HHmmss-SSS";
     public static final int DEFAULT_MAX_RESULT_WINDOW = 500_000;
 
-    private final String indexAlias;
-    private final String indexNamePrefix;
-    private final int numberOfShards;
-    private final int numberOfReplicas;
+    private String indexAlias;
+    private String indexNamePrefix;
+    private int numberOfShards;
+    private int numberOfReplicas;
     private int maxResultWindow;
     private String indexNameDateFormat;
     private Integer fieldsLimit;
@@ -51,6 +59,12 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     private Map<String, String> charMappings;
     private List<IndexSettingsObject> customTokenizers;
     private List<IndexSettingsObject> customAnalyzers;
+
+    /**
+     * ONLY FOR INTERNAL USAGE
+     */
+    public StandardIndexPresetConfiguration() {
+    }
 
     /**
      * Constructor
@@ -211,6 +225,37 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     @Override
     public String createNewIndexName() {
         return indexNamePrefix + "-" + new SimpleDateFormat(indexNameDateFormat, Locale.GERMAN).format(new Date());
+    }
+
+    @Override
+    public Map<String, Object> toDocument() {
+        final Map<String, Object> document = IndexPresetConfiguration.toDocument(this);
+        document.put("indexNamePrefix", indexNamePrefix);
+        document.put("indexNameDateFormat", indexNameDateFormat);
+        return document;
+    }
+
+    @Override
+    public IndexPresetConfiguration fromDocument(Map<String, Object> document) {
+        indexAlias = getString(document, "indexAlias");
+        indexNamePrefix = getString(document, "indexNamePrefix");
+        indexNameDateFormat = getString(document, "indexNameDateFormat");
+        numberOfShards = getInt(document, "numberOfShards", 1);
+        numberOfReplicas = getInt(document, "numberOfReplicas", 0);
+        maxResultWindow = getInt(document, "maxResultWindow", DEFAULT_MAX_RESULT_WINDOW);
+        useCompression = getBoolean(document, "useCompression");
+
+        final Map<String, Object> doc = getDocument(document, "charMappings");
+        if (doc != null) {
+            charMappings = new HashMap<>(doc.size());
+            doc.forEach((k, v) -> charMappings.put(k, v.toString()));
+        }
+
+        Collection<Map<String, Object>> docs = getDocuments(document, "customTokenizers");
+        customTokenizers = (docs != null) ? docs.stream().map(d -> new IndexSettingsObject().fromDocument(d)).collect(Collectors.toList()) : null;
+        docs = getDocuments(document, "customAnalyzers");
+        customAnalyzers = (docs != null) ? docs.stream().map(d -> new IndexSettingsObject().fromDocument(d)).collect(Collectors.toList()) : null;
+        return this;
     }
 
     @Override

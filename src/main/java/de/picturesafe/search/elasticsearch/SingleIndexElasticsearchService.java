@@ -17,6 +17,7 @@
 package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
@@ -107,6 +108,23 @@ public interface SingleIndexElasticsearchService {
     void addToIndex(DataChangeProcessingMode dataChangeProcessingMode, Map<String, Object> document);
 
     /**
+     * Adds an object to the index. If an object with the same ID already exists it will be updated.
+     *
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param object                    Index object to be added
+     */
+    void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object);
+
+    /**
+     * Adds an object to the index. If an object with the same ID already exists it will be updated.
+     *
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param object                    Index object to be added
+     * @param id                        ID to assign to the persisted object (useful if the object does not provide an ID itself)
+     */
+    void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id);
+
+    /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
      * NOTE: key "id" must be present in documents.
      *
@@ -114,6 +132,14 @@ public interface SingleIndexElasticsearchService {
      * @param documents                 Documents to be added
      */
     void addToIndex(DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents);
+
+    /**
+     * Adds multiple objects to the index. If an object with the same ID already exists it will be updated.
+     *
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param objects                   Objects to be added
+     */
+    void addObjectsToIndex(DataChangeProcessingMode dataChangeProcessingMode, List<IndexObject<?>> objects);
 
     /**
      * Removes a document from the index.
@@ -157,6 +183,15 @@ public interface SingleIndexElasticsearchService {
      * @return              The document or <code>null</code> if the ID does not exist
      */
     Map<String, Object> getDocument(long id);
+
+    /**
+     * Gets an object from the index.
+     *
+     * @param id            ID of the object
+     * @param type          Type class of the object
+     * @return              The index object or <code>null</code> if the ID does not exist
+     */
+    <T extends IndexObject<T>> T getObject(long id, Class<T> type);
 
     /**
      * Suggests text options for search-as-you-type functionality.

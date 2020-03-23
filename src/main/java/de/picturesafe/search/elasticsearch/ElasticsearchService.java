@@ -149,6 +149,16 @@ public interface ElasticsearchService {
     void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object);
 
     /**
+     * Adds an object to the index. If an object with the same ID already exists it will be updated.
+     *
+     * @param indexAlias                Name of the alias of the index
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param object                    Index object to be added
+     * @param id                        ID to assign to the persisted object (useful if the object does not provide an ID itself)
+     */
+    void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id);
+
+    /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
      *
      * @param indexAlias                Name of the alias of the index

@@ -18,14 +18,17 @@ package de.picturesafe.search.elasticsearch.config;
 
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Definition of a field that will be stored in the elasticsearch index
  */
-public interface FieldConfiguration {
+public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     String FIELD_NAME_ID = "id";
     String FIELD_NAME_FULLTEXT = "fulltext";
@@ -49,13 +52,29 @@ public interface FieldConfiguration {
 
     String getAnalyzer();
 
+    Set<String> getCopyToFields();
+
     List<? extends FieldConfiguration> getNestedFields();
 
     FieldConfiguration getNestedField(String name);
 
     boolean isNestedObject();
 
-    Set<String> getCopyToFields();
-
     FieldConfiguration getParent();
+
+    @Override
+    default Map<String, Object> toDocument() {
+        return DocumentBuilder.withoutId()
+                .put(CLASS_NAME_FIELD, getClass().getName())
+                .put("name", getName())
+                .put("elasticsearchType", getElasticsearchType())
+                .put("copyToFulltext", isCopyToFulltext())
+                .put("sortable", isSortable())
+                .put("aggregatable", isAggregatable())
+                .put("multilingual", isMultilingual())
+                .put("analyzer", getAnalyzer())
+                .put("copyToFields", getCopyToFields())
+                .put("nestedFields", getNestedFields())
+                .build();
+    }
 }

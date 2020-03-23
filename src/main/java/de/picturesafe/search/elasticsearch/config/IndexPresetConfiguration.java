@@ -16,13 +16,16 @@
 
 package de.picturesafe.search.elasticsearch.config;
 
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
+
 import java.util.List;
 import java.util.Map;
 
 /**
  * Presets for index creation
  */
-public interface IndexPresetConfiguration {
+public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfiguration> {
 
     /**
      * Gets the alias name.
@@ -83,4 +86,29 @@ public interface IndexPresetConfiguration {
      * @return New index name
      */
     String createNewIndexName();
+
+    @Override
+    default Map<String, Object> toDocument() {
+        return toDocument(this);
+    }
+
+    /**
+     * Converts {@link IndexPresetConfiguration} to elasticsearch index document.
+     * @param conf  {@link IndexPresetConfiguration}
+     * @return      Elasticsearch index document
+     */
+    static Map<String, Object> toDocument(IndexPresetConfiguration conf) {
+        return DocumentBuilder.withoutId()
+                .put(CLASS_NAME_FIELD, conf.getClass().getName())
+                .put("indexAlias", conf.getIndexAlias())
+                .put("numberOfShards", conf.getNumberOfShards())
+                .put("numberOfReplicas", conf.getNumberOfReplicas())
+                .put("maxResultWindow", conf.getMaxResultWindow())
+                .put("fieldsLimit", conf.getFieldsLimit())
+                .put("useCompression", conf.isUseCompression())
+                .put("charMappings", conf.getCharMappings())
+                .put("customTokenizers", conf.getCustomTokenizers())
+                .put("customAnalyzers", conf.getCustomAnalyzers())
+                .build();
+    }
 }

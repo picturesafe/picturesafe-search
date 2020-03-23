@@ -6,6 +6,7 @@ import de.picturesafe.search.elasticsearch.SingleIndexElasticsearchService;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
 import de.picturesafe.search.expression.Expression;
@@ -86,8 +87,23 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     }
 
     @Override
+    public void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object) {
+        elasticsearchService.addObjectToIndex(indexAlias, dataChangeProcessingMode, object);
+    }
+
+    @Override
+    public void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id) {
+        elasticsearchService.addObjectToIndex(indexAlias, dataChangeProcessingMode, object, id);
+    }
+
+    @Override
     public void addToIndex(DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents) {
         elasticsearchService.addToIndex(indexAlias, dataChangeProcessingMode, documents);
+    }
+
+    @Override
+    public void addObjectsToIndex(DataChangeProcessingMode dataChangeProcessingMode, List<IndexObject<?>> objects) {
+        elasticsearchService.addObjectsToIndex(indexAlias, dataChangeProcessingMode, objects);
     }
 
     @Override
@@ -113,6 +129,11 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     @Override
     public Map<String, Object> getDocument(long id) {
         return elasticsearchService.getDocument(indexAlias, id);
+    }
+
+    @Override
+    public <T extends IndexObject<T>> T getObject(long id, Class<T> type) {
+        return elasticsearchService.getObject(indexAlias, id, type);
     }
 
     @Override

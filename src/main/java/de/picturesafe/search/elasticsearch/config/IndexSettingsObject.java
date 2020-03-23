@@ -16,23 +16,35 @@
 
 package de.picturesafe.search.elasticsearch.config;
 
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 
 import java.io.IOException;
+import java.util.Map;
+
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 /**
  * Configuration of a custom index settings object.
  */
-public class IndexSettingsObject {
+public class IndexSettingsObject implements IndexObject<IndexSettingsObject> {
 
-    private final String name;
+    private String name;
     private String json;
     private XContentBuilder content;
+
+    /**
+     * ONLY FOR INTERNAL USAGE
+     */
+    public IndexSettingsObject() {
+    }
 
     /**
      * Constructor
@@ -82,6 +94,37 @@ public class IndexSettingsObject {
      */
     public XContentBuilder content() {
         return content;
+    }
+
+    @Override
+    public Map<String, Object> toDocument() {
+        return DocumentBuilder.withoutId().put("name", name()).put("json", json()).build();
+    }
+
+    @Override
+    public IndexSettingsObject fromDocument(Map<String, Object> document) {
+        name = getString(document, "name");
+        json = getString(document, "json");
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final IndexSettingsObject that = (IndexSettingsObject) o;
+        return new EqualsBuilder().append(name, that.name).append(json, that.json).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     @Override

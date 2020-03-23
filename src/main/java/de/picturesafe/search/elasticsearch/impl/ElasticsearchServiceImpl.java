@@ -253,6 +253,14 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
+    public void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id) {
+        Validate.notNull(object, "Parameter 'object' may not be null!");
+        final Map<String, Object> doc = object.toDocument();
+        doc.put("id", id);
+        addToIndex(indexAlias, dataChangeProcessingMode, doc);
+    }
+
+    @Override
     public void addToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents) {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
@@ -325,11 +333,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Override
     public <T extends IndexObject<T>> T getObject(String indexAlias, long id, Class<T> type) {
         final Map<String, Object> doc = getDocument(indexAlias, id);
-        try {
-            return (doc != null) ? type.newInstance().fromDocument(doc) : null;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert document to object", e);
-        }
+        return (doc != null) ? IndexObject.fromDocument(doc, type) : null;
     }
 
     @Override

@@ -2,6 +2,9 @@ package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
+import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
+import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
@@ -299,6 +302,39 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(obj2, indexObject);
         indexObject = elasticsearchService.getObject(indexAlias, obj3.id, TestObject.class);
         assertEquals(obj3, indexObject);
+    }
+
+    @Test
+    public void testPersistingIndexConfig() {
+        indexName = elasticsearchService.createIndex(indexAlias);
+        elasticsearchService.createAlias(indexAlias, indexName);
+
+        final IndexPresetConfiguration indexConfig
+                = new StandardIndexPresetConfiguration("test-persistence", "test-persistence-prefix", "yyyy/MM/dd-HH/mm/ss", 17, 23, 123456);
+        elasticsearchService.addObjectToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, indexConfig, 12345);
+        final IndexPresetConfiguration storedConfig = elasticsearchService.getObject(indexAlias, 12345, IndexPresetConfiguration.class);
+        assertEquals(indexConfig, storedConfig);
+    }
+
+    @Test
+    public void testPersistingFieldConfig() {
+        indexName = elasticsearchService.createIndex(indexAlias);
+        elasticsearchService.createAlias(indexAlias, indexName);
+
+        FieldConfiguration fieldConfig = StandardFieldConfiguration.builder("test-persistence", ElasticsearchType.TEXT)
+                .sortable(true).aggregatable(false).multilingual(true).analyzer("myAnalyzer").copyToFulltext(true).copyTo("test").build();
+        elasticsearchService.addObjectToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, fieldConfig, 1001);
+        FieldConfiguration storedConfig = elasticsearchService.getObject(indexAlias, 1001, FieldConfiguration.class);
+        assertEquals(fieldConfig, storedConfig);
+
+        fieldConfig = StandardFieldConfiguration.builder("test-nested-persistence", ElasticsearchType.NESTED).nestedFields(
+                StandardFieldConfiguration.builder("test-persistence-1", ElasticsearchType.TEXT)
+                        .sortable(true).aggregatable(false).multilingual(true).analyzer("myAnalyzer").copyToFulltext(true).copyTo("test").build(),
+                StandardFieldConfiguration.builder("test-persistence-2", ElasticsearchType.INTEGER).sortable(true).aggregatable(true).build())
+        .build();
+        elasticsearchService.addObjectToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, fieldConfig, 1002);
+        storedConfig = elasticsearchService.getObject(indexAlias, 1002, FieldConfiguration.class);
+        assertEquals(fieldConfig, storedConfig);
     }
 
     private Date parseDate(String date) {
