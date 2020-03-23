@@ -141,12 +141,12 @@ public class GettingStarted {
         try {
             singleIndexElasticsearchService.createIndexWithAlias();
 
-            singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
-                    DocumentBuilder.id(1).put("title", "This is a test title").build());
-            singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
-                    DocumentBuilder.id(2).put("title", "This is another test title").build());
-            singleIndexElasticsearchService.addToIndex(DataChangeProcessingMode.BLOCKING,
-                    DocumentBuilder.id(3).put("title", "This is one more test title").build());
+            singleIndexElasticsearchService
+                    .addToIndex(DataChangeProcessingMode.BLOCKING, Arrays.asList(
+                    DocumentBuilder.id(1).put("title", "This is a test title").build(),
+                    DocumentBuilder.id(2).put("title", "This is another test title").build(),
+                    DocumentBuilder.id(3).put("title", "This is one more test title").build()
+            ));
 
             final Expression expression = OperationExpression.and(
                     new FulltextExpression("test title"),
