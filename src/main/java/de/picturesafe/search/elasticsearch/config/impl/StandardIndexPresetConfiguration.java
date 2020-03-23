@@ -18,7 +18,6 @@ package de.picturesafe.search.elasticsearch.config.impl;
 
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexSettingsObject;
-import de.picturesafe.search.elasticsearch.config.util.IndexPresetConfigurationDocumentBuilder;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -230,14 +229,14 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
 
     @Override
     public Map<String, Object> toDocument() {
-        final Map<String, Object> document = IndexPresetConfigurationDocumentBuilder.build(this);
+        final Map<String, Object> document = IndexPresetConfiguration.toDocument(this);
         document.put("indexNamePrefix", indexNamePrefix);
         document.put("indexNameDateFormat", indexNameDateFormat);
         return document;
     }
 
     @Override
-    public IndexPresetConfiguration internalFromDocument(Map<String, Object> document) {
+    public IndexPresetConfiguration fromDocument(Map<String, Object> document) {
         indexAlias = getString(document, "indexAlias");
         indexNamePrefix = getString(document, "indexNamePrefix");
         indexNameDateFormat = getString(document, "indexNameDateFormat");

@@ -67,7 +67,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
         return DocumentBuilder.withoutId()
                 .put("class", getClass().getName())
                 .put("name", getName())
-                .put("lasticsearchType", getElasticsearchType())
+                .put("elasticsearchType", getElasticsearchType())
                 .put("copyToFulltext", isCopyToFulltext())
                 .put("sortable", isSortable())
                 .put("aggregatable", isAggregatable())
@@ -77,16 +77,4 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("nestedFields", getNestedFields())
                 .build();
     }
-
-    @Override
-    default FieldConfiguration fromDocument(Map<String, Object> document) {
-        final String className = IndexObject.classNameFromDocument(document);
-        try {
-            return ((FieldConfiguration) Class.forName(className).newInstance()).internalFromDocument(document);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    FieldConfiguration internalFromDocument(Map<String, Object> document);
 }

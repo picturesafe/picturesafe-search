@@ -21,6 +21,7 @@ import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Arrays;
@@ -43,8 +44,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
 
     private String name;
     private String elasticsearchType;
-    private boolean copyToFulltext;
-    private boolean copyToSuggest;
     private boolean sortable;
     private boolean aggregatable;
     private boolean multilingual;
@@ -62,8 +61,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private StandardFieldConfiguration(Builder builder) {
         this.name = builder.name;
         this.elasticsearchType = builder.elasticsearchType;
-        this.copyToFulltext = builder.copyToFulltext;
-        this.copyToSuggest = builder.copyToSuggest;
         this.sortable = builder.sortable;
         this.aggregatable = builder.aggregatable;
         this.multilingual = builder.multilingual;
@@ -90,7 +87,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     }
 
     public boolean isCopyToFulltext() {
-        return copyToFulltext;
+        return copyToFields != null && copyToFields.contains(FIELD_NAME_FULLTEXT);
     }
 
     public boolean isSortable() {
@@ -148,8 +145,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     public static class Builder {
         private final String name;
         private final String elasticsearchType;
-        private boolean copyToFulltext;
-        private boolean copyToSuggest;
         private boolean sortable;
         private boolean aggregatable;
         private boolean multilingual;
@@ -188,7 +183,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         }
 
         public Builder copyToFulltext(boolean copyToFulltext) {
-            this.copyToFulltext = copyToFulltext;
             if (copyToFulltext) {
                 if (copyToFields == null) {
                     copyToFields = new TreeSet<>();
@@ -201,7 +195,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         }
 
         public Builder copyToSuggest(boolean copyToSuggest) {
-            this.copyToSuggest = copyToSuggest;
             if (copyToSuggest) {
                 if (copyToFields == null) {
                     copyToFields = new TreeSet<>();
@@ -228,6 +221,10 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             return copyTo(Arrays.asList(copyToFields));
         }
 
+        public Builder nestedFields(StandardFieldConfiguration... nestedFields) {
+            return nestedFields(Arrays.asList(nestedFields));
+        }
+
         public Builder nestedFields(List<StandardFieldConfiguration> nestedFields) {
             this.nestedFields = nestedFields;
             return this;
@@ -251,21 +248,48 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
-    public StandardFieldConfiguration internalFromDocument(Map<String, Object> document) {
+    public StandardFieldConfiguration fromDocument(Map<String, Object> document) {
         name = getString(document, "name");
         elasticsearchType = getString(document, "elasticsearchType");
-        copyToFulltext = getBoolean(document, "copyToFulltext)");
-        sortable = getBoolean(document, "sortable)");
-        aggregatable = getBoolean(document, "aggregatable)");
-        multilingual = getBoolean(document, "multilingual)");
-        analyzer = getString(document, "analyzer)");
-        copyToFields = getStringSet(document, "copyToFields)");
+        sortable = getBoolean(document, "sortable");
+        aggregatable = getBoolean(document, "aggregatable");
+        multilingual = getBoolean(document, "multilingual");
+        analyzer = getString(document, "analyzer");
+        copyToFields = getStringSet(document, "copyToFields");
 
-        final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "nestedFields)");
+        final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "nestedFields");
         nestedFields = (nestedDocuments != null)
-                ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().internalFromDocument(doc)).collect(Collectors.toList())
+                ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().fromDocument(doc)).collect(Collectors.toList())
                 : null;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final StandardFieldConfiguration that = (StandardFieldConfiguration) o;
+        return new EqualsBuilder()
+                .append(sortable, that.sortable)
+                .append(aggregatable, that.aggregatable)
+                .append(multilingual, that.multilingual)
+                .append(name, that.name)
+                .append(elasticsearchType, that.elasticsearchType)
+                .append(analyzer, that.analyzer)
+                .append(nestedFields, that.nestedFields)
+                .append(copyToFields, that.copyToFields)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     @Override
@@ -273,8 +297,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("name", name) //--
                 .append("elasticsearchType", elasticsearchType) //--
-                .append("copyToFulltext", copyToFulltext) //--
-                .append("copyToSuggest", copyToSuggest) //--
                 .append("sortable", sortable) //--
                 .append("aggregatable", aggregatable) //--
                 .append("multilingual", multilingual) //--

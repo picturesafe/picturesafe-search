@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.config;
 
-import de.picturesafe.search.elasticsearch.config.util.IndexPresetConfigurationDocumentBuilder;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
 
 import java.util.List;
@@ -89,18 +89,26 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
 
     @Override
     default Map<String, Object> toDocument() {
-        return IndexPresetConfigurationDocumentBuilder.build(this);
+        return toDocument(this);
     }
 
-    @Override
-    default IndexPresetConfiguration fromDocument(Map<String, Object> document) {
-        final String className = IndexObject.classNameFromDocument(document);
-        try {
-            return ((IndexPresetConfiguration) Class.forName(className).newInstance()).internalFromDocument(document);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * Converts {@link IndexPresetConfiguration} to elasticsearch index document.
+     * @param conf  {@link IndexPresetConfiguration}
+     * @return      Elasticsearch index document
+     */
+    static Map<String, Object> toDocument(IndexPresetConfiguration conf) {
+        return DocumentBuilder.withoutId()
+                .put("class", conf.getClass().getName())
+                .put("indexAlias", conf.getIndexAlias())
+                .put("numberOfShards", conf.getNumberOfShards())
+                .put("numberOfReplicas", conf.getNumberOfReplicas())
+                .put("maxResultWindow", conf.getMaxResultWindow())
+                .put("fieldsLimit", conf.getFieldsLimit())
+                .put("useCompression", conf.isUseCompression())
+                .put("charMappings", conf.getCharMappings())
+                .put("customTokenizers", conf.getCustomTokenizers())
+                .put("customAnalyzers", conf.getCustomAnalyzers())
+                .build();
     }
-
-    IndexPresetConfiguration internalFromDocument(Map<String, Object> document);
 }

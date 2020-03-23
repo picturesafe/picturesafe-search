@@ -30,6 +30,11 @@ import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUt
 public interface IndexObject<T extends IndexObject<T>> {
 
     /**
+     * Name of the field providing the class name in the object's index document
+     */
+    String CLASS_NAME_FIELD = "class";
+
+    /**
      * Converts object to elasticsearch index document.
      * @return Elasticsearch index document
      */
@@ -49,9 +54,6 @@ public interface IndexObject<T extends IndexObject<T>> {
      */
     static String classNameFromDocument(Map<String, Object> document) {
         Validate.notEmpty(document, "Parameter 'document' may not be null or empty!");
-
-        final String className = getString(document, "class");
-        Validate.notNull(className, "Missing field 'class' in document!");
-        return className;
+        return getString(document, CLASS_NAME_FIELD);
     }
 }
