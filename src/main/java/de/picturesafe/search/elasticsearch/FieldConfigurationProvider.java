@@ -31,12 +31,13 @@ public interface FieldConfigurationProvider {
      * @param indexAlias    Name of the alias of the index
      * @return              List of field configurations
      */
-    List<FieldConfiguration> getFieldConfigurations(String indexAlias);
+    List<? extends FieldConfiguration> getFieldConfigurations(String indexAlias);
 
     /**
      * Gets the supported locales for multilingual fields.
      *
-     * @return Supported locales
+     * @param indexAlias    Name of the alias of the index
+     * @return              Supported locales
      */
-    List<Locale> getSupportedLocales();
+    List<Locale> getSupportedLocales(String indexAlias);
 }
