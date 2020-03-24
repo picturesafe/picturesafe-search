@@ -37,6 +37,10 @@ For a new application an Elasticsearch server must be installed first:
 * https://www.elastic.co/downloads/elasticsearch[Download] and unpack the Elasticsearch official distribution.
 * Run `bin/elasticsearch` on Linux or macOS. Run `bin\elasticsearch.bat` on Windows.
 
+Some features of picturesafe-search (for example sorting documents in a language-specific word order) require the https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html[ICU Analysis Plugin] for Elasticsearch.
+
+* Run `bin/elasticsearch-plugin install analysis-icu` on Linux or macOS. Run `bin\elasticsearch-plugin install analysis-icu` on Windows.
+
 ==== Run Elasticsearch in a Docker container
 
 As an alternative to installing Elasticsearch you can run it in a Docker container. To do this you can use the provided Docker Compose file.
