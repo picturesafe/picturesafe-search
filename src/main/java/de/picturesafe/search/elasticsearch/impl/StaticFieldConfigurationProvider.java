@@ -45,7 +45,7 @@ public class StaticFieldConfigurationProvider implements FieldConfigurationProvi
     }
 
     @Override
-    public List<Locale> getSupportedLocales() {
+    public List<Locale> getSupportedLocales(String indexAlias) {
         return supportedLocales;
     }
 }

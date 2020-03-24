@@ -437,10 +437,11 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     protected MappingConfiguration getMappingConfiguration(String indexAlias, boolean addFieldConfigurations) {
         final List<LanguageSortConfiguration> languageSortConfigurations = new ArrayList<>();
-        for (final Locale locale : fieldConfigurationProvider.getSupportedLocales()) {
+        for (final Locale locale : fieldConfigurationProvider.getSupportedLocales(indexAlias)) {
             languageSortConfigurations.add(new LanguageSortConfiguration(locale));
         }
-        final List<FieldConfiguration> fieldConfigurations = addFieldConfigurations ? fieldConfigurationProvider.getFieldConfigurations(indexAlias) : null;
+        final List<? extends FieldConfiguration> fieldConfigurations = addFieldConfigurations
+                ? fieldConfigurationProvider.getFieldConfigurations(indexAlias) : null;
         return new MappingConfiguration(
                 (fieldConfigurations != null) ? fieldConfigurations : Collections.emptyList(), languageSortConfigurations);
     }
