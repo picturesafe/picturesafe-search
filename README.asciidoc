@@ -198,3 +198,29 @@ Expression expression = OperationExpression.and(
 ----
 
 In addition there are further expressions like `InExpression`, `MustNotExpression`, `RangeValueExpression`, `DayExpression`, https://picturesafe-search.io/docs/reference/expressions/[more]
+
+== Building picturesafe-search
+
+If you want to build picturesafe-search yourself there are two prerequisites:
+
+=== JDK
+
+You need to have installed a Java Development Kit. The picturesafe-search project is currently developed using Java 8, but has also been tested on Java 11.
+
+**Note when using Java 11:**
+Please use the OpenJDK provided by https://jdk.java.net/java-se-ri/11[Oracle] as there is a Javadoc related
+https://bugs.openjdk.java.net/browse/JDK-8212233[bug] which has not been fixed in AdoptOpenJDK at the moment.
+
+=== Apache Maven
+
+You also need to have installed https://maven.apache.org/[Apache Maven]. The picturesafe-search project is currently developed using Maven 3.6, but other 3.x
+versions could work also (not tested).
+
+=== Build
+
+Change to the project directory and run the following command in your shell:
+
+[source,bash]
+----
+mvn install
+----

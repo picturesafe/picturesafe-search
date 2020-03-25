@@ -233,7 +233,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     }
 
     private Calendar todayNoon() {
-        final Calendar cal = Calendar.getInstance(Locale.GERMAN);
+        final Calendar cal = Calendar.getInstance(Locale.GERMANY);
         cal.set(Calendar.HOUR_OF_DAY, 12);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
