@@ -213,8 +213,7 @@ https://bugs.openjdk.java.net/browse/JDK-8212233[bug] which has not been fixed i
 
 === Apache Maven
 
-You also need to have installed https://maven.apache.org/[Apache Maven]. The picturesafe-search project is currently developed using Maven 3.6, but other 3.x
-versions could work also (not tested).
+You also need to have installed https://maven.apache.org/[Apache Maven] version 3.6.
 
 === Build
 
