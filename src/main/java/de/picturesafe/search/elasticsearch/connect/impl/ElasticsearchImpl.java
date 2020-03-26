@@ -45,7 +45,7 @@ import de.picturesafe.search.elasticsearch.connect.error.QuerySyntaxException;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.util.NullAwareAndFilterBuilder;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactoryCaller;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
@@ -55,7 +55,6 @@ import de.picturesafe.search.elasticsearch.connect.util.StringTrimUtility;
 import de.picturesafe.search.elasticsearch.connect.util.logging.SearchResponseToString;
 import de.picturesafe.search.elasticsearch.connect.util.logging.SearchSourceBuilderToString;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
-import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
@@ -121,6 +120,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
+import static de.picturesafe.search.elasticsearch.connect.filter.util.FilterFactoryUtils.createFilter;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticRequestUtils.getRefreshPolicy;
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.isTextField;
@@ -490,10 +490,10 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     @Override
-    public QueryBuilder createQuery(Expression expression, MappingConfiguration mappingConfiguration) {
+    public QueryBuilder createQuery(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
         for (QueryFactory queryFactory : queryFactories) {
-            if (queryFactory.supports(expression)) {
-                final QueryBuilder result = queryFactory.create(this, mappingConfiguration, expression);
+            if (queryFactory.supports(queryDto)) {
+                final QueryBuilder result = queryFactory.create(this, queryDto, mappingConfiguration);
                 if (result != null) {
                     return result;
                 }
@@ -561,8 +561,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     protected SearchResponse internalSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration) {
         final SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(queryDto);
 
-        final QueryBuilder filterBuilder = createFilter(queryDto, mappingConfiguration);
-        final QueryBuilder queryBuilder = createQuery(queryDto.getExpression(), mappingConfiguration);
+        final QueryBuilder filterBuilder = createFilter(filterFactories, queryDto, new FilterFactoryContext(mappingConfiguration));
+        final QueryBuilder queryBuilder = createQuery(queryDto, mappingConfiguration);
 
         if (filterBuilder != null) {
             if (queryBuilder == null) {
@@ -685,7 +685,9 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     private NestedSortBuilder nestedSortBuilder(QueryDto queryDto, String topFieldName, SortOption sortOption, MappingConfiguration mappingConfiguration) {
         final NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(topFieldName);
         if (sortOption.getFilter() != null) {
-            nestedSortBuilder.setFilter(createFilter(QueryDto.sortFilter(sortOption.getFilter(), queryDto.getLocale()), mappingConfiguration));
+            nestedSortBuilder.setFilter(
+                    createFilter(filterFactories, QueryDto.sortFilter(sortOption.getFilter(), queryDto.getLocale()),
+                            new FilterFactoryContext(mappingConfiguration)));
         }
         return nestedSortBuilder;
     }
@@ -758,22 +760,6 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         final String[] includes = fields.toArray(new String[0]);
         final String[] excludes = new String[0];
         searchRequestBuilder.fetchSource(includes, excludes);
-    }
-
-    protected QueryBuilder createFilter(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final List<QueryBuilder> queryBuilders = new ArrayList<>();
-        for (FilterFactory filterFactory : filterFactories) {
-            final List<QueryBuilder> filters = filterFactory.create(queryDto, mappingConfiguration);
-            if (CollectionUtils.isNotEmpty(filters)) {
-                queryBuilders.addAll(filters);
-            }
-        }
-        final NullAwareAndFilterBuilder allFilterBuilder = new NullAwareAndFilterBuilder();
-        for (QueryBuilder queryBuilder : queryBuilders) {
-            allFilterBuilder.add(queryBuilder);
-        }
-
-        return allFilterBuilder.toFilterBuilder();
     }
 
     protected SearchSourceBuilder searchSourceBuilder(QueryDto queryDto) {

@@ -53,7 +53,7 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
 
     private InternalQueryFilterBuilder internalQueryFilterBuilder;
     private InternalTermFilterBuilder internalTermFilterBuilder;
-    private InternalNestedFilterBuilder internalNestedFilterBuilder;
+    private InternalNestedFilterBuilder internalNestedSortFilterBuilder;
     private InternalPhraseMatchFilterBuilder internalPhraseMatchFilterBuilder;
 
     public ValueExpressionFilterBuilder(List<ValuePreparer> valuePreparers, QueryConfiguration queryConfig, String timeZone) {
@@ -62,7 +62,7 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
 
         internalQueryFilterBuilder = new InternalQueryFilterBuilder(queryConfig);
         internalTermFilterBuilder = new InternalTermFilterBuilder();
-        internalNestedFilterBuilder = new InternalNestedFilterBuilder();
+        internalNestedSortFilterBuilder = new InternalNestedFilterBuilder();
         internalPhraseMatchFilterBuilder = new InternalPhraseMatchFilterBuilder();
     }
 
@@ -84,7 +84,7 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
         final ValueExpression.Comparison comparison = expression.getComparison();
 
         Object value = prepareValue(expression);
-        final InternalFilterBuilder internalFilterBuilder = determineInternalFilterBuilder(expression, fieldConfig, value);
+        final InternalFilterBuilder internalFilterBuilder = determineInternalFilterBuilder(context, fieldConfig, value);
 
         if (value instanceof Date) {
             value = ElasticDateUtils.formatIso((Date) value, timeZone);
@@ -122,11 +122,11 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
         }
     }
 
-    private InternalFilterBuilder determineInternalFilterBuilder(ValueExpression expression, FieldConfiguration fieldConfig, Object value) {
+    private InternalFilterBuilder determineInternalFilterBuilder(ExpressionFilterBuilderContext context, FieldConfiguration fieldConfig, Object value) {
         InternalFilterBuilder filterBuilder = null;
         if (fieldConfig != null) {
-            if (fieldConfig.isNestedObject()) {
-                filterBuilder = internalNestedFilterBuilder;
+            if (fieldConfig.isNestedObject() && !context.isNestedQuery()) {
+                filterBuilder = internalNestedSortFilterBuilder;
             } else if (fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.BOOLEAN.toString()) && Boolean.FALSE.equals(value)) {
                 // Boolean-Feld nicht vorhanden wird als false interpretiert.
                 filterBuilder = (k, v, c) ->
@@ -134,7 +134,7 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
             }
         }
         if (filterBuilder == null && value instanceof String) {
-            if (matchPhrase(expression)) {
+            if (matchPhrase((ValueExpression) context.getExpression())) {
                 filterBuilder = internalPhraseMatchFilterBuilder;
             } else {
                 filterBuilder = internalQueryFilterBuilder;

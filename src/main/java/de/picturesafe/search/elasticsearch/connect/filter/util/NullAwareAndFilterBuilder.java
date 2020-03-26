@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.util;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -27,25 +28,30 @@ public class NullAwareAndFilterBuilder {
 
     private final List<QueryBuilder> queryBuilders = new ArrayList<>();
 
+    public NullAwareAndFilterBuilder() {
+    }
+
+    public NullAwareAndFilterBuilder(List<QueryBuilder> queryBuilders) {
+        if (CollectionUtils.isNotEmpty(queryBuilders)) {
+            queryBuilders.forEach(this::add);
+        }
+    }
+
     public void add(QueryBuilder filterBuilder) {
         if (filterBuilder != null) {
             queryBuilders.add(filterBuilder);
         }
     }
 
-    public QueryBuilder toFilterBuilder() {
+    public QueryBuilder toQueryBuilder() {
         if (queryBuilders.size() == 0) {
             return null;
         } else if (queryBuilders.size() == 1) {
             return queryBuilders.get(0);
         } else {
             final BoolQueryBuilder boolFilter = QueryBuilders.boolQuery();
-            for (QueryBuilder queryBuilder : queryBuilders) {
-                boolFilter.filter(queryBuilder);
-            }
-
+            queryBuilders.forEach(boolFilter::filter);
             return boolFilter;
         }
     }
-
 }

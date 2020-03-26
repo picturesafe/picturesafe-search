@@ -40,7 +40,7 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfiguration.class, ElasticsearchImpl.class, ElasticsearchAdminImpl.class})
+@ContextConfiguration(classes = {TestConfiguration.class, ElasticsearchImpl.class})
 public abstract class AbstractElasticIntegrationTest {
 
     private static final AtomicInteger INSTANCE_COUNT = new AtomicInteger();
@@ -55,23 +55,23 @@ public abstract class AbstractElasticIntegrationTest {
 
     @Autowired
     @Qualifier("elasticsearchTimeZone")
-    protected String tz;
+    protected String timezone;
 
     protected final String indexAlias = getClass().getSimpleName().toLowerCase(Locale.ROOT) + "-" + INSTANCE_COUNT.incrementAndGet();
     RestHighLevelClient restClient;
-    private TimeZone tzBeforeTest;
+    private TimeZone timezoneBeforeTest;
 
     @Before
     public final void baseSetup() {
-        tzBeforeTest = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone(tz));
+        timezoneBeforeTest = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone(timezone));
         this.restClient = elasticsearchRestClientConfiguration.getClient();
         indexPresetConfiguration = new StandardIndexPresetConfiguration(indexPresetConfiguration, indexAlias);
     }
 
     @After
     public final void baseTearDown() {
-        TimeZone.setDefault(tzBeforeTest);
+        TimeZone.setDefault(timezoneBeforeTest);
     }
 
     public static Date today() {

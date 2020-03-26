@@ -22,6 +22,7 @@ import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.AbstractTimeZoneRelatedTest;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.expression.ConditionExpression;
 import de.picturesafe.search.expression.DayExpression;
@@ -136,6 +137,6 @@ public class DayExpressionFilterBuilderTest extends AbstractTimeZoneRelatedTest 
         fieldConfigs.add(StandardFieldConfiguration.builder("createDate", ElasticsearchType.DATE).build());
 
         final MappingConfiguration indexConfig = new MappingConfiguration(fieldConfigs);
-        return new ExpressionFilterBuilderContext(new DayExpression(field, comparison, date), null, indexConfig, null);
+        return new ExpressionFilterBuilderContext(new DayExpression(field, comparison, date), null, new FilterFactoryContext(indexConfig), null);
     }
 }

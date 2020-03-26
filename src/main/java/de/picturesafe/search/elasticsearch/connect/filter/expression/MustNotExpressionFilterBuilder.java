@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.expression.MustNotExpression;
 
 import org.elasticsearch.index.query.QueryBuilder;
@@ -42,6 +43,6 @@ public class MustNotExpressionFilterBuilder implements ExpressionFilterBuilder {
         final MappingConfiguration mappingConfiguration = expressionFilterBuilderContext.getMappingConfiguration();
 
         final ExpressionFilterFactory expressionFilterFactory = expressionFilterBuilderContext.getInitiator();
-        return expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), queryDto, mappingConfiguration);
+        return expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), queryDto, new FilterFactoryContext(mappingConfiguration));
     }
 }

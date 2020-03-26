@@ -19,19 +19,20 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.expression.Expression;
 
 public class ExpressionFilterBuilderContext {
     private final Expression expression;
     private final QueryDto queryDto;
-    private final MappingConfiguration mappingConfiguration;
+    private final FilterFactoryContext filterFactoryContext;
     private final ExpressionFilterFactory initiator;
 
-    public ExpressionFilterBuilderContext(Expression expression, QueryDto queryDto, MappingConfiguration mappingConfiguration,
+    public ExpressionFilterBuilderContext(Expression expression, QueryDto queryDto, FilterFactoryContext filterFactoryContext,
                                           ExpressionFilterFactory initiator) {
         this.expression = expression;
         this.queryDto = queryDto;
-        this.mappingConfiguration = mappingConfiguration;
+        this.filterFactoryContext = filterFactoryContext;
         this.initiator = initiator;
     }
 
@@ -43,8 +44,16 @@ public class ExpressionFilterBuilderContext {
         return queryDto;
     }
 
+    public FilterFactoryContext getFilterFactoryContext() {
+        return filterFactoryContext;
+    }
+
     public MappingConfiguration getMappingConfiguration() {
-        return mappingConfiguration;
+        return filterFactoryContext.getMappingConfiguration();
+    }
+
+    public boolean isNestedQuery() {
+        return filterFactoryContext.isNestedQuery();
     }
 
     ExpressionFilterFactory getInitiator() {
