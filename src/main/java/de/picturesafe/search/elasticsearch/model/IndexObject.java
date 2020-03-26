@@ -51,6 +51,7 @@ public interface IndexObject<T extends IndexObject<T>> {
      * Converts elasticsearch index document to object.
      * @param document  Elasticsearch index document
      * @param type      Type class of object
+     * @param <T>       Generic type of the object
      * @return          Object
      */
     @SuppressWarnings("unchecked")

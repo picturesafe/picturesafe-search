@@ -189,6 +189,7 @@ public interface SingleIndexElasticsearchService {
      *
      * @param id            ID of the object
      * @param type          Type class of the object
+     * @param <T>           Generic type of the object
      * @return              The index object or <code>null</code> if the ID does not exist
      */
     <T extends IndexObject<T>> T getObject(long id, Class<T> type);
