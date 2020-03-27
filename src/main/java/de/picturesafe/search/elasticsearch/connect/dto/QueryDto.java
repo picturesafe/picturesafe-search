@@ -74,6 +74,11 @@ public class QueryDto {
         Validate.notNull(queryRangeDto, "Search Result Range (QueryRangeDTO) is not allowed to be null.");
     }
 
+    public QueryDto(QueryDto queryDto, Expression expression) {
+        this(expression, queryDto.queryRangeDto, queryDto.sortOptions, queryDto.queryFacetDtos, queryDto.locale, queryDto.fieldsToResolve,
+                queryDto.fieldResolverType);
+    }
+
     public Expression getExpression() {
         return expression;
     }

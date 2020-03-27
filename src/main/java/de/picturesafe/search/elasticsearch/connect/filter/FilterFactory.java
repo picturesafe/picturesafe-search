@@ -16,7 +16,6 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter;
 
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -28,8 +27,8 @@ public interface FilterFactory {
      * Creates a List of {@link QueryBuilder} (filter).
      *
      * @param queryDto                  {@link QueryDto}
-     * @param mappingConfiguration      {@link MappingConfiguration}
+     * @param context                   {@link FilterFactoryContext}
      * @return                          A List of {@link QueryBuilder} (filter) - may be empty
      */
-    List<QueryBuilder> create(QueryDto queryDto, MappingConfiguration mappingConfiguration);
+    List<QueryBuilder> create(QueryDto queryDto, FilterFactoryContext context);
 }

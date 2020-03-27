@@ -1,6 +1,7 @@
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.MustNotExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -27,7 +28,8 @@ public class MustNotExpressionFilterBuilderTest {
         final MustNotExpressionFilterBuilder builder = new MustNotExpressionFilterBuilder();
 
         final Expression expression = new MustNotExpression(new ValueExpression("test", "test"));
-        final ExpressionFilterBuilderContext context = new ExpressionFilterBuilderContext(expression, null, null, expressionFilterFactory);
+        final ExpressionFilterBuilderContext context
+                = new ExpressionFilterBuilderContext(expression, null, new FilterFactoryContext(null), expressionFilterFactory);
         final QueryBuilder mustNotFilter = builder.buildFilter(context);
         assertNotNull(mustNotFilter);
         assertTrue(mustNotFilter instanceof BoolQueryBuilder);
@@ -40,7 +42,8 @@ public class MustNotExpressionFilterBuilderTest {
         final MustNotExpressionFilterBuilder builder = new MustNotExpressionFilterBuilder();
 
         final Expression expression = new ValueExpression("test", "test");
-        final ExpressionFilterBuilderContext context = new ExpressionFilterBuilderContext(expression, null, null, null);
+        final ExpressionFilterBuilderContext context
+                = new ExpressionFilterBuilderContext(expression, null, new FilterFactoryContext(null), null);
         assertNull(builder.buildFilter(context));
     }
 
@@ -50,7 +53,8 @@ public class MustNotExpressionFilterBuilderTest {
         doReturn(null).when(builder).buildInnerFilter(any(ExpressionFilterBuilderContext.class));
 
         final Expression expression = new MustNotExpression(new ValueExpression("test", "test"));
-        final ExpressionFilterBuilderContext context = new ExpressionFilterBuilderContext(expression, null, null, null);
+        final ExpressionFilterBuilderContext context
+                = new ExpressionFilterBuilderContext(expression, null, new FilterFactoryContext(null), null);
         assertNull(builder.buildFilter(context));
     }
 }

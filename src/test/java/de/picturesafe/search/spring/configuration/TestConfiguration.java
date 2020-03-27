@@ -31,6 +31,7 @@ import de.picturesafe.search.elasticsearch.connect.facet.DateHistogramAggregatio
 import de.picturesafe.search.elasticsearch.connect.facet.DateRangeAggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.DefaultExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
+import de.picturesafe.search.elasticsearch.connect.impl.ElasticsearchAdminImpl;
 import de.picturesafe.search.elasticsearch.connect.mock.FacetResolverMock;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Configuration
-@Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class})
+@Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, ElasticsearchAdminImpl.class})
 @PropertySource("classpath:elasticsearch.properties")
 public class TestConfiguration {
 

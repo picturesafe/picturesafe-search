@@ -17,6 +17,7 @@
 package de.picturesafe.search.elasticsearch.connect.query;
 
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
+import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.OperationExpression;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -30,22 +31,22 @@ import java.util.List;
 public class OperationExpressionQueryFactory implements QueryFactory {
 
     @Override
-    public boolean supports(Expression parameter) {
-        return parameter instanceof OperationExpression;
+    public boolean supports(QueryDto queryDto) {
+        return queryDto.getExpression() instanceof OperationExpression;
     }
 
     @Override
-    public QueryBuilder create(QueryFactoryCaller caller, MappingConfiguration mappingConfiguration, Expression parameter) {
-        final OperationExpression operationExpression = (OperationExpression) parameter;
+    public QueryBuilder create(QueryFactoryCaller caller, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
+        final OperationExpression operationExpression = (OperationExpression) queryDto.getExpression();
         final List<Expression> operands = operationExpression.getOperands();
 
         if (operands.size() == 1) {
-            return caller.createQuery(operands.get(0), mappingConfiguration);
+            return caller.createQuery(new QueryDto(queryDto, operands.get(0)), mappingConfiguration);
         } else if (operands.size() > 1) {
             final BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
             boolean somethingAddedToBuilder = false;
             for (Expression operand: operands) {
-                final QueryBuilder subQueryBuilder = caller.createQuery(operand, mappingConfiguration);
+                final QueryBuilder subQueryBuilder = caller.createQuery(new QueryDto(queryDto, operand), mappingConfiguration);
                 if (subQueryBuilder != null) {
                     somethingAddedToBuilder = true;
                     switch (operationExpression.getOperator()) {

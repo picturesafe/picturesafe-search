@@ -16,36 +16,45 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.util;
 
+import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class NullAwareAndFilterBuilder {
+public class FilterFactoryUtils {
 
-    private final List<QueryBuilder> queryBuilders = new ArrayList<>();
-
-    public void add(QueryBuilder filterBuilder) {
-        if (filterBuilder != null) {
-            queryBuilders.add(filterBuilder);
-        }
+    private FilterFactoryUtils() {
     }
 
-    public QueryBuilder toFilterBuilder() {
+    public static QueryBuilder createFilter(List<FilterFactory> filterFactories, QueryDto queryDto, FilterFactoryContext context) {
+        final List<QueryBuilder> queryBuilders = new ArrayList<>();
+        for (FilterFactory filterFactory : filterFactories) {
+            final List<QueryBuilder> filters = filterFactory.create(queryDto, context);
+            if (CollectionUtils.isNotEmpty(filters)) {
+                queryBuilders.addAll(filters);
+            }
+        }
+        return combine(queryBuilders);
+    }
+
+    private static QueryBuilder combine(List<QueryBuilder> queryBuilders) {
+        queryBuilders = queryBuilders.stream().filter(Objects::nonNull).collect(Collectors.toList());
         if (queryBuilders.size() == 0) {
             return null;
         } else if (queryBuilders.size() == 1) {
             return queryBuilders.get(0);
         } else {
             final BoolQueryBuilder boolFilter = QueryBuilders.boolQuery();
-            for (QueryBuilder queryBuilder : queryBuilders) {
-                boolFilter.filter(queryBuilder);
-            }
-
+            queryBuilders.forEach(boolFilter::filter);
             return boolFilter;
         }
     }
-
 }

@@ -16,7 +16,6 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter;
 
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilder;
 import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilderContext;
@@ -35,19 +34,17 @@ public class ExpressionFilterFactory implements FilterFactory {
     }
 
     @Override
-    public List<QueryBuilder> create(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
+    public List<QueryBuilder> create(QueryDto queryDto, FilterFactoryContext context) {
         final List<QueryBuilder> result = new ArrayList<>();
-        final QueryBuilder filter = buildFilter(queryDto.getExpression(), queryDto, mappingConfiguration);
+        final QueryBuilder filter = buildFilter(queryDto.getExpression(), queryDto, context);
         if (filter != null) {
             result.add(filter);
         }
         return result;
     }
 
-    public QueryBuilder buildFilter(Expression expression, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final ExpressionFilterBuilderContext expressionFilterBuilderContext = new ExpressionFilterBuilderContext(
-                expression, queryDto, mappingConfiguration, this
-        );
+    public QueryBuilder buildFilter(Expression expression, QueryDto queryDto, FilterFactoryContext context) {
+        final ExpressionFilterBuilderContext expressionFilterBuilderContext = new ExpressionFilterBuilderContext(expression, queryDto, context, this);
         for (ExpressionFilterBuilder expressionFilterBuilder : expressionFilterBuilders) {
             final QueryBuilder filterBuilder = expressionFilterBuilder.buildFilter(expressionFilterBuilderContext);
             if (filterBuilder != null) {

@@ -16,17 +16,20 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
+import de.picturesafe.search.spring.configuration.TestConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.TimeZone;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-public abstract class AbstractTimeZoneRelatedTest extends AbstractElasticIntegrationTest {
+@ContextConfiguration(classes = TestConfiguration.class)
+public abstract class AbstractTimeZoneRelatedTest {
 
     @Autowired
     @Qualifier("elasticsearchTimeZone")

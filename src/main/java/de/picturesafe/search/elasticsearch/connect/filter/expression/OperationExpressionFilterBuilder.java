@@ -18,10 +18,9 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
+import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.OperationExpression;
-
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -32,20 +31,20 @@ import java.util.List;
 public class OperationExpressionFilterBuilder implements ExpressionFilterBuilder {
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
-        if (!(expressionFilterBuilderContext.getExpression() instanceof OperationExpression)) {
+    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
+        if (!(context.getExpression() instanceof OperationExpression)) {
             return null;
         }
 
-        final OperationExpression operationExpression = (OperationExpression) expressionFilterBuilderContext.getExpression();
-        final QueryDto queryDto = expressionFilterBuilderContext.getQueryDto();
-        final MappingConfiguration mappingConfiguration = expressionFilterBuilderContext.getMappingConfiguration();
+        final OperationExpression operationExpression = (OperationExpression) context.getExpression();
+        final QueryDto queryDto = context.getQueryDto();
+        final FilterFactoryContext filterFactoryContext = context.getFilterFactoryContext();
 
-        final ExpressionFilterFactory expressionFilterFactory = expressionFilterBuilderContext.getInitiator();
+        final ExpressionFilterFactory expressionFilterFactory = context.getInitiator();
         final List<Expression> operands = operationExpression.getOperands();
         final List<QueryBuilder> queryBuilders = new ArrayList<>();
         for (final Expression operand : operands) {
-            final QueryBuilder filterBuilder = expressionFilterFactory.buildFilter(operand, queryDto, mappingConfiguration);
+            final QueryBuilder filterBuilder = expressionFilterFactory.buildFilter(operand, queryDto, filterFactoryContext);
             if (filterBuilder != null) {
                 queryBuilders.add(filterBuilder);
             }

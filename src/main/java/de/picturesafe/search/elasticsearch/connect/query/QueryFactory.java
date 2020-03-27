@@ -17,13 +17,12 @@
 package de.picturesafe.search.elasticsearch.connect.query;
 
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
-import de.picturesafe.search.expression.Expression;
-
+import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import org.elasticsearch.index.query.QueryBuilder;
 
 public interface QueryFactory {
 
-    boolean supports(Expression parameter);
+    boolean supports(QueryDto queryDto);
 
-    QueryBuilder create(QueryFactoryCaller caller, MappingConfiguration mappingConfiguration, Expression parameter);
+    QueryBuilder create(QueryFactoryCaller caller, QueryDto queryDto, MappingConfiguration mappingConfiguration);
 }

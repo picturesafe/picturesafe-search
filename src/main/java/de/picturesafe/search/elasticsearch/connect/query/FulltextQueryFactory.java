@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect.query;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
+import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.error.ElasticsearchException;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.PhraseMatchHelper;
@@ -51,19 +52,20 @@ public class FulltextQueryFactory implements QueryFactory {
     }
 
     @Override
-    public boolean supports(Expression parameter) {
-        return parameter instanceof FulltextExpression
-                || (parameter instanceof ValueExpression && ((ValueExpression) parameter).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT));
+    public boolean supports(QueryDto queryDto) {
+        final Expression expression = queryDto.getExpression();
+        return expression instanceof FulltextExpression
+                || (expression instanceof ValueExpression && ((ValueExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT));
     }
 
     @Override
-    public QueryBuilder create(QueryFactoryCaller caller, MappingConfiguration mappingConfiguration, Expression parameter) {
+    public QueryBuilder create(QueryFactoryCaller caller, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
         final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, FieldConfiguration.FIELD_NAME_FULLTEXT, false);
         if (fieldConfig == null) {
             throw new ElasticsearchException("Missing field configuration for fulltext field, fulltext expressions are not supported without configuration!");
         }
 
-        final ValueExpression valueExpression = (ValueExpression) parameter;
+        final ValueExpression valueExpression = (ValueExpression) queryDto.getExpression();
         final String value = valueExpression.getValue().toString();
         if (!StringUtils.isBlank(value)) {
             QueryStringQueryBuilder result = QueryBuilders.queryStringQuery(preprocess(value))
