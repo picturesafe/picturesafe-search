@@ -14,6 +14,7 @@ import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.DayExpression;
 import de.picturesafe.search.expression.DayRangeExpression;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -33,13 +34,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_ID;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDate;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
@@ -63,8 +65,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testSearchSimple() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         final Map<String, Object> doc1 = createDocument(4711, "Der Hund beißt sich in den Schwanz in Hamburg");
         final Map<String, Object> doc2 = createDocument(4712, "Die Katze jagt Vögel in Hamburg");
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2));
@@ -112,8 +113,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testSearchRanges() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
                 DocumentBuilder.id(4711).put("createDate", parseDate("01.01.2020")).build(),
                 DocumentBuilder.id(4712).put("createDate", parseDate("01.05.2020")).build(),
@@ -149,8 +149,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testSearchDays() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
                 DocumentBuilder.withoutId().put("createDate", parseDate("01.01.2020")).build(),
                 DocumentBuilder.withoutId().put("createDate", parseDate("01.05.2020")).build(),
@@ -185,8 +184,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testSearchFacets() throws Exception {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         final Map<String, Object> doc1 = createDocument(4711, "Der Hund beißt sich in den Schwanz in Hamburg",
                 DateUtils.parseDate("10.05.2019", "dd.MM.yyyy"), "Hamburg");
         final Map<String, Object> doc2 = createDocument(4712, "Die Katze jagt Vögel in Hamburg",
@@ -226,8 +224,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testSearchMultilang() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         final Map<String, Object> doc1 = createDocument(4711, "Der Hund beißt sich in den Schwanz in Hamburg");
         doc1.put("text_multilang.de", "Dies ist ein deutscher Text.");
         doc1.put("text_multilang.en", "This is an english text.");
@@ -264,8 +261,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testSortMultilang() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         final Map<String, Object> doc1 = createDocument(4711, "Äöü Multilang-Test 1");
         doc1.put("text_multilang.de", "Äöü Test");
         final Map<String, Object> doc2 = createDocument(4712, "Aou Multilang-Test 2");
@@ -286,9 +282,94 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
     }
 
     @Test
+    public void testNestedSearch() {
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
+                DocumentBuilder.id(1)
+                        .put("article", Collections.singletonList(
+                                DocumentBuilder.id(1001)
+                                .put("title", "This is a test title")
+                                .put("rubric", "News")
+                                .put("author", "John Doe")
+                                .put("page", 1)
+                                .put("date", parseDate("27.03.2020")).build()
+                        )).build(),
+                DocumentBuilder.id(2)
+                        .put("article", Arrays.asList(
+                                DocumentBuilder.id(1002)
+                                .put("title", "This is another test title")
+                                .put("rubric", "News")
+                                .put("author", "Jane Doe")
+                                .put("page", 1)
+                                .put("date", parseDate("26.03.2020")).build(),
+                                DocumentBuilder.id(1003)
+                                .put("title", "This also is another test title")
+                                .put("rubric", "Politics")
+                                .put("author", "Jeanne d’Arc")
+                                .put("page", 2)
+                                .put("date", parseDate("27.03.2020")).build()
+                        )).build(),
+                DocumentBuilder.id(3)
+                        .put("article", Collections.singletonList(
+                                DocumentBuilder.id(1004)
+                                .put("title", "This is one more test title")
+                                .put("rubric", "Politics")
+                                .put("author", "Jane Doe")
+                                .put("page", 13)
+                                .put("date", parseDate("01.03.2020")).build()
+                        )).build()
+        ));
+
+        Expression expression = new ValueExpression("article.author", "Jane Doe");
+        SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.desc("article.id")).build();
+        SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(2, result.getTotalHitCount());
+        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(1).getId());
+
+        searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.page")).build();
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(2, result.getTotalHitCount());
+        assertEquals(2, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(1).getId());
+
+        searchParameter = SearchParameter.builder().sortOptions(SortOption.desc("article.rubric")).build();
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(2, result.getTotalHitCount());
+        assertEquals(2, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(1).getId());
+
+        searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.date")).build();
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(2, result.getTotalHitCount());
+        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(1).getId());
+
+        expression = new ValueExpression("article.title", "another test");
+        searchParameter = SearchParameter.DEFAULT;
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(1, result.getTotalHitCount());
+        assertEquals(2, result.getSearchResultItems().get(0).getId());
+
+        expression = new FulltextExpression("another test");
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(1, result.getTotalHitCount());
+        assertEquals(2, result.getSearchResultItems().get(0).getId());
+
+        expression = new ValueExpression("article.id", 1003);
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(1, result.getTotalHitCount());
+        assertEquals(2, result.getSearchResultItems().get(0).getId());
+
+        expression = new ValueExpression("article.date", parseDate("01.03.2020"));
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(1, result.getTotalHitCount());
+        assertEquals(3, result.getSearchResultItems().get(0).getId());
+    }
+
+    @Test
     public void testAddGetIndexObject() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
 
         final TestObject obj1 = new TestObject(666, "TestObject 1", parseDate("18.03.2020"));
         elasticsearchService.addObjectToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, obj1);
@@ -306,8 +387,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testPersistingIndexConfig() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
 
         final IndexPresetConfiguration indexConfig
                 = new StandardIndexPresetConfiguration("test-persistence", "test-persistence-prefix", "yyyy/MM/dd-HH/mm/ss", 17, 23, 123456);
@@ -318,8 +398,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
     @Test
     public void testPersistingFieldConfig() {
-        indexName = elasticsearchService.createIndex(indexAlias);
-        elasticsearchService.createAlias(indexAlias, indexName);
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
 
         FieldConfiguration fieldConfig = StandardFieldConfiguration.builder("test-persistence", ElasticsearchType.TEXT)
                 .sortable(true).aggregatable(false).multilingual(true).analyzer("myAnalyzer").copyToFulltext(true).copyTo("test").build();
@@ -397,16 +476,25 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
         @Bean
         List<FieldConfiguration> fieldConfiguration() {
-            final List<FieldConfiguration> testFields = new ArrayList<>();
-            testFields.add(FieldConfiguration.ID_FIELD);
-            testFields.add(FieldConfiguration.FULLTEXT_FIELD);
-            testFields.add(createFieldConfiguration("name", ElasticsearchType.TEXT, false, false, true, false));
-            testFields.add(createFieldConfiguration("title", ElasticsearchType.TEXT, true, false, false, false));
-            testFields.add(createFieldConfiguration("caption", ElasticsearchType.TEXT, true, false, false, false));
-            testFields.add(createFieldConfiguration("createDate", ElasticsearchType.DATE, false, true, true, false));
-            testFields.add(createFieldConfiguration("location", ElasticsearchType.TEXT, true, true, true, false));
-            testFields.add(createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true));
-            return testFields;
+            return Arrays.asList(
+                    FieldConfiguration.ID_FIELD,
+                    FieldConfiguration.FULLTEXT_FIELD,
+                    createFieldConfiguration("name", ElasticsearchType.TEXT, false, false, true, false),
+                    createFieldConfiguration("title", ElasticsearchType.TEXT, true, false, false, false),
+                    createFieldConfiguration("caption", ElasticsearchType.TEXT, true, false, false, false),
+                    createFieldConfiguration("createDate", ElasticsearchType.DATE, false, true, true, false),
+                    createFieldConfiguration("location", ElasticsearchType.TEXT, true, true, true, false),
+                    createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true),
+                    StandardFieldConfiguration.builder("article", ElasticsearchType.NESTED)
+                        .nestedFields(
+                                StandardFieldConfiguration.builder(FIELD_NAME_ID, ElasticsearchType.LONG).sortable(true).build(),
+                                StandardFieldConfiguration.builder("title", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build(),
+                                StandardFieldConfiguration.builder("rubric", ElasticsearchType.TEXT).sortable(true).build(),
+                                StandardFieldConfiguration.builder("author", ElasticsearchType.TEXT).copyToFulltext(true).build(),
+                                StandardFieldConfiguration.builder("page", ElasticsearchType.INTEGER).sortable(true).build(),
+                                StandardFieldConfiguration.builder("date", ElasticsearchType.DATE).sortable(true).build()
+                        ).build()
+            );
         }
     }
 }
