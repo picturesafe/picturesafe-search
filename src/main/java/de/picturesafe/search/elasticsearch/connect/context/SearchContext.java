@@ -27,12 +27,11 @@ public class SearchContext {
 
     private final QueryDto queryDto;
     private final MappingConfiguration mappingConfiguration;
-    private final Set<Expression> processedExceptions = new HashSet<>();
+    private final Set<Expression> processedExpressions;
     private boolean nestedQuery;
 
     public SearchContext(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        this.queryDto = queryDto;
-        this.mappingConfiguration = mappingConfiguration;
+        this(queryDto, mappingConfiguration, new HashSet<>());
     }
 
     public SearchContext(QueryDto queryDto, MappingConfiguration mappingConfiguration, boolean nestedQuery) {
@@ -40,12 +39,18 @@ public class SearchContext {
         this.nestedQuery = nestedQuery;
     }
 
+    private SearchContext(QueryDto queryDto, MappingConfiguration mappingConfiguration, Set<Expression> processedExpressions) {
+        this.queryDto = queryDto;
+        this.mappingConfiguration = mappingConfiguration;
+        this.processedExpressions = processedExpressions;
+    }
+
     public SearchContext(SearchContext context, QueryDto queryDto) {
-        this(queryDto, context.mappingConfiguration);
+        this(queryDto, context.mappingConfiguration, context.processedExpressions);
     }
 
     public SearchContext(SearchContext context, Expression expression) {
-        this(new QueryDto(context.queryDto, expression), context.mappingConfiguration);
+        this(new QueryDto(context.queryDto, expression), context.mappingConfiguration, context.processedExpressions);
     }
 
     public SearchContext(SearchContext context, boolean nestedQuery) {
@@ -69,11 +74,11 @@ public class SearchContext {
     }
 
     public boolean isProcessed(Expression expression) {
-        return processedExceptions.contains(expression);
+        return processedExpressions.contains(expression);
     }
 
     public void setProcessed(Expression expression) {
-        processedExceptions.add(expression);
+        processedExpressions.add(expression);
     }
 
     public boolean isNestedQuery() {

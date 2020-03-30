@@ -22,6 +22,7 @@ import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FieldExpression;
+import de.picturesafe.search.expression.IsNullExpression;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -56,7 +57,8 @@ public class NestedQueryFactory implements QueryFactory {
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(context.getMappingConfiguration(), fieldName);
 
         QueryBuilder queryBuilder = null;
-        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
+        // IsNullExpression must be built as filter
+        if (fieldConfiguration != null && fieldConfiguration.isNestedObject() && !(expression instanceof IsNullExpression)) {
             final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
             final QueryBuilder filter = createFilter(filterFactories, new SearchContext(context, true));
             queryBuilder = (filter != null) ? QueryBuilders.nestedQuery(objectPath, QueryBuilders.boolQuery().filter(filter), ScoreMode.Total) : null;

@@ -16,9 +16,8 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
+import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.OperationExpression;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -28,47 +27,53 @@ import org.elasticsearch.index.query.QueryBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OperationExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
+public class OperationExpressionFilterBuilder implements ExpressionFilterBuilder {
 
     @Override
-    protected boolean supportsExpression(Expression expression) {
-        return expression instanceof OperationExpression;
+    public boolean supports(ExpressionFilterBuilderContext context) {
+        // OperationExpression could only be processed partly by OperationExpressionQueryFactory, that's why here is no processed check. It doesn't matter if it
+        // has been processed fully because the operands will be marked as processed.
+        return context.getExpression() instanceof OperationExpression;
     }
 
     @Override
-    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
+    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
         final OperationExpression operationExpression = (OperationExpression) context.getExpression();
-        final QueryDto queryDto = context.getQueryDto();
         final SearchContext searchContext = context.getSearchContext();
 
         final ExpressionFilterFactory expressionFilterFactory = context.getInitiator();
         final List<Expression> operands = operationExpression.getOperands();
-        final List<QueryBuilder> queryBuilders = new ArrayList<>();
+        final List<QueryBuilder> filterBuilders = new ArrayList<>();
         for (final Expression operand : operands) {
             final QueryBuilder filterBuilder = expressionFilterFactory.buildFilter(operand, searchContext);
             if (filterBuilder != null) {
-                queryBuilders.add(filterBuilder);
-            }
-        }
-        if (queryBuilders.size() > 0) {
-            if (queryBuilders.size() == 1) {
-                return queryBuilders.get(0);
-            } else {
-                final BoolQueryBuilder bool = QueryBuilders.boolQuery();
-                for (QueryBuilder queryBuilder: queryBuilders) {
-                    switch (operationExpression.getOperator()) {
-                        case AND:
-                            bool.filter(queryBuilder);
-                            break;
-                        case OR:
-                            bool.should(queryBuilder);
-                            break;
-                    }
-                }
-                return bool;
+                filterBuilders.add(filterBuilder);
             }
         }
 
-        return null;
+        QueryBuilder queryBuilder = null;
+        if (filterBuilders.size() > 0) {
+            if (filterBuilders.size() == 1) {
+                queryBuilder = filterBuilders.get(0);
+            } else {
+                final BoolQueryBuilder bool = QueryBuilders.boolQuery();
+                for (QueryBuilder filter: filterBuilders) {
+                    switch (operationExpression.getOperator()) {
+                        case AND:
+                            bool.filter(filter);
+                            break;
+                        case OR:
+                            bool.should(filter);
+                            break;
+                    }
+                }
+                queryBuilder = bool;
+            }
+        }
+
+        if (queryBuilder != null) {
+            context.setProcessed();
+        }
+        return queryBuilder;
     }
 }
