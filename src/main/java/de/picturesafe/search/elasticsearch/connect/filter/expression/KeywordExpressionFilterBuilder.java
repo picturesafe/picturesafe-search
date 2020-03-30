@@ -44,7 +44,7 @@ public class KeywordExpressionFilterBuilder extends AbstractExpressionFilterBuil
         }
 
         final MappingConfiguration mappingConfig = context.getMappingConfiguration();
-        final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfig, keywordExpression.getName());
+        final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfig, keywordExpression.getName(), false);
 
         String fieldName
                 = FieldConfigurationUtils

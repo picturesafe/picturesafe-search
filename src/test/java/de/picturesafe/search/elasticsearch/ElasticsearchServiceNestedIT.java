@@ -14,6 +14,9 @@ import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.InExpression;
+import de.picturesafe.search.expression.IsNullExpression;
+import de.picturesafe.search.expression.KeywordExpression;
+import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
@@ -93,7 +96,7 @@ public class ElasticsearchServiceNestedIT {
                         .put("article", Collections.singletonList(
                                 DocumentBuilder.id(1004)
                                 .put("title", "This is one more test title")
-                                .put("rubric", "Politics")
+                                .put("rubric", (String) null)
                                 .put("author", "Jane Doe")
                                 .put("page", 13)
                                 .put("date", parseDate("01.03.2020")).build()
@@ -200,6 +203,54 @@ public class ElasticsearchServiceNestedIT {
     @Test
     public void testInExpression() {
         final Expression expression = new InExpression("article.page", 1, 2, 3);
+        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
+        final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(2, result.getTotalHitCount());
+        assertEquals(1, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(1).getId());
+    }
+
+    @Test
+    public void testIsNullExpression() {
+        final Expression expression = new IsNullExpression("article.rubric");
+        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
+        final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(1, result.getTotalHitCount());
+        assertEquals(3, result.getSearchResultItems().get(0).getId());
+    }
+
+    @Test
+    public void testKeywordExpression() {
+        final Expression expression = new KeywordExpression("article.rubric", "Politics");
+        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
+        final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(1, result.getTotalHitCount());
+        assertEquals(2, result.getSearchResultItems().get(0).getId());
+    }
+
+    // ToDo
+//    @Test
+//    public void testMustNotValueExpression() {
+//        final Expression expression = new MustNotExpression(new ValueExpression("article.page", 1));
+//        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
+//        final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+//        assertEquals(1, result.getTotalHitCount());
+//        assertEquals(3, result.getSearchResultItems().get(0).getId());
+//    }
+//
+//    @Test
+//    public void testMustNotDayExpression() {
+//        final Expression expression = new MustNotExpression(new DayExpression("article.date", parseDate("01.03.2020")));
+//        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
+//        final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+//        assertEquals(2, result.getTotalHitCount());
+//        assertEquals(1, result.getSearchResultItems().get(0).getId());
+//        assertEquals(2, result.getSearchResultItems().get(1).getId());
+//    }
+
+    @Test
+    public void testRangeValueExpression() {
+        final Expression expression = new RangeValueExpression("article.page", 1, 3);
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
