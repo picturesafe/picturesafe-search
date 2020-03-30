@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.expression.ConditionExpression;
 import de.picturesafe.search.expression.DayExpression;
+import de.picturesafe.search.expression.Expression;
 import org.apache.commons.lang3.time.DateUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -28,7 +29,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import java.util.Date;
 
-public class DayExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
+public class DayExpressionFilterBuilder extends AbstractExpressionFilterBuilder implements TimeZoneAware {
 
     private String timeZone;
 
@@ -37,11 +38,12 @@ public class DayExpressionFilterBuilder implements ExpressionFilterBuilder, Time
     }
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
-        if (!(context.getExpression() instanceof DayExpression)) {
-            return null;
-        }
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof DayExpression;
+    }
 
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
         final DayExpression expression = (DayExpression) context.getExpression();
         final String fieldName = expression.getName();
         final ConditionExpression.Comparison comparison = expression.getComparison();

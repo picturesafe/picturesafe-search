@@ -16,8 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.query;
 
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.OperationExpression;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -31,22 +30,23 @@ import java.util.List;
 public class OperationExpressionQueryFactory implements QueryFactory {
 
     @Override
-    public boolean supports(QueryDto queryDto) {
-        return queryDto.getExpression() instanceof OperationExpression;
+    public boolean supports(SearchContext context) {
+        return !context.isRootExpressionProcessed() && context.getRootExpression() instanceof OperationExpression;
     }
 
     @Override
-    public QueryBuilder create(QueryFactoryCaller caller, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final OperationExpression operationExpression = (OperationExpression) queryDto.getExpression();
+    public QueryBuilder create(QueryFactoryCaller caller, SearchContext context) {
+        final OperationExpression operationExpression = (OperationExpression) context.getRootExpression();
         final List<Expression> operands = operationExpression.getOperands();
 
+        QueryBuilder queryBuilder = null;
         if (operands.size() == 1) {
-            return caller.createQuery(new QueryDto(queryDto, operands.get(0)), mappingConfiguration);
+            queryBuilder = caller.createQuery(new SearchContext(context, operands.get(0)));
         } else if (operands.size() > 1) {
             final BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
             boolean somethingAddedToBuilder = false;
             for (Expression operand: operands) {
-                final QueryBuilder subQueryBuilder = caller.createQuery(new QueryDto(queryDto, operand), mappingConfiguration);
+                final QueryBuilder subQueryBuilder = caller.createQuery(new SearchContext(context, operand));
                 if (subQueryBuilder != null) {
                     somethingAddedToBuilder = true;
                     switch (operationExpression.getOperator()) {
@@ -59,8 +59,13 @@ public class OperationExpressionQueryFactory implements QueryFactory {
                     }
                 }
             }
-            return somethingAddedToBuilder ? boolQueryBuilder : null;
+
+            queryBuilder = somethingAddedToBuilder ? boolQueryBuilder : null;
+            if (queryBuilder != null) {
+                context.setProcessed(operationExpression);
+            }
         }
-        return null;
+
+        return queryBuilder;
     }
 }

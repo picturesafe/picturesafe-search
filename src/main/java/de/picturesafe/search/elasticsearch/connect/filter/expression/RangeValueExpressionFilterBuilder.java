@@ -21,6 +21,7 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -28,7 +29,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import java.util.Date;
 
-public class RangeValueExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
+public class RangeValueExpressionFilterBuilder extends AbstractExpressionFilterBuilder implements TimeZoneAware {
 
     private String timeZone;
 
@@ -37,10 +38,12 @@ public class RangeValueExpressionFilterBuilder implements ExpressionFilterBuilde
     }
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
-        if (!(context.getExpression() instanceof RangeValueExpression)) {
-            return null;
-        }
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof RangeValueExpression;
+    }
+
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
         final MappingConfiguration mappingConfiguration = context.getMappingConfiguration();
         final RangeValueExpression expression = (RangeValueExpression) context.getExpression();
         final String fieldName = expression.getName();

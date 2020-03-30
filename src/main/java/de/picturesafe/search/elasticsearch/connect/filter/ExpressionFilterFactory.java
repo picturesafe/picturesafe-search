@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter;
 
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilder;
 import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionFilterBuilderContext;
 import de.picturesafe.search.expression.Expression;
@@ -34,21 +34,23 @@ public class ExpressionFilterFactory implements FilterFactory {
     }
 
     @Override
-    public List<QueryBuilder> create(QueryDto queryDto, FilterFactoryContext context) {
+    public List<QueryBuilder> create(SearchContext context) {
         final List<QueryBuilder> result = new ArrayList<>();
-        final QueryBuilder filter = buildFilter(queryDto.getExpression(), queryDto, context);
+        final QueryBuilder filter = buildFilter(context.getQueryDto().getExpression(), context);
         if (filter != null) {
             result.add(filter);
         }
         return result;
     }
 
-    public QueryBuilder buildFilter(Expression expression, QueryDto queryDto, FilterFactoryContext context) {
-        final ExpressionFilterBuilderContext expressionFilterBuilderContext = new ExpressionFilterBuilderContext(expression, queryDto, context, this);
+    public QueryBuilder buildFilter(Expression expression, SearchContext context) {
+        final ExpressionFilterBuilderContext expressionFilterBuilderContext = new ExpressionFilterBuilderContext(expression, context, this);
         for (ExpressionFilterBuilder expressionFilterBuilder : expressionFilterBuilders) {
-            final QueryBuilder filterBuilder = expressionFilterBuilder.buildFilter(expressionFilterBuilderContext);
-            if (filterBuilder != null) {
-                return filterBuilder;
+            if (expressionFilterBuilder.supports(expressionFilterBuilderContext)) {
+                final QueryBuilder filterBuilder = expressionFilterBuilder.buildFilter(expressionFilterBuilderContext);
+                if (filterBuilder != null) {
+                    return filterBuilder;
+                }
             }
         }
 

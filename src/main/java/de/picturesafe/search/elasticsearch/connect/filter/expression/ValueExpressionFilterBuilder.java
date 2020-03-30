@@ -31,6 +31,7 @@ import de.picturesafe.search.elasticsearch.connect.filter.valuepreparation.Value
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.PhraseMatchHelper;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.KeywordExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import org.apache.commons.lang3.Validate;
@@ -46,7 +47,7 @@ import static de.picturesafe.search.elasticsearch.connect.util.FieldConfiguratio
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_STARTS_WITH;
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.TERM_WILDCARD;
 
-public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, TimeZoneAware {
+public class ValueExpressionFilterBuilder extends AbstractExpressionFilterBuilder implements TimeZoneAware {
 
     private final List<ValuePreparer> valuePreparers;
     private final String timeZone;
@@ -67,11 +68,12 @@ public class ValueExpressionFilterBuilder implements ExpressionFilterBuilder, Ti
     }
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
-        if (!(context.getExpression() instanceof ValueExpression) || context.getExpression() instanceof KeywordExpression) {
-            return null;
-        }
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof ValueExpression && !(expression instanceof KeywordExpression);
+    }
 
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
         final ValueExpression expression = (ValueExpression) context.getExpression();
         if (expression.getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT)) {
             return null;

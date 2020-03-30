@@ -20,5 +20,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 
 public interface ExpressionFilterBuilder {
 
-    QueryBuilder buildFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext);
+    boolean supports(ExpressionFilterBuilderContext context);
+
+    QueryBuilder buildFilter(ExpressionFilterBuilderContext context);
 }

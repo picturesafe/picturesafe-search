@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter;
 
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.List;
@@ -26,9 +26,8 @@ public interface FilterFactory {
     /**
      * Creates a List of {@link QueryBuilder} (filter).
      *
-     * @param queryDto                  {@link QueryDto}
-     * @param context                   {@link FilterFactoryContext}
-     * @return                          A List of {@link QueryBuilder} (filter) - may be empty
+     * @param context {@link SearchContext}
+     * @return        A List of {@link QueryBuilder} (filter) - may be empty
      */
-    List<QueryBuilder> create(QueryDto queryDto, FilterFactoryContext context);
+    List<QueryBuilder> create(SearchContext context);
 }

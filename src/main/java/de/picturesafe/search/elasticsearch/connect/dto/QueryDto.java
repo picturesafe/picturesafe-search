@@ -47,6 +47,7 @@ public class QueryDto {
     private final List<String> fieldsToResolve;
     private final FieldResolverType fieldResolverType;
     private AccountContext<?> accountContext;
+    private boolean sortFilter;
 
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
@@ -116,6 +117,15 @@ public class QueryDto {
         return this;
     }
 
+    public boolean isSortFilter() {
+        return sortFilter;
+    }
+
+    public QueryDto sortFilter(boolean sortFilter) {
+        this.sortFilter = sortFilter;
+        return this;
+    }
+
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(expression).append(queryRangeDto).toHashCode();
@@ -152,6 +162,6 @@ public class QueryDto {
     }
 
     public static QueryDto sortFilter(Expression expression, Locale locale) {
-        return new QueryDto(expression, new QueryRangeDto(-1, Integer.MAX_VALUE), null, null, locale);
+        return new QueryDto(expression, new QueryRangeDto(0, Integer.MAX_VALUE), null, null, locale).sortFilter(true);
     }
 }

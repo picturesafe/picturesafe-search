@@ -18,7 +18,7 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.OperationExpression;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -28,23 +28,24 @@ import org.elasticsearch.index.query.QueryBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OperationExpressionFilterBuilder implements ExpressionFilterBuilder {
+public class OperationExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
-        if (!(context.getExpression() instanceof OperationExpression)) {
-            return null;
-        }
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof OperationExpression;
+    }
 
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
         final OperationExpression operationExpression = (OperationExpression) context.getExpression();
         final QueryDto queryDto = context.getQueryDto();
-        final FilterFactoryContext filterFactoryContext = context.getFilterFactoryContext();
+        final SearchContext searchContext = context.getSearchContext();
 
         final ExpressionFilterFactory expressionFilterFactory = context.getInitiator();
         final List<Expression> operands = operationExpression.getOperands();
         final List<QueryBuilder> queryBuilders = new ArrayList<>();
         for (final Expression operand : operands) {
-            final QueryBuilder filterBuilder = expressionFilterFactory.buildFilter(operand, queryDto, filterFactoryContext);
+            final QueryBuilder filterBuilder = expressionFilterFactory.buildFilter(operand, searchContext);
             if (filterBuilder != null) {
                 queryBuilders.add(filterBuilder);
             }

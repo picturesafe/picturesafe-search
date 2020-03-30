@@ -16,9 +16,8 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.util;
 
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -34,10 +33,10 @@ public class FilterFactoryUtils {
     private FilterFactoryUtils() {
     }
 
-    public static QueryBuilder createFilter(List<FilterFactory> filterFactories, QueryDto queryDto, FilterFactoryContext context) {
+    public static QueryBuilder createFilter(List<FilterFactory> filterFactories, SearchContext context) {
         final List<QueryBuilder> queryBuilders = new ArrayList<>();
         for (FilterFactory filterFactory : filterFactories) {
-            final List<QueryBuilder> filters = filterFactory.create(queryDto, context);
+            final List<QueryBuilder> filters = filterFactory.create(context);
             if (CollectionUtils.isNotEmpty(filters)) {
                 queryBuilders.addAll(filters);
             }
