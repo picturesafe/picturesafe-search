@@ -24,11 +24,11 @@ import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.PhraseMatchHelper;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
+import de.picturesafe.search.expression.MustNotExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +52,11 @@ public class FulltextQueryFactory implements QueryFactory {
 
     @Override
     public boolean supports(SearchContext context) {
-        final Expression expression = context.getRootExpression();
-        return !context.isRootExpressionProcessed()
+        Expression expression = context.getRootExpression();
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+        }
+        return !context.isProcessed(expression)
                 && (expression instanceof FulltextExpression
                 || (expression instanceof ValueExpression && ((ValueExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT)));
     }
@@ -66,17 +69,26 @@ public class FulltextQueryFactory implements QueryFactory {
             throw new ElasticsearchException("Missing field configuration for fulltext field, fulltext expressions are not supported without configuration!");
         }
 
-        final ValueExpression valueExpression = (ValueExpression) context.getRootExpression();
+        Expression expression = context.getRootExpression();
+        boolean mustNot = false;
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+            mustNot = true;
+        }
+
+        final ValueExpression valueExpression = (ValueExpression) expression;
         final String value = valueExpression.getValue().toString();
         if (!StringUtils.isBlank(value)) {
-            QueryStringQueryBuilder queryBuilder = QueryBuilders.queryStringQuery(preprocess(value))
+            QueryBuilder queryBuilder = QueryBuilders.queryStringQuery(preprocess(value))
                     .field(FieldConfiguration.FIELD_NAME_FULLTEXT)
-                    .defaultOperator(queryConfig.getDefaultQueryStringOperator());
-            if (value.contains("*") || value.contains("?")) {
-                queryBuilder = queryBuilder.analyzeWildcard(true);
+                    .defaultOperator(queryConfig.getDefaultQueryStringOperator())
+                    .analyzeWildcard(containsWildcard(value));
+            if (mustNot) {
+                queryBuilder = QueryBuilders.boolQuery().mustNot(queryBuilder);
             }
 
             context.setProcessed(valueExpression);
+            context.setProcessed(expression);
             return (valueExpression.getComparison() != null && valueExpression.getComparison().equals(NOT_EQ))
                     ? QueryBuilders.boolQuery().mustNot(queryBuilder)
                     : queryBuilder;
@@ -90,5 +102,9 @@ public class FulltextQueryFactory implements QueryFactory {
             queryString = preprocessor.process(queryString);
         }
         return queryString;
+    }
+
+    private boolean containsWildcard(String value) {
+        return value.contains("*") || value.contains("?");
     }
 }

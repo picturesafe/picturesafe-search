@@ -23,6 +23,7 @@ import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FieldExpression;
 import de.picturesafe.search.expression.IsNullExpression;
+import de.picturesafe.search.expression.MustNotExpression;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -45,23 +46,33 @@ public class NestedQueryFactory implements QueryFactory {
 
     @Override
     public boolean supports(SearchContext context) {
-        final Expression expression = context.getRootExpression();
-        return !context.isRootExpressionProcessed()
-                && (expression instanceof FieldExpression && !((FieldExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT));
+        Expression expression = context.getRootExpression();
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+        }
+        return !context.isProcessed(expression)
+                && (expression instanceof FieldExpression && !((FieldExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT)
+                // IsNullExpression must be built as filter
+                && !(expression instanceof IsNullExpression));
     }
 
     @Override
     public QueryBuilder create(QueryFactoryCaller caller, SearchContext context) {
-        final FieldExpression expression = (FieldExpression) context.getRootExpression();
-        final String fieldName = expression.getName();
+        Expression expression = context.getRootExpression();
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+        }
+
+        final FieldExpression fieldExpression = (FieldExpression) expression;
+        final String fieldName = fieldExpression.getName();
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(context.getMappingConfiguration(), fieldName);
 
         QueryBuilder queryBuilder = null;
-        // IsNullExpression must be built as filter
-        if (fieldConfiguration != null && fieldConfiguration.isNestedObject() && !(expression instanceof IsNullExpression)) {
+        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
             final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
             final QueryBuilder filter = createFilter(filterFactories, new SearchContext(context, true));
             queryBuilder = (filter != null) ? QueryBuilders.nestedQuery(objectPath, QueryBuilders.boolQuery().filter(filter), ScoreMode.Total) : null;
+            context.setProcessed(fieldExpression);
             context.setProcessed(expression);
         }
 
