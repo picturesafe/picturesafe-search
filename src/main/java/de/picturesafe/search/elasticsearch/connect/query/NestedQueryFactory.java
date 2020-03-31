@@ -17,13 +17,13 @@
 package de.picturesafe.search.elasticsearch.connect.query;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.expression.Expression;
-import de.picturesafe.search.expression.ValueExpression;
+import de.picturesafe.search.expression.FieldExpression;
+import de.picturesafe.search.expression.IsNullExpression;
+import de.picturesafe.search.expression.MustNotExpression;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -45,23 +45,37 @@ public class NestedQueryFactory implements QueryFactory {
     }
 
     @Override
-    public boolean supports(QueryDto queryDto) {
-        final Expression expression = queryDto.getExpression();
-        return expression instanceof ValueExpression && !((ValueExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT);
+    public boolean supports(SearchContext context) {
+        Expression expression = context.getRootExpression();
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+        }
+        return !context.isProcessed(expression)
+                && (expression instanceof FieldExpression && !((FieldExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT)
+                // IsNullExpression must be built as filter
+                && !(expression instanceof IsNullExpression));
     }
 
     @Override
-    public QueryBuilder create(QueryFactoryCaller caller, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final ValueExpression valueExpression = (ValueExpression) queryDto.getExpression();
-        final String fieldName = valueExpression.getName();
-        final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
-        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
-            final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
-            return QueryBuilders.nestedQuery(objectPath,
-                    QueryBuilders.boolQuery().filter(createFilter(filterFactories, queryDto, new FilterFactoryContext(mappingConfiguration, true))),
-                    ScoreMode.Total);
+    public QueryBuilder create(QueryFactoryCaller caller, SearchContext context) {
+        Expression expression = context.getRootExpression();
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
         }
 
-        return null;
+        final FieldExpression fieldExpression = (FieldExpression) expression;
+        final String fieldName = fieldExpression.getName();
+        final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(context.getMappingConfiguration(), fieldName);
+
+        QueryBuilder queryBuilder = null;
+        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
+            final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
+            final QueryBuilder filter = createFilter(filterFactories, new SearchContext(context, true));
+            queryBuilder = (filter != null) ? QueryBuilders.nestedQuery(objectPath, QueryBuilders.boolQuery().filter(filter), ScoreMode.Total) : null;
+            context.setProcessed(fieldExpression);
+            context.setProcessed(expression);
+        }
+
+        return queryBuilder;
     }
 }

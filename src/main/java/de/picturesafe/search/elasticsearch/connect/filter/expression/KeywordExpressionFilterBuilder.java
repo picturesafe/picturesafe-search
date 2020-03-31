@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.KeywordExpression;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -27,14 +28,15 @@ import org.elasticsearch.index.query.TermsQueryBuilder;
 
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.keywordFieldName;
 
-public class KeywordExpressionFilterBuilder implements ExpressionFilterBuilder {
+public class KeywordExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext context) {
-        if (!(context.getExpression() instanceof KeywordExpression)) {
-            return null;
-        }
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof KeywordExpression;
+    }
 
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
         final KeywordExpression keywordExpression = (KeywordExpression) context.getExpression();
         final Object value = keywordExpression.getValue();
         if (!(value instanceof String) || StringUtils.isEmpty((String) value)) {
@@ -42,7 +44,7 @@ public class KeywordExpressionFilterBuilder implements ExpressionFilterBuilder {
         }
 
         final MappingConfiguration mappingConfig = context.getMappingConfiguration();
-        final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfig, keywordExpression.getName());
+        final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfig, keywordExpression.getName(), false);
 
         String fieldName
                 = FieldConfigurationUtils

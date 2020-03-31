@@ -1,7 +1,8 @@
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
+import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.MustNotExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -10,6 +11,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -24,12 +26,12 @@ public class MustNotExpressionFilterBuilderTest {
     public void test() {
         final QueryBuilder innerFilter = mock(QueryBuilder.class);
         final ExpressionFilterFactory expressionFilterFactory = mock(ExpressionFilterFactory.class);
-        doReturn(innerFilter).when(expressionFilterFactory).buildFilter(any(), any(), any());
+        doReturn(innerFilter).when(expressionFilterFactory).buildFilter(any(), any());
         final MustNotExpressionFilterBuilder builder = new MustNotExpressionFilterBuilder();
 
         final Expression expression = new MustNotExpression(new ValueExpression("test", "test"));
         final ExpressionFilterBuilderContext context
-                = new ExpressionFilterBuilderContext(expression, null, new FilterFactoryContext(null), expressionFilterFactory);
+                = new ExpressionFilterBuilderContext(expression, new SearchContext((QueryDto) null, null), expressionFilterFactory);
         final QueryBuilder mustNotFilter = builder.buildFilter(context);
         assertNotNull(mustNotFilter);
         assertTrue(mustNotFilter instanceof BoolQueryBuilder);
@@ -40,11 +42,7 @@ public class MustNotExpressionFilterBuilderTest {
     @Test
     public void testExpressionNotSupported() {
         final MustNotExpressionFilterBuilder builder = new MustNotExpressionFilterBuilder();
-
-        final Expression expression = new ValueExpression("test", "test");
-        final ExpressionFilterBuilderContext context
-                = new ExpressionFilterBuilderContext(expression, null, new FilterFactoryContext(null), null);
-        assertNull(builder.buildFilter(context));
+        assertFalse(builder.supportsExpression(new ValueExpression("test", "test")));
     }
 
     @Test
@@ -54,7 +52,7 @@ public class MustNotExpressionFilterBuilderTest {
 
         final Expression expression = new MustNotExpression(new ValueExpression("test", "test"));
         final ExpressionFilterBuilderContext context
-                = new ExpressionFilterBuilderContext(expression, null, new FilterFactoryContext(null), null);
+                = new ExpressionFilterBuilderContext(expression, new SearchContext((QueryDto) null, null), null);
         assertNull(builder.buildFilter(context));
     }
 }

@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.InExpression;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
@@ -26,15 +27,26 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-public class InExpressionFilterBuilder implements ExpressionFilterBuilder {
+public class InExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
-    private QueryBuilder inFilter(final String fieldName, final Object[] values, ExpressionFilterBuilderContext filterBuilderContext) {
+    @Override
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof InExpression;
+    }
+
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
+        final InExpression inExpression = (InExpression) context.getExpression();
+        return inFilter(inExpression.getName(), inExpression.getValues(), context);
+    }
+
+    private QueryBuilder inFilter(final String fieldName, final Object[] values, ExpressionFilterBuilderContext context) {
         Validate.notEmpty(fieldName, "Parameter 'fieldName' may be not empty!");
         if (ArrayUtils.isEmpty(values)) {
             return null;
         }
 
-        final MappingConfiguration mappingConfiguration = filterBuilderContext.getMappingConfiguration();
+        final MappingConfiguration mappingConfiguration = context.getMappingConfiguration();
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
         final String queryFieldName = FieldConfigurationUtils.keywordFieldName(fieldConfiguration, fieldName, values);
 
@@ -45,21 +57,11 @@ public class InExpressionFilterBuilder implements ExpressionFilterBuilder {
             queryBuilder = QueryBuilders.termQuery(queryFieldName, values[0]);
         }
 
-        if (fieldConfiguration != null && fieldConfiguration.isNestedObject()) {
+        if (fieldConfiguration != null && fieldConfiguration.isNestedObject() && !context.isNestedQuery()) {
             final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
             queryBuilder = QueryBuilders.nestedQuery(objectPath, queryBuilder, ScoreMode.None);
         }
 
         return queryBuilder;
-    }
-
-    @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
-        if (!(expressionFilterBuilderContext.getExpression() instanceof InExpression)) {
-            return null;
-        }
-
-        final InExpression inExpression = (InExpression) expressionFilterBuilderContext.getExpression();
-        return inFilter(inExpression.getName(), inExpression.getValues(), expressionFilterBuilderContext);
     }
 }

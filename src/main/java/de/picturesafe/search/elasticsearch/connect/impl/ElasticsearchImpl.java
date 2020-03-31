@@ -45,7 +45,7 @@ import de.picturesafe.search.elasticsearch.connect.error.QuerySyntaxException;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactoryCaller;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
@@ -490,10 +490,10 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     @Override
-    public QueryBuilder createQuery(QueryDto queryDto, MappingConfiguration mappingConfiguration) {
+    public QueryBuilder createQuery(SearchContext context) {
         for (QueryFactory queryFactory : queryFactories) {
-            if (queryFactory.supports(queryDto)) {
-                final QueryBuilder result = queryFactory.create(this, queryDto, mappingConfiguration);
+            if (queryFactory.supports(context)) {
+                final QueryBuilder result = queryFactory.create(this, context);
                 if (result != null) {
                     return result;
                 }
@@ -561,8 +561,9 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     protected SearchResponse internalSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration) {
         final SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(queryDto);
 
-        final QueryBuilder filterBuilder = createFilter(filterFactories, queryDto, new FilterFactoryContext(mappingConfiguration));
-        final QueryBuilder queryBuilder = createQuery(queryDto, mappingConfiguration);
+        final SearchContext context = new SearchContext(queryDto, mappingConfiguration);
+        final QueryBuilder queryBuilder = createQuery(context);
+        final QueryBuilder filterBuilder = createFilter(filterFactories, context);
 
         if (filterBuilder != null) {
             if (queryBuilder == null) {
@@ -686,8 +687,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         final NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(topFieldName);
         if (sortOption.getFilter() != null) {
             nestedSortBuilder.setFilter(
-                    createFilter(filterFactories, QueryDto.sortFilter(sortOption.getFilter(), queryDto.getLocale()),
-                            new FilterFactoryContext(mappingConfiguration)));
+                    createFilter(filterFactories,
+                            new SearchContext(QueryDto.sortFilter(sortOption.getFilter(), queryDto.getLocale()), mappingConfiguration)));
         }
         return nestedSortBuilder;
     }

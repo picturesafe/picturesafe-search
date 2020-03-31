@@ -17,19 +17,18 @@
 package de.picturesafe.search.elasticsearch.connect.query;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.error.ElasticsearchException;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.PhraseMatchHelper;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
+import de.picturesafe.search.expression.MustNotExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,34 +51,47 @@ public class FulltextQueryFactory implements QueryFactory {
     }
 
     @Override
-    public boolean supports(QueryDto queryDto) {
-        final Expression expression = queryDto.getExpression();
-        return expression instanceof FulltextExpression
-                || (expression instanceof ValueExpression && ((ValueExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT));
+    public boolean supports(SearchContext context) {
+        Expression expression = context.getRootExpression();
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+        }
+        return !context.isProcessed(expression)
+                && (expression instanceof FulltextExpression
+                || (expression instanceof ValueExpression && ((ValueExpression) expression).getName().equals(FieldConfiguration.FIELD_NAME_FULLTEXT)));
     }
 
     @Override
-    public QueryBuilder create(QueryFactoryCaller caller, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final FieldConfiguration fieldConfig = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, FieldConfiguration.FIELD_NAME_FULLTEXT, false);
+    public QueryBuilder create(QueryFactoryCaller caller, SearchContext context) {
+        final FieldConfiguration fieldConfig
+                = FieldConfigurationUtils.fieldConfiguration(context.getMappingConfiguration(), FieldConfiguration.FIELD_NAME_FULLTEXT, false);
         if (fieldConfig == null) {
             throw new ElasticsearchException("Missing field configuration for fulltext field, fulltext expressions are not supported without configuration!");
         }
 
-        final ValueExpression valueExpression = (ValueExpression) queryDto.getExpression();
+        Expression expression = context.getRootExpression();
+        boolean mustNot = false;
+        if (expression instanceof MustNotExpression) {
+            expression = ((MustNotExpression) expression).getExpression();
+            mustNot = true;
+        }
+
+        final ValueExpression valueExpression = (ValueExpression) expression;
         final String value = valueExpression.getValue().toString();
         if (!StringUtils.isBlank(value)) {
-            QueryStringQueryBuilder result = QueryBuilders.queryStringQuery(preprocess(value))
+            QueryBuilder queryBuilder = QueryBuilders.queryStringQuery(preprocess(value))
                     .field(FieldConfiguration.FIELD_NAME_FULLTEXT)
-                    .defaultOperator(queryConfig.getDefaultQueryStringOperator());
-            if (value.contains("*") || value.contains("?")) {
-                result = result.analyzeWildcard(true);
+                    .defaultOperator(queryConfig.getDefaultQueryStringOperator())
+                    .analyzeWildcard(containsWildcard(value));
+            if (mustNot) {
+                queryBuilder = QueryBuilders.boolQuery().mustNot(queryBuilder);
             }
 
-            if (valueExpression.getComparison() != null && valueExpression.getComparison().equals(NOT_EQ)) {
-                return QueryBuilders.boolQuery().mustNot(result);
-            } else {
-                return result;
-            }
+            context.setProcessed(valueExpression);
+            context.setProcessed(expression);
+            return (valueExpression.getComparison() != null && valueExpression.getComparison().equals(NOT_EQ))
+                    ? QueryBuilders.boolQuery().mustNot(queryBuilder)
+                    : queryBuilder;
         }
         return null;
     }
@@ -90,5 +102,9 @@ public class FulltextQueryFactory implements QueryFactory {
             queryString = preprocessor.process(queryString);
         }
         return queryString;
+    }
+
+    private boolean containsWildcard(String value) {
+        return value.contains("*") || value.contains("?");
     }
 }

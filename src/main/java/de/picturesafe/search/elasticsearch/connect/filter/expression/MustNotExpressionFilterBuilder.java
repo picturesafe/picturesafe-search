@@ -16,33 +16,28 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
-import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.MustNotExpression;
-
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-public class MustNotExpressionFilterBuilder implements ExpressionFilterBuilder {
+public class MustNotExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
     @Override
-    public QueryBuilder buildFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
-        if (!(expressionFilterBuilderContext.getExpression() instanceof MustNotExpression)) {
-            return null;
-        }
+    protected boolean supportsExpression(Expression expression) {
+        return expression instanceof MustNotExpression;
+    }
 
-        final QueryBuilder innerFilter = buildInnerFilter(expressionFilterBuilderContext);
+    @Override
+    protected QueryBuilder buildExpressionFilter(ExpressionFilterBuilderContext context) {
+        final QueryBuilder innerFilter = buildInnerFilter(context);
         return (innerFilter != null) ? QueryBuilders.boolQuery().mustNot(innerFilter) : null;
     }
 
-    QueryBuilder buildInnerFilter(ExpressionFilterBuilderContext expressionFilterBuilderContext) {
-        final MustNotExpression mustNotExpression = (MustNotExpression) expressionFilterBuilderContext.getExpression();
-        final QueryDto queryDto = expressionFilterBuilderContext.getQueryDto();
-        final MappingConfiguration mappingConfiguration = expressionFilterBuilderContext.getMappingConfiguration();
-
-        final ExpressionFilterFactory expressionFilterFactory = expressionFilterBuilderContext.getInitiator();
-        return expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), queryDto, new FilterFactoryContext(mappingConfiguration));
+    QueryBuilder buildInnerFilter(ExpressionFilterBuilderContext context) {
+        final MustNotExpression mustNotExpression = (MustNotExpression) context.getExpression();
+        final ExpressionFilterFactory expressionFilterFactory = context.getInitiator();
+        return expressionFilterFactory.buildFilter(mustNotExpression.getExpression(), context.getSearchContext());
     }
 }

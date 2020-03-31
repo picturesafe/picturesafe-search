@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 picturesafe media/data/bank GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
@@ -14,7 +30,6 @@ import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.DayExpression;
 import de.picturesafe.search.expression.DayRangeExpression;
-import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -35,13 +50,11 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_ID;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDate;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
@@ -282,92 +295,6 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
     }
 
     @Test
-    public void testNestedSearch() {
-        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
-        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
-                DocumentBuilder.id(1)
-                        .put("article", Collections.singletonList(
-                                DocumentBuilder.id(1001)
-                                .put("title", "This is a test title")
-                                .put("rubric", "News")
-                                .put("author", "John Doe")
-                                .put("page", 1)
-                                .put("date", parseDate("27.03.2020")).build()
-                        )).build(),
-                DocumentBuilder.id(2)
-                        .put("article", Arrays.asList(
-                                DocumentBuilder.id(1002)
-                                .put("title", "This is another test title")
-                                .put("rubric", "News")
-                                .put("author", "Jane Doe")
-                                .put("page", 1)
-                                .put("date", parseDate("26.03.2020")).build(),
-                                DocumentBuilder.id(1003)
-                                .put("title", "This also is another test title")
-                                .put("rubric", "Politics")
-                                .put("author", "Jeanne d’Arc")
-                                .put("page", 2)
-                                .put("date", parseDate("27.03.2020")).build()
-                        )).build(),
-                DocumentBuilder.id(3)
-                        .put("article", Collections.singletonList(
-                                DocumentBuilder.id(1004)
-                                .put("title", "This is one more test title")
-                                .put("rubric", "Politics")
-                                .put("author", "Jane Doe")
-                                .put("page", 13)
-                                .put("date", parseDate("01.03.2020")).build()
-                        )).build()
-        ));
-
-        Expression expression = new ValueExpression("article.author", "Jane Doe");
-        SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.desc("article.id")).build();
-        SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(2, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
-
-        searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.page")).build();
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(2, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-        assertEquals(3, result.getSearchResultItems().get(1).getId());
-
-        searchParameter = SearchParameter.builder().sortOptions(SortOption.desc("article.rubric")).build();
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(2, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-        assertEquals(3, result.getSearchResultItems().get(1).getId());
-
-        searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.date")).build();
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(2, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
-
-        expression = new ValueExpression("article.title", "another test");
-        searchParameter = SearchParameter.DEFAULT;
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-
-        expression = new FulltextExpression("another test");
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-
-        expression = new ValueExpression("article.id", 1003);
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-
-        expression = new ValueExpression("article.date", parseDate("01.03.2020"));
-        result = elasticsearchService.search(indexAlias, expression, searchParameter);
-        assertEquals(1, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
-    }
-
-    @Test
     public void testAddGetIndexObject() {
         indexName = elasticsearchService.createIndexWithAlias(indexAlias);
 
@@ -484,16 +411,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
                     createFieldConfiguration("caption", ElasticsearchType.TEXT, true, false, false, false),
                     createFieldConfiguration("createDate", ElasticsearchType.DATE, false, true, true, false),
                     createFieldConfiguration("location", ElasticsearchType.TEXT, true, true, true, false),
-                    createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true),
-                    StandardFieldConfiguration.builder("article", ElasticsearchType.NESTED)
-                        .nestedFields(
-                                StandardFieldConfiguration.builder(FIELD_NAME_ID, ElasticsearchType.LONG).sortable(true).build(),
-                                StandardFieldConfiguration.builder("title", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build(),
-                                StandardFieldConfiguration.builder("rubric", ElasticsearchType.TEXT).sortable(true).build(),
-                                StandardFieldConfiguration.builder("author", ElasticsearchType.TEXT).copyToFulltext(true).build(),
-                                StandardFieldConfiguration.builder("page", ElasticsearchType.INTEGER).sortable(true).build(),
-                                StandardFieldConfiguration.builder("date", ElasticsearchType.DATE).sortable(true).build()
-                        ).build()
+                    createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true)
             );
         }
     }

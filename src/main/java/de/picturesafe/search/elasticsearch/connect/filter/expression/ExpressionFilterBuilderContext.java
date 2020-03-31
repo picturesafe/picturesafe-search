@@ -19,20 +19,17 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.filter.ExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
-import de.picturesafe.search.elasticsearch.connect.filter.FilterFactoryContext;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.expression.Expression;
 
 public class ExpressionFilterBuilderContext {
     private final Expression expression;
-    private final QueryDto queryDto;
-    private final FilterFactoryContext filterFactoryContext;
+    private final SearchContext searchContext;
     private final ExpressionFilterFactory initiator;
 
-    public ExpressionFilterBuilderContext(Expression expression, QueryDto queryDto, FilterFactoryContext filterFactoryContext,
-                                          ExpressionFilterFactory initiator) {
+    public ExpressionFilterBuilderContext(Expression expression, SearchContext searchContext, ExpressionFilterFactory initiator) {
         this.expression = expression;
-        this.queryDto = queryDto;
-        this.filterFactoryContext = filterFactoryContext;
+        this.searchContext = searchContext;
         this.initiator = initiator;
     }
 
@@ -41,19 +38,27 @@ public class ExpressionFilterBuilderContext {
     }
 
     public QueryDto getQueryDto() {
-        return queryDto;
+        return searchContext.getQueryDto();
     }
 
-    public FilterFactoryContext getFilterFactoryContext() {
-        return filterFactoryContext;
+    public SearchContext getSearchContext() {
+        return searchContext;
     }
 
     public MappingConfiguration getMappingConfiguration() {
-        return filterFactoryContext.getMappingConfiguration();
+        return searchContext.getMappingConfiguration();
+    }
+
+    public boolean isProcessed() {
+        return searchContext.isProcessed(expression);
+    }
+
+    public void setProcessed() {
+        searchContext.setProcessed(expression);
     }
 
     public boolean isNestedQuery() {
-        return filterFactoryContext.isNestedQuery();
+        return searchContext.isNestedQuery();
     }
 
     ExpressionFilterFactory getInitiator() {
