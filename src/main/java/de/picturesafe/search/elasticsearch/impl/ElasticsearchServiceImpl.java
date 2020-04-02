@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.impl;
 import de.picturesafe.search.elasticsearch.DataChangeProcessingMode;
 import de.picturesafe.search.elasticsearch.ElasticsearchService;
 import de.picturesafe.search.elasticsearch.FieldConfigurationProvider;
+import de.picturesafe.search.elasticsearch.IndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.api.RangeFacet;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
@@ -64,7 +65,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Component
@@ -77,8 +77,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     protected static final int DEFAULT_SHARD_SIZE_FACTOR = 5;
 
     protected final Elasticsearch elasticsearch;
+    protected final IndexPresetConfigurationProvider indexPresetConfigurationProvider;
     protected final FieldConfigurationProvider fieldConfigurationProvider;
-    protected final Map<String, IndexPresetConfiguration> indexPresetConfigurationByAlias;
 
     @Value("${elasticsearch.service.default_page_size:" + DEFAULT_PAGE_SIZE + "}")
     protected int defaultPageSize = DEFAULT_PAGE_SIZE;
@@ -93,15 +93,11 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     protected boolean optimizeExpressionsEnabled = true;
 
     @Autowired
-    public ElasticsearchServiceImpl(Elasticsearch elasticsearch,
-                                    List<IndexPresetConfiguration> indexPresetConfigurations,
+    public ElasticsearchServiceImpl(Elasticsearch elasticsearch, IndexPresetConfigurationProvider indexPresetConfigurationProvider,
                                     FieldConfigurationProvider fieldConfigurationProvider) {
         this.elasticsearch = elasticsearch;
+        this.indexPresetConfigurationProvider = indexPresetConfigurationProvider;
         this.fieldConfigurationProvider = fieldConfigurationProvider;
-        indexPresetConfigurationByAlias = new TreeMap<>();
-        for (final IndexPresetConfiguration conf : indexPresetConfigurations) {
-            indexPresetConfigurationByAlias.put(conf.getIndexAlias(), conf);
-        }
     }
 
     /**
@@ -165,7 +161,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Override
     public String createIndex(String indexAlias) {
         LOGGER.info("Creating a new elasticsearch index for alias '{}'", indexAlias);
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         final MappingConfiguration mappingConfiguration = getMappingConfiguration(indexAlias, true);
         final String indexName = elasticsearch.createIndex(indexPresetConfiguration, mappingConfiguration);
         LOGGER.info("New elasticsearch index '{}' was created for alias '{}'", indexName, indexAlias);
@@ -175,7 +171,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Override
     public String createIndexWithAlias(String indexAlias) {
         LOGGER.info("Creating a new elasticsearch index with alias '{}'", indexAlias);
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         final MappingConfiguration mappingConfiguration = getMappingConfiguration(indexAlias, true);
         final String indexName = elasticsearch.createIndexWithAlias(indexPresetConfiguration, mappingConfiguration);
         LOGGER.info("New elasticsearch index '{}' was created with alias '{}'", indexName, indexAlias);
@@ -184,7 +180,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public void addFieldConfiguration(String indexAlias, FieldConfiguration... fieldConfigs) {
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         final MappingConfiguration mappingConfiguration = getMappingConfiguration(indexAlias, false);
         elasticsearch.updateMapping(indexPresetConfiguration, mappingConfiguration, Arrays.asList(fieldConfigs));
     }
@@ -222,7 +218,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Override
     public String removeAlias(String indexAlias) {
         LOGGER.info("Removing elasticsearch alias '{}'", indexAlias);
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         return elasticsearch.removeAlias(indexPresetConfiguration);
     }
 
@@ -280,7 +276,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
 
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         elasticsearch.removeFromIndex(getMappingConfiguration(indexAlias, false), indexPresetConfiguration, dataChangeProcessingMode.isRefresh(), id);
     }
 
@@ -290,7 +286,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(ids, "Parameter 'ids' may not be null!");
 
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         elasticsearch.removeFromIndex(getMappingConfiguration(indexAlias, false), indexPresetConfiguration, dataChangeProcessingMode.isRefresh(), ids);
     }
 
@@ -343,10 +339,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         return new SuggestResult(elasticsearch.suggest(indexAlias, expressions));
     }
 
-    protected IndexPresetConfiguration getIndexPresetConfiguration(String indexAlias) {
-        return indexPresetConfigurationByAlias.get(indexAlias);
-    }
-
     protected int getPageSize(SearchParameter searchParameter) {
         if (searchParameter == null) {
             return defaultPageSize;
@@ -363,7 +355,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         if (searchParameter == null) {
             searchParameter = SearchParameter.DEFAULT;
         }
-        final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
 
         sw.start("create query");
         final int pageIndex = (searchParameter.getPageIndex() != null) ? searchParameter.getPageIndex() : 1;
@@ -416,7 +408,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     protected int getMaxResults(String indexAlias, Integer maxResults, long totalHitCount) {
         if (maxResults == null) {
-            final IndexPresetConfiguration indexPresetConfiguration = getIndexPresetConfiguration(indexAlias);
+            final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
             return (int) Math.min(totalHitCount, indexPresetConfiguration.getMaxResultWindow());
         }
         return (int) Math.min(totalHitCount, (long) maxResults);

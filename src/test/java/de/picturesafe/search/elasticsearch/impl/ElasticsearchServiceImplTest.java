@@ -17,14 +17,15 @@
 package de.picturesafe.search.elasticsearch.impl;
 
 import de.picturesafe.search.elasticsearch.FieldConfigurationProvider;
+import de.picturesafe.search.elasticsearch.IndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
-import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.internal.EmptyExpression;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
@@ -34,8 +35,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,9 +64,9 @@ public class ElasticsearchServiceImplTest {
     @Before
     public void setup() {
         when(indexPresetConfiguration.getIndexAlias()).thenReturn(getClass().getSimpleName().toLowerCase(Locale.ROOT));
-        final List<IndexPresetConfiguration> indexPresetConfigurations = new ArrayList<>();
-        indexPresetConfigurations.add(indexPresetConfiguration);
-        elasticsearchService = new ElasticsearchServiceImpl(elasticsearch, indexPresetConfigurations, fieldConfigurationProvider);
+        final IndexPresetConfigurationProvider indexPresetConfigurationProvider
+                = new StaticIndexPresetConfigurationProvider(Collections.singletonList(indexPresetConfiguration));
+        elasticsearchService = new ElasticsearchServiceImpl(elasticsearch, indexPresetConfigurationProvider, fieldConfigurationProvider);
     }
 
     @Test

@@ -7,6 +7,7 @@ import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
+import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.expression.DayExpression;
@@ -315,6 +316,11 @@ public class ElasticsearchServiceNestedIT {
             final int numberOfShards = 1;
             final int numberOfReplicas = 0;
             return new StandardIndexPresetConfiguration(indexAlias, numberOfShards, numberOfReplicas);
+        }
+
+        @Bean
+        SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+            return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
         }
 
         @Bean
