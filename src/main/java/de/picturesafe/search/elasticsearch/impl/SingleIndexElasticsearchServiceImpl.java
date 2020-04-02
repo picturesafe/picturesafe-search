@@ -27,7 +27,6 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
 
     protected ElasticsearchService elasticsearchService;
     protected IndexPresetConfiguration indexPresetConfiguration;
-    protected String indexAlias;
 
     @Autowired
     public SingleIndexElasticsearchServiceImpl(ElasticsearchService elasticsearchService,
@@ -35,7 +34,6 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
         this.elasticsearchService = elasticsearchService;
         // Compatibility to ElasticsearchServiceImpl
         this.indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration("default");
-        this.indexAlias = indexPresetConfiguration.getIndexAlias();
     }
 
 
@@ -50,96 +48,96 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
 
     @Override
     public String getIndexAlias() {
-        return indexAlias;
+        return indexPresetConfiguration.getIndexAlias();
     }
 
     @Override
     public String getIndexName() {
-        return elasticsearchService.resolveIndexNames(indexAlias).get(0);
+        return elasticsearchService.resolveIndexNames(indexPresetConfiguration.getIndexAlias()).get(0);
     }
 
     @Override
     public String createIndexWithAlias() {
-        return elasticsearchService.createIndexWithAlias(indexAlias);
+        return elasticsearchService.createIndexWithAlias(indexPresetConfiguration.getIndexAlias());
     }
 
     @Override
     public void deleteIndexWithAlias() {
-        elasticsearchService.deleteIndexWithAlias(indexAlias);
+        elasticsearchService.deleteIndexWithAlias(indexPresetConfiguration.getIndexAlias());
     }
 
     @Override
     public void setIndexVersion(int indexVersion) {
-        elasticsearchService.setIndexVersion(indexAlias, indexVersion);
+        elasticsearchService.setIndexVersion(indexPresetConfiguration.getIndexAlias(), indexVersion);
     }
 
     @Override
     public int getIndexVersion() {
-        return elasticsearchService.getIndexVersion(indexAlias);
+        return elasticsearchService.getIndexVersion(indexPresetConfiguration.getIndexAlias());
     }
 
     @Override
     public void addFieldConfiguration(FieldConfiguration... fieldConfigs) {
-        elasticsearchService.addFieldConfiguration(indexAlias, fieldConfigs);
+        elasticsearchService.addFieldConfiguration(indexPresetConfiguration.getIndexAlias(), fieldConfigs);
     }
 
     @Override
     public void addToIndex(DataChangeProcessingMode dataChangeProcessingMode, Map<String, Object> document) {
-        elasticsearchService.addToIndex(indexAlias, dataChangeProcessingMode, document);
+        elasticsearchService.addToIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, document);
     }
 
     @Override
     public void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object) {
-        elasticsearchService.addObjectToIndex(indexAlias, dataChangeProcessingMode, object);
+        elasticsearchService.addObjectToIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, object);
     }
 
     @Override
     public void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id) {
-        elasticsearchService.addObjectToIndex(indexAlias, dataChangeProcessingMode, object, id);
+        elasticsearchService.addObjectToIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, object, id);
     }
 
     @Override
     public void addToIndex(DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents) {
-        elasticsearchService.addToIndex(indexAlias, dataChangeProcessingMode, documents);
+        elasticsearchService.addToIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, documents);
     }
 
     @Override
     public void addObjectsToIndex(DataChangeProcessingMode dataChangeProcessingMode, List<IndexObject<?>> objects) {
-        elasticsearchService.addObjectsToIndex(indexAlias, dataChangeProcessingMode, objects);
+        elasticsearchService.addObjectsToIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, objects);
     }
 
     @Override
     public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, long id) {
-        elasticsearchService.removeFromIndex(indexAlias, dataChangeProcessingMode, id);
+        elasticsearchService.removeFromIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, id);
     }
 
     @Override
     public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<Long> ids) {
-        elasticsearchService.removeFromIndex(indexAlias, dataChangeProcessingMode, ids);
+        elasticsearchService.removeFromIndex(indexPresetConfiguration.getIndexAlias(), dataChangeProcessingMode, ids);
     }
 
     @Override
     public SearchResult search(Expression expression, SearchParameter searchParameter) {
-        return elasticsearchService.search(indexAlias, expression, searchParameter);
+        return elasticsearchService.search(indexPresetConfiguration.getIndexAlias(), expression, searchParameter);
     }
 
     @Override
     public SearchResult search(AccountContext<?> accountContext, Expression expression, SearchParameter searchParameter) {
-        return elasticsearchService.search(indexAlias, accountContext, expression, searchParameter);
+        return elasticsearchService.search(indexPresetConfiguration.getIndexAlias(), accountContext, expression, searchParameter);
     }
 
     @Override
     public Map<String, Object> getDocument(long id) {
-        return elasticsearchService.getDocument(indexAlias, id);
+        return elasticsearchService.getDocument(indexPresetConfiguration.getIndexAlias(), id);
     }
 
     @Override
     public <T extends IndexObject<T>> T getObject(long id, Class<T> type) {
-        return elasticsearchService.getObject(indexAlias, id, type);
+        return elasticsearchService.getObject(indexPresetConfiguration.getIndexAlias(), id, type);
     }
 
     @Override
     public SuggestResult suggest(SuggestExpression... expressions) {
-        return elasticsearchService.suggest(indexAlias, expressions);
+        return elasticsearchService.suggest(indexPresetConfiguration.getIndexAlias(), expressions);
     }
 }
