@@ -28,6 +28,8 @@ public class SortOption {
 
     public enum Direction {ASC, DESC}
 
+    public static final String RELEVANCE_NAME = "_score";
+
     private final String fieldName;
     private final Direction sortDirection;
     private Expression filter;
@@ -48,6 +50,14 @@ public class SortOption {
      */
     public static SortOption desc(String fieldName) {
         return new SortOption(fieldName, Direction.DESC);
+    }
+
+    /**
+     * Creates a sort option for the hit relevance.
+     * @return SortOption
+     */
+    public static SortOption relevance() {
+        return new SortOption(RELEVANCE_NAME, Direction.DESC);
     }
 
     private SortOption(String fieldName, Direction sortDirection) {

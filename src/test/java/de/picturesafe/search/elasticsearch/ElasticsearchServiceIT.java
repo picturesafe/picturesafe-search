@@ -30,6 +30,7 @@ import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.DayExpression;
 import de.picturesafe.search.expression.DayRangeExpression;
+import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -341,6 +342,27 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         elasticsearchService.addObjectToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, fieldConfig, 1002);
         storedConfig = elasticsearchService.getObject(indexAlias, 1002, FieldConfiguration.class);
         assertEquals(fieldConfig, storedConfig);
+    }
+
+    @Test
+    public void testSortByRelevance() {
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
+                DocumentBuilder.id(2001).put("title", "Black horse")
+                        .put("caption", "I was riding on a black horse long time ago.").build(),
+                DocumentBuilder.id(2002).put("title", "White horse")
+                        .put("caption", "I was riding on a white horse followed by a black dog.").build(),
+                DocumentBuilder.id(2003).put("title", "Black and white")
+                        .put("caption", "Michael Jackson was singing about black and white, not about a black horse.").build()
+        ));
+
+        final Expression expression = new FulltextExpression("black");
+        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.relevance()).build();
+        final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(3, result.getTotalHitCount());
+        assertEquals(2003, result.getSearchResultItems().get(0).getId());
+        assertEquals(2001, result.getSearchResultItems().get(1).getId());
+        assertEquals(2002, result.getSearchResultItems().get(2).getId());
     }
 
     private Date parseDate(String date) {
