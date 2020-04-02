@@ -2,6 +2,7 @@ package de.picturesafe.search.elasticsearch.impl;
 
 import de.picturesafe.search.elasticsearch.DataChangeProcessingMode;
 import de.picturesafe.search.elasticsearch.ElasticsearchService;
+import de.picturesafe.search.elasticsearch.IndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.SingleIndexElasticsearchService;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
@@ -30,7 +31,7 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
 
     @Autowired
     public SingleIndexElasticsearchServiceImpl(ElasticsearchService elasticsearchService,
-                                               SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider) {
+                                               IndexPresetConfigurationProvider indexPresetConfigurationProvider) {
         this.elasticsearchService = elasticsearchService;
         // Compatibility to ElasticsearchServiceImpl
         this.indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration("default");
