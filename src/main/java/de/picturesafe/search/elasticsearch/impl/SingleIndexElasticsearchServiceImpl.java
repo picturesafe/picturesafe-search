@@ -30,9 +30,10 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
 
     @Autowired
     public SingleIndexElasticsearchServiceImpl(ElasticsearchService elasticsearchService,
-                                               List<IndexPresetConfiguration> indexPresetConfigurations) {
+                                               SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider) {
         this.elasticsearchService = elasticsearchService;
-        this.indexPresetConfiguration = indexPresetConfigurations.get(0); // Compatibility to ElasticsearchServiceImpl
+        // Compatibility to ElasticsearchServiceImpl
+        this.indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration("default");
         this.indexAlias = indexPresetConfiguration.getIndexAlias();
     }
 

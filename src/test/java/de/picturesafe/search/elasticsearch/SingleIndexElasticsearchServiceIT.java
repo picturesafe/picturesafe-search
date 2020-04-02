@@ -24,6 +24,7 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
+import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
@@ -363,6 +364,11 @@ public class SingleIndexElasticsearchServiceIT {
             final int numberOfShards = 1;
             final int numberOfReplicas = 0;
             return new StandardIndexPresetConfiguration(indexAlias, numberOfShards, numberOfReplicas);
+        }
+
+        @Bean
+        SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+            return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
         }
 
         @Bean

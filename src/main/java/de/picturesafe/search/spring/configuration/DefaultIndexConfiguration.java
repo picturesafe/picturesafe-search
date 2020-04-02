@@ -17,9 +17,11 @@
 package de.picturesafe.search.spring.configuration;
 
 import de.picturesafe.search.elasticsearch.FieldConfigurationProvider;
+import de.picturesafe.search.elasticsearch.IndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
+import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.impl.StaticFieldConfigurationProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -62,6 +64,11 @@ public class DefaultIndexConfiguration {
         cfg.setFieldsLimit(fieldsLimit);
         cfg.setCharMappings(defaultCharMapping());
         return cfg;
+    }
+
+    @Bean
+    public IndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+        return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
     }
 
     @Bean
