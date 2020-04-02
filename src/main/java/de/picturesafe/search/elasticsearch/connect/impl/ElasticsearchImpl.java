@@ -30,6 +30,7 @@ import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientDeleteA
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientIndexAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientIndexRefreshAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientSearchAction;
+import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
@@ -45,7 +46,6 @@ import de.picturesafe.search.elasticsearch.connect.error.QuerySyntaxException;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
 import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactoryCaller;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
@@ -96,6 +96,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.Suggest;
@@ -642,32 +643,39 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         if (queryDto.getSortOptions() != null) {
             for (SortOption sortOption : queryDto.getSortOptions()) {
                 final String fieldName = sortOption.getFieldName();
-                FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, fieldName, false);
-                final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+                SortBuilder<?> sortBuilder;
 
-                if (fieldConfiguration == null) {
-                    fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, topFieldName, false);
-                }
-
-                FieldSortBuilder fieldSortBuilder = null;
-                if (fieldConfiguration != null) {
-                    if (fieldConfiguration.getParent() != null) {
-                        fieldConfiguration = fieldConfiguration.getParent();
-                    }
-
-                    if (fieldConfiguration.isNestedObject()) {
-                        fieldSortBuilder = buildNestedSort(queryDto, fieldConfiguration, fieldName, sortOption, mappingConfig);
-                    } else if (isTextField(fieldConfiguration)) {
-                        fieldSortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
-                    }
+                if (SortOption.RELEVANCE_NAME.equals(fieldName)) {
+                    sortBuilder = SortBuilders.scoreSort();
                 } else {
-                    LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
+                    FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, fieldName, false);
+                    final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+
+                    if (fieldConfiguration == null) {
+                        fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, topFieldName, false);
+                    }
+
+                    sortBuilder = null;
+                    if (fieldConfiguration != null) {
+                        if (fieldConfiguration.getParent() != null) {
+                            fieldConfiguration = fieldConfiguration.getParent();
+                        }
+
+                        if (fieldConfiguration.isNestedObject()) {
+                            sortBuilder = buildNestedSort(queryDto, fieldConfiguration, fieldName, sortOption, mappingConfig);
+                        } else if (isTextField(fieldConfiguration)) {
+                            sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
+                        }
+                    } else {
+                        LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
+                    }
+
+                    if (sortBuilder == null) {
+                        sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
+                    }
                 }
 
-                if (fieldSortBuilder == null) {
-                    fieldSortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
-                }
-                searchRequestBuilder.sort(fieldSortBuilder);
+                searchRequestBuilder.sort(sortBuilder);
             }
         }
     }
