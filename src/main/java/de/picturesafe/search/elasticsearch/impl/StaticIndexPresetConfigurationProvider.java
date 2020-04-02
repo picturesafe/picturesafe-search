@@ -33,6 +33,6 @@ public class StaticIndexPresetConfigurationProvider implements IndexPresetConfig
 
     @Override
     public IndexPresetConfiguration getIndexPresetConfiguration(String indexAlias) {
-        throw new RuntimeException("Operation getIndexPresetConfiguration not supported!"); // TODO!
+        return indexPresetConfigurationByAlias.get(indexAlias);
     }
 }
