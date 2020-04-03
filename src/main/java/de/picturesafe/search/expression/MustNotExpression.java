@@ -16,7 +16,10 @@
 
 package de.picturesafe.search.expression;
 
+import de.picturesafe.search.expression.internal.EmptyExpression;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
+import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -27,17 +30,13 @@ public class MustNotExpression extends AbstractExpression {
     private Expression expression;
 
     /**
-     * Default constructor
-     */
-    public MustNotExpression() {
-    }
-
-    /**
      * Constructor
      * @param expression Expression to negate
      */
     public MustNotExpression(Expression expression) {
+        Validate.notNull(expression, "Parameter 'expression' may not be null!");
         this.expression = expression;
+        expression.setParent(this);
     }
 
     /**
@@ -48,20 +47,32 @@ public class MustNotExpression extends AbstractExpression {
         return expression;
     }
 
-    /**
-     * Sets the expression to negate.
-     * @param expression Expression to negate
-     */
-    public void setExpression(Expression expression) {
-        this.expression = expression;
-        if (expression != null) {
-            expression.setParent(this);
+    @Override
+    public Expression optimize() {
+        Expression optimizedExpression = expression.optimize();
+        if (optimizedExpression == null) {
+            optimizedExpression = new EmptyExpression();
         }
+        return (!(optimizedExpression instanceof EmptyExpression)) ? new MustNotExpression(optimizedExpression) : optimizedExpression;
     }
 
     @Override
-    public Expression optimize() {
-        return (expression != null) ? this : expression;
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final MustNotExpression that = (MustNotExpression) o;
+        return new EqualsBuilder().append(expression, that.expression).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return expression.hashCode();
     }
 
     @Override
