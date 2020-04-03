@@ -15,6 +15,7 @@ import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.SearchParameter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -30,12 +31,12 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
 
     @Autowired
     public SingleIndexElasticsearchServiceImpl(ElasticsearchService elasticsearchService,
-                                               IndexPresetConfigurationProvider indexPresetConfigurationProvider) {
+                                               IndexPresetConfigurationProvider indexPresetConfigurationProvider,
+                                               @Value("${elasticsearch.index.alias:default}") String defaultAlias) {
         this.elasticsearchService = elasticsearchService;
         // Compatibility to ElasticsearchServiceImpl
-        this.indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration("default");
+        this.indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(defaultAlias);
     }
-
 
     public ElasticsearchService getElasticsearchService() {
         return elasticsearchService;
