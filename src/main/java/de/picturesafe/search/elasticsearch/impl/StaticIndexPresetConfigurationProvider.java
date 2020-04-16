@@ -25,14 +25,22 @@ import java.util.TreeMap;
 
 public class StaticIndexPresetConfigurationProvider implements IndexPresetConfigurationProvider {
 
+    private static final String DEFAULT_KEY = "%DEFAULT%";
+
     private final Map<String, IndexPresetConfiguration> indexPresetConfigurationByAlias = new TreeMap<>();
+    private boolean singleIndex;
 
     public StaticIndexPresetConfigurationProvider(List<IndexPresetConfiguration> indexPresetConfigurations) {
         indexPresetConfigurations.forEach(conf -> indexPresetConfigurationByAlias.put(conf.getIndexAlias(), conf));
     }
 
+    public StaticIndexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+        indexPresetConfigurationByAlias.put(DEFAULT_KEY, indexPresetConfiguration);
+        singleIndex = true;
+    }
+
     @Override
     public IndexPresetConfiguration getIndexPresetConfiguration(String indexAlias) {
-        return indexPresetConfigurationByAlias.get(indexAlias);
+        return singleIndex ? indexPresetConfigurationByAlias.get(DEFAULT_KEY) : indexPresetConfigurationByAlias.get(indexAlias);
     }
 }

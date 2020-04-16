@@ -24,7 +24,7 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
-import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
+import de.picturesafe.search.elasticsearch.impl.StaticIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
@@ -33,7 +33,7 @@ import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
-import de.picturesafe.search.spring.configuration.TestConfiguration;
+import de.picturesafe.search.spring.configuration.DefaultElasticConfiguration;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
@@ -70,7 +70,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfiguration.class, SingleIndexElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
+@ContextConfiguration(classes = {DefaultElasticConfiguration.class, SingleIndexElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
         loader = AnnotationConfigContextLoader.class)
 public class SingleIndexElasticsearchServiceIT {
 
@@ -367,8 +367,8 @@ public class SingleIndexElasticsearchServiceIT {
         }
 
         @Bean
-        SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
-            return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
+        IndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+            return new StaticIndexPresetConfigurationProvider(indexPresetConfiguration);
         }
 
         @Bean
@@ -385,12 +385,8 @@ public class SingleIndexElasticsearchServiceIT {
             return testFields;
         }
 
-        private FieldConfiguration createFieldConfiguration(String name,
-                                                            ElasticsearchType elasticType,
-                                                            boolean copyToFulltext,
-                                                            boolean aggregatable,
-                                                            boolean sortable,
-                                                            boolean multilingual) {
+        private FieldConfiguration createFieldConfiguration(String name, ElasticsearchType elasticType, boolean copyToFulltext, boolean aggregatable,
+                                                            boolean sortable, boolean multilingual) {
             return StandardFieldConfiguration.builder(name, elasticType)
                     .copyToFulltext(copyToFulltext)
                     .aggregatable(aggregatable)
