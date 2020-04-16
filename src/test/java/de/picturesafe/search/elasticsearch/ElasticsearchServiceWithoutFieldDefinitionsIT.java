@@ -16,8 +16,8 @@
 
 package de.picturesafe.search.elasticsearch;
 
-import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
@@ -26,7 +26,7 @@ import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
-import de.picturesafe.search.spring.configuration.TestConfiguration;
+import de.picturesafe.search.spring.configuration.DefaultElasticConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfiguration.class, AbstractElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
+@ContextConfiguration(classes = {DefaultElasticConfiguration.class, AbstractElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
         loader = AnnotationConfigContextLoader.class)
 public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElasticsearchServiceIT {
 

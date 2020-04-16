@@ -16,8 +16,6 @@
 
 package de.picturesafe.search.elasticsearch;
 
-import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
-import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
@@ -26,6 +24,8 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.error.QuerySyntaxException;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
+import de.picturesafe.search.elasticsearch.impl.StaticIndexPresetConfigurationProvider;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
@@ -432,8 +432,8 @@ abstract class AbstractElasticsearchServiceIT {
         }
 
         @Bean
-        SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
-            return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
+        IndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+            return new StaticIndexPresetConfigurationProvider(indexPresetConfiguration);
         }
 
         protected FieldConfiguration createFieldConfiguration(String name,

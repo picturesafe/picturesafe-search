@@ -21,8 +21,8 @@ import de.picturesafe.search.elasticsearch.IndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
-import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.impl.StaticFieldConfigurationProvider;
+import de.picturesafe.search.elasticsearch.impl.StaticIndexPresetConfigurationProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -57,7 +57,7 @@ public class DefaultIndexConfiguration {
     @Value("${elasticsearch.index.max_result_window:10000}")
     private int maxResultWindow;
 
-    @Bean
+   @Bean
     public StandardIndexPresetConfiguration indexPresetConfiguration() {
         final StandardIndexPresetConfiguration cfg = new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix,
                 indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
@@ -68,7 +68,7 @@ public class DefaultIndexConfiguration {
 
     @Bean
     public IndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
-        return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
+        return new StaticIndexPresetConfigurationProvider(indexPresetConfiguration);
     }
 
     @Bean
