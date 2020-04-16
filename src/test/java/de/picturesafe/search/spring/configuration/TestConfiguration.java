@@ -148,6 +148,8 @@ public class TestConfiguration {
                 "released", ElasticsearchType.BOOLEAN).aggregatable(true).build());
         testFields.add(StandardFieldConfiguration.builder(
                 "facetDate", ElasticsearchType.DATE).aggregatable(true).build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "objectField", ElasticsearchType.OBJECT).withoutIndexing().build());
         testFields.add(referenceWithSortFieldConfiguration());
         testFields.add(FieldConfiguration.SUGGEST_FIELD);
         return testFields;

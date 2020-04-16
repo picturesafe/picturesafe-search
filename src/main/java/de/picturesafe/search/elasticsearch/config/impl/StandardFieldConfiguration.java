@@ -48,6 +48,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private boolean aggregatable;
     private boolean multilingual;
     private String analyzer;
+    private boolean withoutIndexing;
     private List<StandardFieldConfiguration> nestedFields;
     private Set<String> copyToFields;
     private FieldConfiguration parent;
@@ -65,6 +66,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         this.aggregatable = builder.aggregatable;
         this.multilingual = builder.multilingual;
         this.analyzer = builder.analyzer;
+        this.withoutIndexing = builder.withoutIndexing;
         this.copyToFields = builder.copyToFields;
         this.nestedFields = builder.nestedFields;
         initNestedFields();
@@ -78,38 +80,52 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         }
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public String getElasticsearchType() {
         return elasticsearchType;
     }
 
+    @Override
     public boolean isCopyToFulltext() {
         return copyToFields != null && copyToFields.contains(FIELD_NAME_FULLTEXT);
     }
 
+    @Override
     public boolean isSortable() {
         return sortable;
     }
 
+    @Override
     public boolean isAggregatable() {
         return aggregatable;
     }
 
+    @Override
     public boolean isMultilingual() {
         return multilingual;
     }
 
+    @Override
     public String getAnalyzer() {
         return analyzer;
     }
 
+    @Override
+    public boolean isWithoutIndexing() {
+        return withoutIndexing;
+    }
+
+    @Override
     public List<? extends FieldConfiguration> getNestedFields() {
         return nestedFields;
     }
 
+    @Override
     public FieldConfiguration getNestedField(String name) {
         if (CollectionUtils.isNotEmpty(nestedFields)) {
             for (final FieldConfiguration nestedField : nestedFields) {
@@ -121,10 +137,12 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return null;
     }
 
+    @Override
     public boolean isNestedObject() {
         return getElasticsearchType().equalsIgnoreCase(ElasticsearchType.NESTED.toString());
     }
 
+    @Override
     public Set<String> getCopyToFields() {
         return copyToFields;
     }
@@ -149,6 +167,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         private boolean aggregatable;
         private boolean multilingual;
         private String analyzer;
+        private boolean withoutIndexing;
         private List<StandardFieldConfiguration> nestedFields;
         private Set<String> copyToFields;
 
@@ -179,6 +198,11 @@ public class StandardFieldConfiguration implements FieldConfiguration {
 
         public Builder analyzer(String analyzer) {
             this.analyzer = analyzer;
+            return this;
+        }
+
+        public Builder withoutIndexing() {
+            this.withoutIndexing = true;
             return this;
         }
 
@@ -255,6 +279,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         aggregatable = getBoolean(document, "aggregatable");
         multilingual = getBoolean(document, "multilingual");
         analyzer = getString(document, "analyzer");
+        withoutIndexing = getBoolean(document, "withoutIndexing");
         copyToFields = getStringSet(document, "copyToFields");
 
         final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "nestedFields");
@@ -282,6 +307,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append(name, that.name)
                 .append(elasticsearchType, that.elasticsearchType)
                 .append(analyzer, that.analyzer)
+                .append(withoutIndexing, that.withoutIndexing)
                 .append(nestedFields, that.nestedFields)
                 .append(copyToFields, that.copyToFields)
                 .isEquals();
@@ -301,6 +327,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append("aggregatable", aggregatable) //--
                 .append("multilingual", multilingual) //--
                 .append("analyzer", analyzer) //--
+                .append("withoutIndexing", withoutIndexing) //--
                 .append("copyToFields", copyToFields) //--
                 .append("nestedFields", nestedFields) //--
                 .append("parent", (parent != null) ? parent.getName() : null) //--

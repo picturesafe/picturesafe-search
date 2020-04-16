@@ -52,6 +52,8 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     String getAnalyzer();
 
+    boolean isWithoutIndexing();
+
     Set<String> getCopyToFields();
 
     List<? extends FieldConfiguration> getNestedFields();
@@ -73,6 +75,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("aggregatable", isAggregatable())
                 .put("multilingual", isMultilingual())
                 .put("analyzer", getAnalyzer())
+                .put("withoutIndexing", isWithoutIndexing())
                 .put("copyToFields", getCopyToFields())
                 .put("nestedFields", getNestedFields())
                 .build();

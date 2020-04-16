@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.mapping;
 
+import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
@@ -95,6 +96,10 @@ public class MappingBuilder {
                     addNestedObject(mapping, fieldConfig);
                 } else {
                     mapping.field("type", fieldConfig.getElasticsearchType());
+                }
+                if (fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.OBJECT.toString())
+                        && fieldConfig.isWithoutIndexing()) {
+                    mapping.field("enabled", false);
                 }
                 addCopyTo(fieldConfig, mapping);
             }
