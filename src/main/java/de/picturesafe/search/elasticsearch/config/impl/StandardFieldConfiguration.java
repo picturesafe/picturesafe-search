@@ -201,8 +201,8 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             return this;
         }
 
-        public Builder withoutIndexing(boolean withoutIndexing) {
-            this.withoutIndexing = withoutIndexing;
+        public Builder withoutIndexing() {
+            this.withoutIndexing = true;
             return this;
         }
 
