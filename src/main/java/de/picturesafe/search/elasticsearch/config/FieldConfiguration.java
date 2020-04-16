@@ -52,6 +52,8 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     String getAnalyzer();
 
+    boolean isWithoutIndexing();
+
     Set<String> getCopyToFields();
 
     List<? extends FieldConfiguration> getNestedFields();

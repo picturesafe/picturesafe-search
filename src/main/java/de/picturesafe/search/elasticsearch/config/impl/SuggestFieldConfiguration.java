@@ -81,6 +81,11 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
+    public boolean isWithoutIndexing() {
+        return false;
+    }
+
+    @Override
     public List<FieldConfiguration> getNestedFields() {
         return Collections.emptyList();
     }

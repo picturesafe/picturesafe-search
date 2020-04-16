@@ -138,6 +138,35 @@ public class AdminIT extends AbstractElasticIntegrationTest {
     }
 
     @Test
+    public void testFieldDisabled() throws Exception {
+        final String fieldName = "objectField";
+        final String indexAlias = adminIndexPresetConfiguration.getIndexAlias();
+
+        try {
+            final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
+            assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
+
+            final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
+            final MappingMetaData mapping = response.mappings().get(indexName);
+            final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
+            assertTrue("Mapping must contain field " + fieldName, properties.containsKey(fieldName));
+
+            final Map<String, Object> fieldProperties = (Map<String, Object>) properties.get(fieldName);
+            assertTrue("Field mapping must contain property 'type'", fieldProperties.containsKey("type"));
+            assertEquals("Elasticsearch type must be object", ElasticsearchType.OBJECT.toString(), fieldProperties.get("type"));
+            assertTrue("Field mapping must contain property 'enabled'", fieldProperties.containsKey("enabled"));
+            assertEquals("Property 'enabled' must be false", false, fieldProperties.get("enabled"));
+
+            elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
+            assertFalse("Deleted index must not exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
+        } finally {
+            if (elasticsearchAdmin.aliasOrIndexExists(indexAlias)) {
+                elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
+            }
+        }
+    }
+
+    @Test
     public void testFieldsLimit() {
         final StandardIndexPresetConfiguration indexPresetConfiguration = ((StandardIndexPresetConfiguration) adminIndexPresetConfiguration).clone();
         final String indexAlias = indexPresetConfiguration.getIndexAlias();
@@ -165,12 +194,12 @@ public class AdminIT extends AbstractElasticIntegrationTest {
 
             final StandardIndexPresetConfiguration cfg = new StandardIndexPresetConfiguration(indexAlias, numberOfShards, numberOfReplicas);
             try {
-                IndexSettingsObject fileNameTokenizer = new IndexSettingsObject("file_name_tokenizer");
+                final IndexSettingsObject fileNameTokenizer = new IndexSettingsObject("file_name_tokenizer");
                 fileNameTokenizer.content().startObject()
                         .field("type", "char_group")
                         .array("tokenize_on_chars", "whitespace", ".", "-", "_", "\n")
                         .endObject();
-                IndexSettingsObject fileNameAnalyzer = new IndexSettingsObject("file_name");
+                final IndexSettingsObject fileNameAnalyzer = new IndexSettingsObject("file_name");
                 fileNameAnalyzer.content().startObject()
                         .field("type", "custom")
                         .field("tokenizer", "file_name_tokenizer")

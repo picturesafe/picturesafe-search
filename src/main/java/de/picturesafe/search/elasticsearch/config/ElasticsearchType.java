@@ -30,7 +30,8 @@ public enum ElasticsearchType {
     DATE,
     BOOLEAN,
     NESTED,
-    COMPLETION;
+    COMPLETION,
+    OBJECT;
 
     @Override
     public String toString() {
