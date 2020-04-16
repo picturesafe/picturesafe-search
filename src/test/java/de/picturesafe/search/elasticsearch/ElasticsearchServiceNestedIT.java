@@ -7,7 +7,7 @@ import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
-import de.picturesafe.search.elasticsearch.impl.SingleIndexPresetConfigurationProvider;
+import de.picturesafe.search.elasticsearch.impl.StaticIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.expression.DayExpression;
@@ -22,7 +22,7 @@ import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
-import de.picturesafe.search.spring.configuration.TestConfiguration;
+import de.picturesafe.search.spring.configuration.DefaultElasticConfiguration;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +46,7 @@ import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIEL
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfiguration.class, ElasticsearchServiceNestedIT.Config.class, ElasticsearchServiceImpl.class},
+@ContextConfiguration(classes = {DefaultElasticConfiguration.class, ElasticsearchServiceNestedIT.Config.class, ElasticsearchServiceImpl.class},
         loader = AnnotationConfigContextLoader.class)
 public class ElasticsearchServiceNestedIT {
 
@@ -319,8 +319,8 @@ public class ElasticsearchServiceNestedIT {
         }
 
         @Bean
-        SingleIndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
-            return new SingleIndexPresetConfigurationProvider(indexPresetConfiguration);
+        IndexPresetConfigurationProvider indexPresetConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration) {
+            return new StaticIndexPresetConfigurationProvider(indexPresetConfiguration);
         }
 
         @Bean
