@@ -75,6 +75,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("aggregatable", isAggregatable())
                 .put("multilingual", isMultilingual())
                 .put("analyzer", getAnalyzer())
+                .put("withoutIndexing", isWithoutIndexing())
                 .put("copyToFields", getCopyToFields())
                 .put("nestedFields", getNestedFields())
                 .build();
