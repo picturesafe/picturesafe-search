@@ -16,7 +16,6 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
-import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
@@ -24,6 +23,7 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.OperationExpression;
@@ -43,7 +43,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -248,11 +247,10 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     private Map<String, Object> dateDoc(long id, Date date) {
         final String caption = "DateFacetTest #" + id + " - " + DateFormatUtils.format(date, "dd.MM.yyyy");
         LOGGER.debug(caption);
-        final Map<String, Object> doc = new HashMap<>();
-        doc.put("id", id);
-        doc.put("caption", caption);
-        doc.put("facetDate", date);
-        return doc;
+        return DocumentBuilder.id(id)
+                .put("caption", caption)
+                .put("facetDate", date)
+                .build();
     }
 
     private QueryRangeDto defaultRange() {

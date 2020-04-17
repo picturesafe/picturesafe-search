@@ -30,22 +30,29 @@ import java.util.Map;
  */
 public class SearchResultItem {
 
-    private final long id;
+    private final String id;
     private final Map<String, Object> attributes;
+    private final IdFormat idFormat;
 
     /**
      * Constructor
      *
-     * @param attributes            Attributes of the result item's document
+     * @param attributes    Attributes of the result item's document
      */
     public SearchResultItem(Map<String, Object> attributes) {
-        this.id = extractId(attributes);
-        this.attributes = attributes;
+        this(attributes, IdFormat.DEFAULT);
     }
 
-    private long extractId(Map<String, Object> attributes) {
-        final Long id = ElasticDocumentUtils.getId(attributes);
-        return (id != null) ? id : -1;
+    /**
+     * Constructor
+     *
+     * @param attributes    Attributes of the result item's document
+     * @param idFormat      {@link IdFormat}
+     */
+    public SearchResultItem(Map<String, Object> attributes, IdFormat idFormat) {
+        this.id = ElasticDocumentUtils.getId(attributes);
+        this.attributes = attributes;
+        this.idFormat = idFormat;
     }
 
     /**
@@ -53,8 +60,19 @@ public class SearchResultItem {
      *
      * @return ID
      */
-    public long getId() {
+    public String getId() {
         return id;
+    }
+
+    /**
+     * Gets the ID of the result items's document.
+     *
+     * @param <T> Type of the ID
+     * @param type Type class of the ID
+     * @return ID
+     */
+    public <T> T getId(Class<T> type) {
+        return idFormat.parse(id, type);
     }
 
     /**

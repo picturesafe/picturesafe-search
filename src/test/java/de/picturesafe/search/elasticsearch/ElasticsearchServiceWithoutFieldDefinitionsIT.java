@@ -71,7 +71,7 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         SearchResultItem item = result.getSearchResultItems().get(0);
-        assertEquals(4711, item.getId());
+        assertEquals(4711, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc1, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new ValueExpression("title", "Katze"),
@@ -79,7 +79,7 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
     }
 

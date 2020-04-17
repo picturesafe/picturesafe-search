@@ -89,7 +89,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         SearchResultItem item = result.getSearchResultItems().get(0);
-        assertEquals(4711, item.getId());
+        assertEquals(4711, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc1, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new ValueExpression("title", "Katze"),
@@ -97,7 +97,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new FulltextExpression("Vögel"),
@@ -105,7 +105,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new FulltextExpression("Hamburg"),
@@ -113,7 +113,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = elasticsearchService.search(indexAlias, new FulltextExpression("Hamburg"),
@@ -121,7 +121,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4711, item.getId());
+        assertEquals(4711, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc1, item.getAttributes());
     }
 
@@ -289,10 +289,10 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("title", "Multilang"),
                 SearchParameter.builder().language("de").sortOptions(SortOption.asc("text_multilang")).build());
         assertEquals(4, result.getResultCount());
-        assertEquals(4713, result.getSearchResultItems().get(0).getId());
-        assertEquals(4712, result.getSearchResultItems().get(1).getId());
-        assertEquals(4711, result.getSearchResultItems().get(2).getId());
-        assertEquals(4714, result.getSearchResultItems().get(3).getId());
+        assertEquals(4713, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(4712, result.getSearchResultItems().get(1).getId(Long.class).longValue());
+        assertEquals(4711, result.getSearchResultItems().get(2).getId(Long.class).longValue());
+        assertEquals(4714, result.getSearchResultItems().get(3).getId(Long.class).longValue());
     }
 
     @Test
@@ -360,9 +360,9 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.relevance()).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(3, result.getTotalHitCount());
-        assertEquals(2003, result.getSearchResultItems().get(0).getId());
-        assertEquals(2001, result.getSearchResultItems().get(1).getId());
-        assertEquals(2002, result.getSearchResultItems().get(2).getId());
+        assertEquals(2003, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2001, result.getSearchResultItems().get(1).getId(Long.class).longValue());
+        assertEquals(2002, result.getSearchResultItems().get(2).getId(Long.class).longValue());
     }
 
     private Date parseDate(String date) {

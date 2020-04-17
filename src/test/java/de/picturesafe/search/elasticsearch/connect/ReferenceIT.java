@@ -123,13 +123,13 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     @Test
     public void testSearchValue() {
         final Map<String, Object> doc1 = new HashMap<>();
-        doc1.put("id", 23);
+        doc1.put("id", "23");
         List<Map<String, Object>> references = new ArrayList<>();
         references.add(generateReference(7, null, null));
         doc1.put("referenceWithSort", references);
 
         final Map<String, Object> doc2 = new HashMap<>();
-        doc2.put("id", 24);
+        doc2.put("id", "24");
         references = new ArrayList<>();
         references.add(generateReference(8, null, null));
         doc2.put("referenceWithSort", references);
@@ -147,14 +147,14 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     @Test
     public void testSearchIn() {
         final Map<String, Object> doc1 = new HashMap<>();
-        doc1.put("id", 123);
+        doc1.put("id", "123");
         List<Map<String, Object>> references = new ArrayList<>();
         references.add(generateReference(7, null, null));
         references.add(generateReference(8, null, null));
         doc1.put("referenceWithSort", references);
 
         final Map<String, Object> doc2 = new HashMap<>();
-        doc2.put("id", 124);
+        doc2.put("id", "124");
         references = new ArrayList<>();
         references.add(generateReference(8, null, null));
         doc2.put("referenceWithSort", references);
@@ -177,7 +177,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     @Test
     public void testSearchEmptyIn() {
         final Map<String, Object> doc1 = new HashMap<>();
-        doc1.put("id", 223);
+        doc1.put("id", "223");
         doc1.put("caption", "SearchEmptyIn");
         List<Map<String, Object>> references = new ArrayList<>();
         references.add(generateReference(7, null, null));
@@ -185,7 +185,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         doc1.put("referenceWithSort", references);
 
         final Map<String, Object> doc2 = new HashMap<>();
-        doc2.put("id", 224);
+        doc2.put("id", "224");
         doc2.put("caption", "SearchEmptyIn");
         references = new ArrayList<>();
         references.add(generateReference(8, null, null));
@@ -205,14 +205,14 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     @Test
     public void testSearchIsNull() {
         final Map<String, Object> doc1 = new HashMap<>();
-        doc1.put("id", 323);
+        doc1.put("id", "323");
         doc1.put("caption", "SearchIsNull");
         final List<Map<String, Object>> references = new ArrayList<>();
         references.add(generateReference(7, null, null));
         doc1.put("referenceWithSort", references);
 
         final Map<String, Object> doc2 = new HashMap<>();
-        doc2.put("id", 324);
+        doc2.put("id", "324");
         doc2.put("caption", "SearchIsNull");
 
         elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
@@ -256,14 +256,14 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
     @Test
     public void testSortOnLinkingTimeFilteredByTargetId() {
         final Map<String, Object> doc1 = new HashMap<>();
-        doc1.put("id", 1001);
+        doc1.put("id", "1001");
         List<Map<String, Object>> references = new ArrayList<>();
         references.add(generateReference(777, null, 1L));
         references.add(generateReference(888, null, 3L));
         doc1.put("referenceWithSort", references);
 
         final Map<String, Object> doc2 = new HashMap<>();
-        doc2.put("id", 1002);
+        doc2.put("id", "1002");
         references = new ArrayList<>();
         references.add(generateReference(888, null, 2L));
         doc2.put("referenceWithSort", references);

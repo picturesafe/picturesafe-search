@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.util;
 
+import de.picturesafe.search.elasticsearch.model.IdFormat;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.Collection;
@@ -32,21 +33,17 @@ public class ElasticDocumentUtils {
     }
 
     public static long getId(Map<String, Object> doc, long fallbackValue) {
-        final Long id = getId(doc);
+        final Long id = getId(doc, Long.class);
         return (id != null) ? id : fallbackValue;
     }
 
-    public static Long getId(Map<String, Object> doc) {
-        final Object val = doc.get("id");
-        if (val instanceof Number) {
-            return ((Number) val).longValue();
-        } else if (val instanceof String) {
-            return Long.parseLong((String) val);
-        } else if (val != null) {
-            throw new IllegalArgumentException("Document field 'id' has unsupported type: " + val);
-        } else {
-            return null;
-        }
+    public static <T> T getId(Map<String, Object> doc, Class<T> type) {
+        final String val = getId(doc);
+        return (val != null) ? IdFormat.DEFAULT.parse(val, type) : null;
+    }
+
+    public static String getId(Map<String, Object> doc) {
+        return (String) doc.get("id");
     }
 
     public static Date getDate(Map<String, Object> doc, String name) {

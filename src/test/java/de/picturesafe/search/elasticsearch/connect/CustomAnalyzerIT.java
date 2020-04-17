@@ -25,6 +25,7 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.ValueExpression;
 import org.junit.Test;
@@ -37,7 +38,6 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -174,11 +174,10 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
     }
 
     private Map<String, Object> createTestDocument(long id, String filename) {
-        final Map<String, Object> doc = new HashMap<>();
-        doc.put("id", id);
-        doc.put("filenameWithAnalyzer", filename);
-        doc.put("filenameWithoutAnalyzer", filename);
-        return doc;
+        return DocumentBuilder.id(id)
+                .put("filenameWithAnalyzer", filename)
+                .put("filenameWithoutAnalyzer", filename)
+                .build();
     }
 
     private ElasticsearchResult search(String fieldname, String value) {

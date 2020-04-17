@@ -156,7 +156,7 @@ public interface ElasticsearchService {
      * @param object                    Index object to be added
      * @param id                        ID to assign to the persisted object (useful if the object does not provide an ID itself)
      */
-    void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id);
+    void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, Object id);
 
     /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
@@ -183,7 +183,7 @@ public interface ElasticsearchService {
      * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
      * @param id                        ID of the document to be removed
      */
-    void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, long id);
+    void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Object id);
 
     /**
      * Removes multiple documents from the index.
@@ -192,7 +192,7 @@ public interface ElasticsearchService {
      * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
      * @param ids                       IDs of the documents to be removed
      */
-    void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Collection<Long> ids);
+    void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids);
 
     /**
      * Searches for documents.
@@ -222,7 +222,7 @@ public interface ElasticsearchService {
      * @param id            ID of the document
      * @return              The document or <code>null</code> if the ID does not exist
      */
-    Map<String, Object> getDocument(String indexAlias, long id);
+    Map<String, Object> getDocument(String indexAlias, Object id);
 
     /**
      * Gets an object from the index.
@@ -233,7 +233,7 @@ public interface ElasticsearchService {
      * @param <T>           Generic type of the object
      * @return              The index object or <code>null</code> if the ID does not exist
      */
-    <T extends IndexObject<T>> T getObject(String indexAlias, long id, Class<T> type);
+    <T extends IndexObject<T>> T getObject(String indexAlias, Object id, Class<T> type);
 
     /**
      * Suggests text options for search-as-you-type functionality.

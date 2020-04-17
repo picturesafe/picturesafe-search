@@ -34,6 +34,7 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
+import de.picturesafe.search.elasticsearch.model.IdFormat;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
@@ -92,6 +93,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     @Value("${elasticsearch.service.optimize_expressions.enabled:true}")
     protected boolean optimizeExpressionsEnabled = true;
 
+    protected IdFormat idFormat = IdFormat.DEFAULT;
+
     @Autowired
     public ElasticsearchServiceImpl(Elasticsearch elasticsearch, IndexPresetConfigurationProvider indexPresetConfigurationProvider,
                                     FieldConfigurationProvider fieldConfigurationProvider) {
@@ -146,6 +149,11 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
      */
     public void setShardSizeFactor(int shardSizeFactor) {
         this.shardSizeFactor = shardSizeFactor;
+    }
+
+    @Autowired(required = false)
+    public void setIdFormat(IdFormat idFormat) {
+        this.idFormat = idFormat;
     }
 
     @Override
@@ -249,10 +257,10 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
-    public void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id) {
+    public void addObjectToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, Object id) {
         Validate.notNull(object, "Parameter 'object' may not be null!");
         final Map<String, Object> doc = object.toDocument();
-        doc.put("id", id);
+        doc.put("id", idFormat.format(id));
         addToIndex(indexAlias, dataChangeProcessingMode, doc);
     }
 
@@ -272,7 +280,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
-    public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, long id) {
+    public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Object id) {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
 
@@ -281,7 +289,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
-    public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Collection<Long> ids) {
+    public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids) {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(ids, "Parameter 'ids' may not be null!");
@@ -307,7 +315,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         final List<Map<String, Object>> searchResult = elasticsearchResult.getHits();
         final List<SearchResultItem> resultItems = new ArrayList<>();
         for (Map<String, Object> hit : searchResult) {
-            resultItems.add(new SearchResultItem(hit));
+            resultItems.add(new SearchResultItem(hit, idFormat));
         }
 
         sw.start("get max results");
@@ -322,12 +330,12 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
-    public Map<String, Object> getDocument(String indexAlias, long id) {
+    public Map<String, Object> getDocument(String indexAlias, Object id) {
         return elasticsearch.getDocument(indexAlias, id);
     }
 
     @Override
-    public <T extends IndexObject<T>> T getObject(String indexAlias, long id, Class<T> type) {
+    public <T extends IndexObject<T>> T getObject(String indexAlias, Object id, Class<T> type) {
         final Map<String, Object> doc = getDocument(indexAlias, id);
         return (doc != null) ? IndexObject.fromDocument(doc, type) : null;
     }

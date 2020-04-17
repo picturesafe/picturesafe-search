@@ -39,28 +39,28 @@ public class DocumentBuilderTest {
     @Test
     public void test() {
         Map<String, Object> document = DocumentBuilder.id(1).put("title", "This is a title").build();
-        assertTrue(document.get(FieldConfiguration.FIELD_NAME_ID) instanceof Long);
-        assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
+        assertTrue(document.get(FieldConfiguration.FIELD_NAME_ID) instanceof String);
+        assertEquals("1", (String) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertEquals("This is a title", document.get("title"));
 
         document = DocumentBuilder.id(1000).put("title", "This is a title").put("caption", "This is a caption").build();
-        assertEquals(1000, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
+        assertEquals("1000", (String) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertEquals("This is a title", document.get("title"));
         assertEquals("This is a caption", document.get("caption"));
 
         document = DocumentBuilder.id(1).put("title", "This is a title").put("available", true).build();
-        assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
+        assertEquals("1", (String) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertEquals("This is a title", document.get("title"));
         assertTrue(document.get("available") instanceof Boolean);
         assertTrue((Boolean) document.get("available"));
 
         document = DocumentBuilder.id(1).put("title", (String) null).build();
-        assertEquals(1, (long) document.get(FieldConfiguration.FIELD_NAME_ID));
+        assertEquals("1", (String) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertNull(document.get("title"));
 
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("Argument 'id' must be > 0!");
-        DocumentBuilder.id(-1).build();
+        exception.expect(NullPointerException.class);
+        exception.expectMessage("Parameter 'id' may not be null!");
+        DocumentBuilder.id(null).build();
     }
 
     @Test

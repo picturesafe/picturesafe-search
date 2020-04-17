@@ -91,7 +91,9 @@ public class Config {
             FieldConfiguration.ID_FIELD,
             FieldConfiguration.FULLTEXT_FIELD,
             StandardFieldConfiguration.builder(
-                    "title", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build()
+                    "title", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build(),
+            StandardFieldConfiguration.builder(
+                    "count", ElasticsearchType.TEXT).sortable(true).build()
         );
     }
 }
@@ -147,14 +149,17 @@ public class GettingStarted {
 
             singleIndexElasticsearchService
                     .addToIndex(DataChangeProcessingMode.BLOCKING, Arrays.asList(
-                    DocumentBuilder.id(1).put("title", "This is a test title").build(),
-                    DocumentBuilder.id(2).put("title", "This is another test title").build(),
-                    DocumentBuilder.id(3).put("title", "This is one more test title").build()
+                    DocumentBuilder.id(1).put("title", "This is a test title")
+                        .put("count", 101).build(),
+                    DocumentBuilder.id(2).put("title", "This is another test title")
+                        .put("count", 102).build(),
+                    DocumentBuilder.id(3).put("title", "This is one more test title")
+                        .put("count", 103).build()
             ));
 
             final Expression expression = OperationExpression.and(
                     new FulltextExpression("test title"),
-                    new ValueExpression("id", ValueExpression.Comparison.GE, 2));
+                    new ValueExpression("count", ValueExpression.Comparison.GE, 102));
 
             final SearchResult searchResult = singleIndexElasticsearchService
                 .search(expression, SearchParameter.DEFAULT);
@@ -186,7 +191,7 @@ Expression expression = new ValueExpression("title", "test");
 .Simple field search with comparison operator
 [source,java]
 ----
-Expression expression = new ValueExpression("id", ValueExpression.Comparison.GE, 2);
+Expression expression = new ValueExpression("count", ValueExpression.Comparison.GE, 102);
 ----
 
 .Search with two terms
@@ -194,7 +199,7 @@ Expression expression = new ValueExpression("id", ValueExpression.Comparison.GE,
 ----
 Expression expression = OperationExpression.and(
         new FulltextExpression("test title"),
-        new ValueExpression("id", ValueExpression.Comparison.GE, 2));
+        new ValueExpression("count", ValueExpression.Comparison.GE, 102));
 ----
 
 In addition there are further expressions like `InExpression`, `MustNotExpression`, `RangeValueExpression`, `DayExpression`, https://picturesafe-search.io/docs/reference/expressions/[more]

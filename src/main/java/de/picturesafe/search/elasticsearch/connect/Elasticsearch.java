@@ -75,7 +75,7 @@ public interface Elasticsearch {
      *                                      Be careful and use false as default.
      * @param id                            ID of the document to be removed
      */
-    void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration, boolean applyIndexRefresh, long id);
+    void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration, boolean applyIndexRefresh, Object id);
 
     /**
      * Removes multiple documents from the index.
@@ -87,7 +87,7 @@ public interface Elasticsearch {
      * @param ids                           IDs of the documents to be removed
      */
     void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
-                         boolean applyIndexRefresh, Collection<Long> ids);
+                         boolean applyIndexRefresh, Collection<?> ids);
 
     /**
      * Checks if elasticsearch service is available.
@@ -222,7 +222,7 @@ public interface Elasticsearch {
      * @param id              ID of the documents
      * @return                The document or <code>null</code> if the ID does not exist
      */
-    Map<String, Object> getDocument(String indexAlias, long id);
+    Map<String, Object> getDocument(String indexAlias, Object id);
 
     /**
      * Suggests text options for search-as-you-type functionality.

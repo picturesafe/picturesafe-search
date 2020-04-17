@@ -122,42 +122,42 @@ public class ElasticsearchServiceNestedIT {
         SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.desc("article.id")).build();
         SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
 
         searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.page")).build();
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-        assertEquals(3, result.getSearchResultItems().get(1).getId());
+        assertEquals(2, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(3, result.getSearchResultItems().get(1).getId(Long.class).longValue());
 
         searchParameter = SearchParameter.builder().sortOptions(SortOption.desc("article.rubric")).build();
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
-        assertEquals(3, result.getSearchResultItems().get(1).getId());
+        assertEquals(2, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(3, result.getSearchResultItems().get(1).getId(Long.class).longValue());
 
         searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.date")).build();
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
 
         expression = new ValueExpression("article.title", "another test");
         searchParameter = SearchParameter.DEFAULT;
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         expression = new ValueExpression("article.id", 1003);
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         expression = new ValueExpression("article.date", parseDate("01.03.2020"));
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
     }
 
     @Test
@@ -166,7 +166,7 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.DEFAULT;
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(0).getId(Long.class).longValue());
     }
 
     @Test
@@ -175,21 +175,21 @@ public class ElasticsearchServiceNestedIT {
         SearchParameter searchParameter = SearchParameter.DEFAULT;
         SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         expression = new DayExpression("article.date", DayExpression.Comparison.GE, parseDate("01.03.2020"));
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(3, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
-        assertEquals(3, result.getSearchResultItems().get(2).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
+        assertEquals(3, result.getSearchResultItems().get(2).getId(Long.class).longValue());
 
         expression = new DayExpression("article.date", DayExpression.Comparison.GT, parseDate("01.03.2020"));
         searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -198,8 +198,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -208,8 +208,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -218,7 +218,7 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
     }
 
     @Test
@@ -227,7 +227,7 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(2, result.getSearchResultItems().get(0).getId());
+        assertEquals(2, result.getSearchResultItems().get(0).getId(Long.class).longValue());
     }
 
     @Test
@@ -236,8 +236,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -246,8 +246,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -256,8 +256,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(3, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(3, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -266,8 +266,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -276,7 +276,7 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
     }
 
     @Test
@@ -285,7 +285,7 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(1, result.getTotalHitCount());
-        assertEquals(3, result.getSearchResultItems().get(0).getId());
+        assertEquals(3, result.getSearchResultItems().get(0).getId(Long.class).longValue());
     }
 
     @Test
@@ -294,8 +294,8 @@ public class ElasticsearchServiceNestedIT {
         final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.asc("article.id")).build();
         final SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
         assertEquals(2, result.getTotalHitCount());
-        assertEquals(1, result.getSearchResultItems().get(0).getId());
-        assertEquals(2, result.getSearchResultItems().get(1).getId());
+        assertEquals(1, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(2, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     private Date parseDate(String date) {

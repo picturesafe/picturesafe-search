@@ -34,13 +34,18 @@ public class DocumentBuilder {
     private DocumentBuilder() {
     }
 
-    private DocumentBuilder(long id) {
+    private DocumentBuilder(String id) {
         doc.put(FieldConfiguration.FIELD_NAME_ID, id);
     }
 
-    public static DocumentBuilder id(long id) {
-        Validate.isTrue(id > 0, "Argument 'id' must be > 0!");
-        return new DocumentBuilder(id);
+    public static DocumentBuilder id(Object id) {
+        return id(id, IdFormat.DEFAULT);
+    }
+
+    public static DocumentBuilder id(Object id, IdFormat idFormat) {
+        Validate.notNull(id, "Parameter 'id' may not be null!");
+        Validate.notNull(id, "Parameter 'idFormat' may not be null!");
+        return new DocumentBuilder(idFormat.format(id));
     }
 
     public static DocumentBuilder withoutId() {

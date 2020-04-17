@@ -17,12 +17,11 @@
 package de.picturesafe.search.elasticsearch.model;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Elasticsearch result
@@ -167,12 +166,19 @@ public class SearchResult {
      *
      * @return IDs of the result items
      */
-    public List<Long> getIds() {
-        final List<Long> ids = new ArrayList<>(searchResultItems.size());
-        for (final SearchResultItem item : searchResultItems) {
-            ids.add(item.getId());
-        }
-        return ids;
+    public List<String> getIds() {
+        return searchResultItems.stream().map(SearchResultItem::getId).collect(Collectors.toList());
+    }
+
+    /**
+     * Gets the IDs of the result items.
+     *
+     * @param <T>   Type of the IDs
+     * @param type  Type class of the IDs
+     * @return IDs of the result items
+     */
+    public <T> List<T> getIds(Class<T> type) {
+        return searchResultItems.stream().map(item -> item.getId(type)).collect(Collectors.toList());
     }
 
     @Override
