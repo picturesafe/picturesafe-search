@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SortOption;
@@ -29,7 +30,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,9 +65,7 @@ public class LikeIT extends AbstractElasticIntegrationTest {
         final List<Map<String, Object>> docs = new ArrayList<>(CAPTIONS.length);
         int i = 1;
         for (String caption : CAPTIONS) {
-            final Map<String, Object> document = new HashMap<>();
-            document.put("id", i++);
-            document.put("caption", caption);
+            final Map<String, Object> document = DocumentBuilder.id(i++).put("caption", caption).build();
             docs.add(document);
         }
         elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);

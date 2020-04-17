@@ -24,6 +24,7 @@ import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SortOption;
@@ -35,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,14 +63,12 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
         indexSetup.createIndex(indexAlias);
 
         for (int i = 1; i <= DOC_COUNT; i++) {
-            final Map<String, Object> document = new HashMap<>();
-            document.put("id", i);
-
+            final DocumentBuilder documentBuilder = DocumentBuilder.id(i);
             for (LanguageSortConfiguration languageSortConfiguration : mappingConfiguration.getLanguageSortConfigurations()) {
-                document.put("title." + languageSortConfiguration.getLanguage(),
+                documentBuilder.put("title." + languageSortConfiguration.getLanguage(),
                         "Multilang Titel" + i + " " + languageSortConfiguration.getLanguage());
             }
-            elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
+            elasticsearch.addToIndex(documentBuilder.build(), mappingConfiguration, indexAlias, true);
         }
     }
 

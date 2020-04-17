@@ -58,7 +58,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -217,7 +216,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         SearchResultItem item = result.getSearchResultItems().get(0);
-        assertEquals(4711, item.getId());
+        assertEquals(4711, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc1, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new ValueExpression("title", "Katze"),
@@ -225,7 +224,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new FulltextExpression("Vögel"),
@@ -233,7 +232,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(1, result.getTotalHitCount());
         assertEquals(1, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new FulltextExpression("Hamburg"),
@@ -241,7 +240,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4712, item.getId());
+        assertEquals(4712, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc2, item.getAttributes());
 
         result = singleIndexElasticsearchService.search(new FulltextExpression("Hamburg"),
@@ -249,7 +248,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(2, result.getTotalHitCount());
         assertEquals(2, result.getResultCount());
         item = result.getSearchResultItems().get(0);
-        assertEquals(4711, item.getId());
+        assertEquals(4711, item.getId(Long.class).longValue());
         assertDocsAreEqual(doc1, item.getAttributes());
     }
 
@@ -280,14 +279,13 @@ public class SingleIndexElasticsearchServiceIT {
     }
 
     private Map<String, Object> createDocument(long id, String title, Date createDate, String location) {
-        final Map<String, Object> doc = new HashMap<>();
-        doc.put("id", id);
-        doc.put("name", "name-" + id);
-        doc.put("title", title);
-        doc.put("caption", "Document caption #" + id + "\nThis document was created for testing purposes.\nÄÖÜäöüß");
-        doc.put("createDate", createDate);
-        doc.put("location", location);
-        return doc;
+        return DocumentBuilder.id(id)
+                .put("name", "name-" + id)
+                .put("title", title)
+                .put("caption", "Document caption #" + id + "\nThis document was created for testing purposes.\nÄÖÜäöüß")
+                .put("createDate", createDate)
+                .put("location", location)
+                .build();
     }
 
     private void assertDocsAreEqual(Map<String, Object> doc1, Map<String, Object> doc2) {

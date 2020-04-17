@@ -54,7 +54,9 @@ import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.StringTrimUtility;
 import de.picturesafe.search.elasticsearch.connect.util.logging.SearchResponseToString;
 import de.picturesafe.search.elasticsearch.connect.util.logging.SearchSourceBuilderToString;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
+import de.picturesafe.search.elasticsearch.model.IdFormat;
 import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
@@ -120,10 +122,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_ID;
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
 import static de.picturesafe.search.elasticsearch.connect.filter.util.FilterFactoryUtils.createFilter;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticRequestUtils.getRefreshPolicy;
+import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.fieldConfiguration;
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.isTextField;
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.keywordFieldName;
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.sortFieldName;
@@ -150,6 +154,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     @Value("${elasticsearch.service.missing_value_sort_position:LAST}")
     protected MissingValueSortPosition missingValueSortPosition;
 
+    protected IdFormat idFormat = IdFormat.DEFAULT;
+
     @Autowired
     public ElasticsearchImpl(ElasticsearchAdmin elasticsearchAdmin,
                              RestClientConfiguration restClientConfiguration,
@@ -171,6 +177,11 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     @Autowired(required = false)
     public void setFacetResolvers(List<FacetResolver> facetResolvers) {
         this.facetResolvers = facetResolvers;
+    }
+
+    @Autowired(required = false)
+    public void setIdFormat(IdFormat idFormat) {
+        this.idFormat = idFormat;
     }
 
     public void setCheckClusterStatusTimeout(long checkClusterStatusTimeout) {
@@ -255,12 +266,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
 
     @Override
     public void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
-                                boolean applyIndexRefresh, long id) {
-        Validate.notNull(mappingConfiguration, "The argument 'indexConfiguration' is null.");
+                                boolean applyIndexRefresh, Object id) {
+        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null.");
+        Validate.notNull(indexPresetConfiguration, "Parameter 'indexPresetConfiguration' may not be null.");
+        Validate.notNull(id, "Parameter 'id' may not be null.");
 
         final String index = indexPresetConfiguration.getIndexAlias();
 
-        final DeleteRequest deleteRequest = new DeleteRequest(index, String.valueOf(id)).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
+        final DeleteRequest deleteRequest = new DeleteRequest(index, idFormat.format(id)).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
         final DeleteResponse deleteResponse = new RestClientDeleteAction().action(restClient, deleteRequest);
 
         if (LOG.isDebugEnabled()) {
@@ -270,16 +283,16 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
 
     @Override
     public void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
-                                boolean applyIndexRefresh, Collection<Long> ids) {
-        Validate.notNull(mappingConfiguration, "The argument 'indexConfiguration' is null.");
-        Validate.notNull(indexPresetConfiguration, "The argument 'indexPresetConfiguration' is null.");
+                                boolean applyIndexRefresh, Collection<?> ids) {
+        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null!");
+        Validate.notNull(indexPresetConfiguration, "Parameter 'indexPresetConfiguration' may not be null!");
 
 
-        if (ids == null || ids.isEmpty()) {
+        if (CollectionUtils.isEmpty(ids)) {
             return;
         }
 
-        final Long[] idsAsArray = ids.toArray(new Long[0]);
+        final String[] idsAsArray = ids.stream().map(idFormat::format).toArray(String[]::new);
 
         final int maxSize = 10000;
         if (idsAsArray.length == 1) {
@@ -294,7 +307,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                 final int size = Math.min(maxSize, idsAsArray.length - count);
                 final BulkRequest bulkRequest = new BulkRequest().setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
                 for (int i = count; i < count + size; i++) {
-                    bulkRequest.add(new DeleteRequest(index, String.valueOf(idsAsArray[i])));
+                    bulkRequest.add(new DeleteRequest(index, idsAsArray[i]));
                 }
 
                 final BulkResponse bulkResponse = new RestClientBulkAction().action(restClient, bulkRequest);
@@ -364,9 +377,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
 
     @Override
     public void setIndexVersion(String indexAlias, int indexVersion, MappingConfiguration mappingConfiguration) {
-        final Map<String, Object> document = new HashMap<>();
-        document.put("id", 0);
-        document.put(INDEX_VERSION, indexVersion);
+        final Map<String, Object> document = DocumentBuilder.id(0, idFormat).put(INDEX_VERSION, indexVersion).build();
         addToIndex(document, mappingConfiguration, indexAlias, true);
     }
 
@@ -451,9 +462,11 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     @Override
-    public Map<String, Object> getDocument(String indexAlias, long id) {
+    public Map<String, Object> getDocument(String indexAlias, Object id) {
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
+        Validate.notNull(id, "Parameter 'id' may not be null!");
         try {
-            final GetRequest request = new GetRequest().index(indexAlias).id(String.valueOf(id));
+            final GetRequest request = new GetRequest().index(indexAlias).id(idFormat.format(id));
             final GetResponse response = restClient.get(request, RequestOptions.DEFAULT);
             return response.getSource();
         } catch (Exception e) {
@@ -648,11 +661,11 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                 if (SortOption.RELEVANCE_NAME.equals(fieldName)) {
                     sortBuilder = SortBuilders.scoreSort();
                 } else {
-                    FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, fieldName, false);
+                    FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
                     final String topFieldName = StringUtils.substringBefore(fieldName, ".");
 
                     if (fieldConfiguration == null) {
-                        fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfig, topFieldName, false);
+                        fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
                     }
 
                     sortBuilder = null;
@@ -733,7 +746,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
 
         switch (queryDto.getFieldResolverType()) {
             case DOC_VALUES:
-                addDocValuesToSearchRequest(fields, searchRequestBuilder);
+                addDocValuesToSearchRequest(fields, searchRequestBuilder, mappingConfiguration);
                 break;
             case SOURCE_VALUES:
                 addSourceValuesToSearchRequest(fields, searchRequestBuilder);
@@ -755,16 +768,17 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         }
     }
 
-    protected void addDocValuesToSearchRequest(List<String> fields, SearchSourceBuilder searchRequestBuilder) {
+    protected void addDocValuesToSearchRequest(List<String> fields, SearchSourceBuilder searchRequestBuilder, MappingConfiguration mappingConfiguration) {
         searchRequestBuilder.fetchSource(false);
         for (final String field : fields) {
-            searchRequestBuilder.docValueField(field);
+            final String docValueField = keywordFieldName(fieldConfiguration(mappingConfiguration, field), field);
+            searchRequestBuilder.docValueField(docValueField);
         }
     }
 
     protected void addSourceValuesToSearchRequest(List<String> fields, SearchSourceBuilder searchRequestBuilder) {
-        if (!fields.contains("id")) {
-            fields.add("id"); // mandatory for elasticsearch service
+        if (!fields.contains(FIELD_NAME_ID)) {
+            fields.add(FIELD_NAME_ID); // mandatory for elasticsearch service
         }
         final String[] includes = fields.toArray(new String[0]);
         final String[] excludes = new String[0];
@@ -786,9 +800,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         contentBuilder.startObject();
         addToIndexRequestContent(contentBuilder, doc, mappingConfiguration);
         contentBuilder.endObject();
-        final Long id = getId(doc);
-        final String docId = (id != null) ? String.valueOf(id) : null;
-        final IndexRequest indexRequest = new IndexRequest(indexName).id(docId)
+        final String id = getId(doc);
+        final IndexRequest indexRequest = new IndexRequest(indexName).id(id)
                 .source(contentBuilder).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
 
         if (LOG.isDebugEnabled()) {

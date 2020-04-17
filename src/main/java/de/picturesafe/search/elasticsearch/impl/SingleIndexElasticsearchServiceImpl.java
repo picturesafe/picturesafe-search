@@ -103,7 +103,7 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     }
 
     @Override
-    public void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id) {
+    public void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, Object id) {
         elasticsearchService.addObjectToIndex(getIndexAlias(), dataChangeProcessingMode, object, id);
     }
 
@@ -118,12 +118,12 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     }
 
     @Override
-    public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, long id) {
+    public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Object id) {
         elasticsearchService.removeFromIndex(getIndexAlias(), dataChangeProcessingMode, id);
     }
 
     @Override
-    public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<Long> ids) {
+    public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids) {
         elasticsearchService.removeFromIndex(getIndexAlias(), dataChangeProcessingMode, ids);
     }
 
@@ -138,12 +138,12 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     }
 
     @Override
-    public Map<String, Object> getDocument(long id) {
+    public Map<String, Object> getDocument(Object id) {
         return elasticsearchService.getDocument(getIndexAlias(), id);
     }
 
     @Override
-    public <T extends IndexObject<T>> T getObject(long id, Class<T> type) {
+    public <T extends IndexObject<T>> T getObject(Object id, Class<T> type) {
         return elasticsearchService.getObject(getIndexAlias(), id, type);
     }
 

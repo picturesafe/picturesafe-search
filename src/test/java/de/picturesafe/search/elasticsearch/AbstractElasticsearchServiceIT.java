@@ -278,20 +278,20 @@ abstract class AbstractElasticsearchServiceIT {
                 new InExpression("id", new long[] {4711}),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
-        assertEquals(4711, result.getSearchResultItems().get(0).getId());
+        assertEquals(4711, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         result = elasticsearchService.search(indexAlias,
                 new InExpression("name", "name-4711"),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
-        assertEquals(4711, result.getSearchResultItems().get(0).getId());
+        assertEquals(4711, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         result = elasticsearchService.search(indexAlias,
                 new InExpression("name", "name-4711", "name-4714"),
                 SearchParameter.DEFAULT);
         assertEquals(2, result.getResultCount());
-        assertEquals(4711, result.getSearchResultItems().get(0).getId());
-        assertEquals(4714, result.getSearchResultItems().get(1).getId());
+        assertEquals(4711, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(4714, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test
@@ -308,13 +308,13 @@ abstract class AbstractElasticsearchServiceIT {
                 new MustNotExpression(new InExpression("id", 4711, 4712, 4714)),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
-        assertEquals(4713, result.getSearchResultItems().get(0).getId());
+        assertEquals(4713, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         result = elasticsearchService.search(indexAlias,
                 new MustNotExpression(new InExpression("name", "name-4711", "name-4713", "name-4714")),
                 SearchParameter.DEFAULT);
         assertEquals(1, result.getResultCount());
-        assertEquals(4712, result.getSearchResultItems().get(0).getId());
+        assertEquals(4712, result.getSearchResultItems().get(0).getId(Long.class).longValue());
 
         result = elasticsearchService.search(indexAlias,
                 new MustNotExpression(new InExpression("id", 4711L, 4712L, 4714L)),
@@ -325,9 +325,9 @@ abstract class AbstractElasticsearchServiceIT {
                 new MustNotExpression(new InExpression("id", new long[] {4711})),
                 SearchParameter.DEFAULT);
         assertEquals(3, result.getResultCount());
-        assertEquals(4712, result.getSearchResultItems().get(0).getId());
-        assertEquals(4713, result.getSearchResultItems().get(1).getId());
-        assertEquals(4714, result.getSearchResultItems().get(2).getId());
+        assertEquals(4712, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(4713, result.getSearchResultItems().get(1).getId(Long.class).longValue());
+        assertEquals(4714, result.getSearchResultItems().get(2).getId(Long.class).longValue());
 
         result = elasticsearchService.search(indexAlias,
                 new MustNotExpression(new InExpression("name", "name-4711")),
@@ -338,8 +338,8 @@ abstract class AbstractElasticsearchServiceIT {
                 new MustNotExpression(new InExpression("name", "name-4711", "name-4714")),
                 SearchParameter.DEFAULT);
         assertEquals(2, result.getResultCount());
-        assertEquals(4712, result.getSearchResultItems().get(0).getId());
-        assertEquals(4713, result.getSearchResultItems().get(1).getId());
+        assertEquals(4712, result.getSearchResultItems().get(0).getId(Long.class).longValue());
+        assertEquals(4713, result.getSearchResultItems().get(1).getId(Long.class).longValue());
     }
 
     @Test

@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SortOption;
 import org.junit.After;
@@ -28,7 +29,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -52,11 +52,9 @@ public class PhraseSearchIT extends AbstractElasticIntegrationTest {
     public void begin() {
         indexSetup.createIndex(indexAlias);
 
-        final Map<String, Object> document = new HashMap<>();
         int i = 1;
         for (String keyword : TERMS) {
-            document.put("id", i++);
-            document.put("keyword", keyword);
+            final Map<String, Object> document = DocumentBuilder.id(i++).put("keyword", keyword).build();
             elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
         }
     }

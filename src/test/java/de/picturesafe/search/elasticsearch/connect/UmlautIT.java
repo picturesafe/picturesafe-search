@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -30,7 +31,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,9 +55,9 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
     public void begin() {
         indexSetup.createIndex(indexAlias);
 
-        final Map<String, Object> document = new HashMap<>();
-        document.put("id", 42);
-        document.put("caption", "Die Bälle hüpfen im Kreißsaal wild herum, Äpfel liegen überall!");
+        final Map<String, Object> document = DocumentBuilder.id(42)
+                .put("caption", "Die Bälle hüpfen im Kreißsaal wild herum, Äpfel liegen überall!")
+                .build();
         elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
     }
 

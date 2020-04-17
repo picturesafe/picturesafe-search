@@ -122,7 +122,7 @@ public interface SingleIndexElasticsearchService {
      * @param object                    Index object to be added
      * @param id                        ID to assign to the persisted object (useful if the object does not provide an ID itself)
      */
-    void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, long id);
+    void addObjectToIndex(DataChangeProcessingMode dataChangeProcessingMode, IndexObject<?> object, Object id);
 
     /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
@@ -147,7 +147,7 @@ public interface SingleIndexElasticsearchService {
      * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
      * @param id                        ID of the document to be removed
      */
-    void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, long id);
+    void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Object id);
 
     /**
      * Removes multiple documents from the index.
@@ -155,7 +155,7 @@ public interface SingleIndexElasticsearchService {
      * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
      * @param ids                       IDs of the documents to be removed
      */
-    void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<Long> ids);
+    void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids);
 
     /**
      * Searches for documents.
@@ -182,7 +182,7 @@ public interface SingleIndexElasticsearchService {
      * @param id            ID of the documents
      * @return              The document or <code>null</code> if the ID does not exist
      */
-    Map<String, Object> getDocument(long id);
+    Map<String, Object> getDocument(Object id);
 
     /**
      * Gets an object from the index.
@@ -192,7 +192,7 @@ public interface SingleIndexElasticsearchService {
      * @param <T>           Generic type of the object
      * @return              The index object or <code>null</code> if the ID does not exist
      */
-    <T extends IndexObject<T>> T getObject(long id, Class<T> type);
+    <T extends IndexObject<T>> T getObject(Object id, Class<T> type);
 
     /**
      * Suggests text options for search-as-you-type functionality.
