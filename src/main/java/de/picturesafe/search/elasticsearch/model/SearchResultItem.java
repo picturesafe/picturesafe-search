@@ -67,8 +67,8 @@ public class SearchResultItem {
     /**
      * Gets the ID of the result items's document.
      *
-     * @param <T> Type of the ID
-     * @param type Type class of the ID
+     * @param <T>   Type of the ID
+     * @param type  Type class of the ID
      * @return ID
      */
     public <T> T getId(Class<T> type) {
@@ -87,8 +87,8 @@ public class SearchResultItem {
     /**
      * Gets a specific attribute.
      *
-     * @param name Name of the attribute
-     * @return Attribute value
+     * @param name  Name of the attribute
+     * @return      Attribute value
      */
     public Object getAttribute(String name) {
         return attributes.get(name);
