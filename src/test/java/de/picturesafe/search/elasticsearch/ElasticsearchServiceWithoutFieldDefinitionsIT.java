@@ -31,6 +31,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -47,6 +49,8 @@ import static org.junit.Assert.assertNotNull;
 @ContextConfiguration(classes = {DefaultElasticConfiguration.class, AbstractElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
         loader = AnnotationConfigContextLoader.class)
 public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElasticsearchServiceIT {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceWithoutFieldDefinitionsIT.class);
 
     @Before
     public void setup() {
@@ -137,6 +141,11 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
                 SearchParameter.builder().sortOptions(SortOption.asc("ordinal")).build());
         assertEquals(3, result.getTotalHitCount());
         assertEquals(3, result.getResultCount());
+
+        result.getSearchResultItems().forEach(i -> {
+            LOGGER.debug("{}", i);
+            assertNotNull(i.getId());
+        });
 
         final List<String> names = result.getSearchResultItems().stream().map(i -> (String) i.getAttribute("name")).collect(Collectors.toList());
         assertEquals("name-1", names.get(0));

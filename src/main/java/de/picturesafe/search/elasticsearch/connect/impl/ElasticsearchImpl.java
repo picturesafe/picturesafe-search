@@ -446,10 +446,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
                     final TotalHits totalHits = searchHits.getTotalHits();
 
                     for (SearchHit hit : hits) {
-                        final Map<String, Object> source = hit.getSourceAsMap();
-                        final Map<String, DocumentField> documentField = hit.getFields();
-                        final Map<String, Object> backMappedSource = convertFields(source, documentField, mappingConfiguration);
-                        result.add(backMappedSource);
+                        final Map<String, Object> doc = convertSearchHit(hit, mappingConfiguration);
+                        result.add(doc);
                     }
                     final List<FacetDto> facetDtos = convertFacets(searchResponse, queryDto, mappingConfiguration);
 
@@ -516,7 +514,9 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         return null;
     }
 
-    protected Map<String, Object> convertFields(Map<String, Object> source, Map<String, DocumentField> fields, MappingConfiguration mappingConfiguration) {
+    protected Map<String, Object> convertSearchHit(SearchHit hit, MappingConfiguration mappingConfiguration) {
+        final Map<String, Object> source = hit.getSourceAsMap();
+        final Map<String, DocumentField> fields = hit.getFields();
         final Map<String, Object> result = new HashMap<>();
         if (source != null) {
             for (Map.Entry<String, Object> entry : source.entrySet()) {
@@ -533,6 +533,10 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
             }
         } else {
             throw new RuntimeException("Missing data in search result!");
+        }
+
+        if (!result.containsKey(FIELD_NAME_ID)) {
+            result.put(FIELD_NAME_ID, hit.getId());
         }
 
         return result;
