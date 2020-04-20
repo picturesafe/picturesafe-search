@@ -93,7 +93,7 @@ public class Config {
             StandardFieldConfiguration.builder(
                     "title", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build(),
             StandardFieldConfiguration.builder(
-                    "count", ElasticsearchType.TEXT).sortable(true).build()
+                    "count", ElasticsearchType.INTEGER).sortable(true).build()
         );
     }
 }
