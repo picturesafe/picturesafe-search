@@ -31,6 +31,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -38,7 +40,6 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,6 +48,8 @@ import static org.junit.Assert.assertNotNull;
 @ContextConfiguration(classes = {DefaultElasticConfiguration.class, AbstractElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
         loader = AnnotationConfigContextLoader.class)
 public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElasticsearchServiceIT {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceWithoutFieldDefinitionsIT.class);
 
     @Before
     public void setup() {
@@ -138,9 +141,13 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
         assertEquals(3, result.getTotalHitCount());
         assertEquals(3, result.getResultCount());
 
-        final List<String> names = result.getSearchResultItems().stream().map(i -> (String) i.getAttribute("name")).collect(Collectors.toList());
-        assertEquals("name-1", names.get(0));
-        assertEquals("name-2", names.get(1));
-        assertEquals("name-3", names.get(2));
+        int idx = 0;
+        for (final SearchResultItem item : result.getSearchResultItems()) {
+            LOGGER.debug("{}", item);
+            assertEquals("name-" + (idx + 1), item.getAttribute("name"));
+            assertNotNull(item.getId());
+            assertEquals("name-" + (idx + 1), elasticsearchService.getDocument(indexAlias, item.getId()).get("name"));
+            idx++;
+        };
     }
 }
