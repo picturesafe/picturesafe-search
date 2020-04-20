@@ -438,15 +438,16 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = new FulltextExpression("wert");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 1000);
         final List<String> fieldsToResolve = new ArrayList<>();
-        fieldsToResolve.add("id");
+        fieldsToResolve.add("caption");
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null,
                 null, fieldsToResolve, QueryDto.FieldResolverType.DOC_VALUES);
         final ElasticsearchResult results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertTrue("There must be search results to test: indexAlias = " + indexAlias, results.getTotalHitCount() > 0);
         for (Map<String, Object> result : results.getHits()) {
-            assertEquals("There must be only one field in a search result element: indexAlias = " + indexAlias, 1, result.keySet().size());
-            assertNotNull("The only field in a search result must be id: indexAlias = " + indexAlias, result);
+            assertEquals("There must be two fields in a search result element: indexAlias = " + indexAlias, 2, result.keySet().size());
+            assertNotNull("The field id must always be returned: indexAlias = " + indexAlias, result);
+            assertNotNull(result.get("caption.keyword"));
         }
     }
 
