@@ -309,14 +309,12 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
         final StopWatch sw = new StopWatch();
 
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         final int pageSize = getPageSize(searchParameter);
-        final ElasticsearchResult elasticsearchResult = getElasticSearchResult(indexAlias, accountContext, expression, searchParameter, pageSize, sw);
-
-        final List<Map<String, Object>> searchResult = elasticsearchResult.getHits();
-        final List<SearchResultItem> resultItems = new ArrayList<>();
-        for (Map<String, Object> hit : searchResult) {
-            resultItems.add(new SearchResultItem(hit, idFormat));
-        }
+        final ElasticsearchResult elasticsearchResult
+                = getElasticsearchResult(new InternalSearchContext(indexPresetConfiguration, accountContext, expression, searchParameter, pageSize), sw);
+        final List<SearchResultItem> resultItems
+                = elasticsearchResult.getHits().stream().map(hit -> new SearchResultItem(hit, idFormat)).collect(Collectors.toList());
 
         sw.start("get max results");
         final long totalHitCount = elasticsearchResult.getTotalHitCount();
@@ -358,24 +356,33 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         return pageSize;
     }
 
-    protected ElasticsearchResult getElasticSearchResult(String indexAlias, AccountContext<?> accountContext, Expression expression,
-                                                         SearchParameter searchParameter, int pageSize, StopWatch sw) {
+    protected ElasticsearchResult getElasticsearchResult(InternalSearchContext context) {
+        final StopWatch sw = new StopWatch();
+        try {
+            return getElasticsearchResult(context, sw);
+        } finally {
+            LOGGER.debug("Performed search on index '{}':\n{}", context.indexPresetConfiguration.getIndexAlias(), new StopWatchPrettyPrint(sw));
+        }
+    }
+
+    protected ElasticsearchResult getElasticsearchResult(InternalSearchContext context, StopWatch sw) {
+        SearchParameter searchParameter = context.searchParameter;
         if (searchParameter == null) {
             searchParameter = SearchParameter.DEFAULT;
         }
-        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
 
         sw.start("create query");
         final int pageIndex = (searchParameter.getPageIndex() != null) ? searchParameter.getPageIndex() : 1;
-        final int start = (pageIndex - 1) * pageSize;
-        final int maxResults = (searchParameter.getMaxResults() != null) ? searchParameter.getMaxResults() : indexPresetConfiguration.getMaxResultWindow();
-        final int resultLimit = Math.min(pageSize, maxResults - start);
+        final int start = (pageIndex - 1) * context.pageSize;
+        final int maxResults = (searchParameter.getMaxResults() != null)
+                ? searchParameter.getMaxResults() : context.indexPresetConfiguration.getMaxResultWindow();
+        final int resultLimit = Math.min(context.pageSize, maxResults - start);
 
-        final QueryDto queryDto = createQueryDto(accountContext, expression, start, resultLimit, searchParameter);
+        final QueryDto queryDto = createQueryDto(context.accountContext, context.expression, start, resultLimit, searchParameter);
         sw.stop();
 
         sw.start("process search");
-        final ElasticsearchResult result = elasticsearch.search(queryDto, getMappingConfiguration(indexAlias, true), indexPresetConfiguration);
+        final ElasticsearchResult result = elasticsearch.search(queryDto, context.mappingConfiguration(), context.indexPresetConfiguration);
         sw.stop();
 
         return result;
@@ -444,5 +451,34 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 ? fieldConfigurationProvider.getFieldConfigurations(indexAlias) : null;
         return new MappingConfiguration(
                 (fieldConfigurations != null) ? fieldConfigurations : Collections.emptyList(), languageSortConfigurations);
+    }
+
+    protected class InternalSearchContext {
+
+        final IndexPresetConfiguration indexPresetConfiguration;
+        final AccountContext<?> accountContext;
+        final Expression expression;
+        final SearchParameter searchParameter;
+        final int pageSize;
+
+        MappingConfiguration mappingConfiguration;
+
+        public InternalSearchContext(IndexPresetConfiguration indexPresetConfiguration, AccountContext<?> accountContext, Expression expression,
+                                     SearchParameter searchParameter, int pageSize) {
+            this.indexPresetConfiguration = indexPresetConfiguration;
+            this.accountContext = accountContext;
+            this.expression = expression;
+            this.searchParameter = searchParameter;
+            this.pageSize = pageSize;
+        }
+
+        public InternalSearchContext mappingConfiguration(MappingConfiguration mappingConfiguration) {
+            this.mappingConfiguration = mappingConfiguration;
+            return this;
+        }
+
+        public MappingConfiguration mappingConfiguration() {
+            return mappingConfiguration != null ? mappingConfiguration : getMappingConfiguration(indexPresetConfiguration.getIndexAlias(), true);
+        }
     }
 }
