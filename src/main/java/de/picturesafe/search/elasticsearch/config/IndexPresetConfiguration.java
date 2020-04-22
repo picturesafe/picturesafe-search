@@ -64,10 +64,18 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
     boolean isUseCompression();
 
     /**
-     * Gets optional character mappings (e.g. for mapping umlauts to latin character sequences).
+     * Checks if the built-in default analyzer is enabled.
+     * If disabled the Elasticsearch standard analyzer will be used.
+     * Alternatively, custom analyzers can be configured.
+     * @return TRUE if the default analyzer is enabled
+     */
+    boolean isDefaultAnalyzerEnabled();
+
+    /**
+     * Gets optional character mappings (e.g. for mapping umlauts to latin character sequences) for the default analyzer.
      * @return Optional character mappings
      */
-    Map<String, String> getCharMappings();
+    Map<String, String> getDefaultAnalyzerCharMappings();
 
     /**
      * Gets optional custom tokenizers.
@@ -106,7 +114,8 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
                 .put("maxResultWindow", conf.getMaxResultWindow())
                 .put("fieldsLimit", conf.getFieldsLimit())
                 .put("useCompression", conf.isUseCompression())
-                .put("charMappings", conf.getCharMappings())
+                .put("defaultAnalyzerEnabled", conf.isDefaultAnalyzerEnabled())
+                .put("defaultAnalyzerCharMappings", conf.getDefaultAnalyzerCharMappings())
                 .put("customTokenizers", conf.getCustomTokenizers())
                 .put("customAnalyzers", conf.getCustomAnalyzers())
                 .build();

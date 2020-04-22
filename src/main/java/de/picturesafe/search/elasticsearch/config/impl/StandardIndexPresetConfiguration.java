@@ -56,7 +56,8 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     private String indexNameDateFormat;
     private Integer fieldsLimit;
     private boolean useCompression;
-    private Map<String, String> charMappings;
+    private boolean defaultAnalyzerEnabled;
+    private Map<String, String> defaultAnalyzerCharMappings;
     private List<IndexSettingsObject> customTokenizers;
     private List<IndexSettingsObject> customAnalyzers;
 
@@ -116,7 +117,8 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         this(indexAlias, indexAlias, DEFAULT_INDEX_NAME_DATE_FORMAT, conf.getNumberOfShards(), conf.getNumberOfReplicas(), conf.getMaxResultWindow());
         this.fieldsLimit = conf.getFieldsLimit();
         this.useCompression = conf.isUseCompression();
-        this.charMappings = (conf.getCharMappings() != null) ? new HashMap<>(conf.getCharMappings()) : null;
+        this.defaultAnalyzerEnabled = conf.isDefaultAnalyzerEnabled();
+        this.defaultAnalyzerCharMappings = (conf.getDefaultAnalyzerCharMappings() != null) ? new HashMap<>(conf.getDefaultAnalyzerCharMappings()) : null;
         this.customTokenizers = (conf.getCustomTokenizers() != null) ? new ArrayList<>(conf.getCustomTokenizers()) : null;
         this.customAnalyzers = (conf.getCustomAnalyzers() != null) ? new ArrayList<>(conf.getCustomAnalyzers()) : null;
     }
@@ -184,16 +186,31 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     @Override
-    public Map<String, String> getCharMappings() {
-        return charMappings;
+    public boolean isDefaultAnalyzerEnabled() {
+        return defaultAnalyzerEnabled;
     }
 
     /**
-     * Sets optional character mappings (e.g. for mapping umlauts to latin character sequences).
-     * @param charMappings Optional character mappings
+     * Sets if the built-in default analyzer is enabled.
+     * If disabled the Elasticsearch standard analyzer will be used.
+     * Alternatively, custom analyzers can be configured.
+     * @param defaultAnalyzerEnabled  TRUE if the default analyzer should be used
      */
-    public void setCharMappings(Map<String, String> charMappings) {
-        this.charMappings = charMappings;
+    public void setDefaultAnalyzerEnabled(boolean defaultAnalyzerEnabled) {
+        this.defaultAnalyzerEnabled = defaultAnalyzerEnabled;
+    }
+
+    @Override
+    public Map<String, String> getDefaultAnalyzerCharMappings() {
+        return defaultAnalyzerCharMappings;
+    }
+
+    /**
+     * Sets optional character mappings (e.g. for mapping umlauts to latin character sequences) for the default analyzer.
+     * @param defaultAnalyzerCharMappings Optional character mappings
+     */
+    public void setDefaultAnalyzerCharMappings(Map<String, String> defaultAnalyzerCharMappings) {
+        this.defaultAnalyzerCharMappings = defaultAnalyzerCharMappings;
     }
 
     @Override
@@ -244,11 +261,12 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         numberOfReplicas = getInt(document, "numberOfReplicas", 0);
         maxResultWindow = getInt(document, "maxResultWindow", DEFAULT_MAX_RESULT_WINDOW);
         useCompression = getBoolean(document, "useCompression");
+        defaultAnalyzerEnabled = getBoolean(document, "defaultAnalyzerEnabled");
 
-        final Map<String, Object> doc = getDocument(document, "charMappings");
+        final Map<String, Object> doc = getDocument(document, "defaultAnalyzerCharMappings");
         if (doc != null) {
-            charMappings = new HashMap<>(doc.size());
-            doc.forEach((k, v) -> charMappings.put(k, v.toString()));
+            defaultAnalyzerCharMappings = new HashMap<>(doc.size());
+            doc.forEach((k, v) -> defaultAnalyzerCharMappings.put(k, v.toString()));
         }
 
         Collection<Map<String, Object>> docs = getDocuments(document, "customTokenizers");
@@ -276,7 +294,8 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
                 .append(numberOfReplicas, that.numberOfReplicas)
                 .append(maxResultWindow, that.maxResultWindow)
                 .append(useCompression, that.useCompression)
-                .append(charMappings, that.charMappings)
+                .append(defaultAnalyzerEnabled, that.defaultAnalyzerEnabled)
+                .append(defaultAnalyzerCharMappings, that.defaultAnalyzerCharMappings)
                 .append(customTokenizers, that.customTokenizers)
                 .append(customAnalyzers, that.customAnalyzers)
                 .isEquals();
@@ -296,7 +315,8 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
                 .append("numberOfShards", numberOfShards)
                 .append("numberOfReplicas", numberOfReplicas)
                 .append("useCompression", useCompression)
-                .append("charMappings", charMappings)
+                .append("defaultAnalyzerEnabled", defaultAnalyzerEnabled)
+                .append("defaultAnalyzerCharMappings", defaultAnalyzerCharMappings)
                 .append("customTokenizers", customTokenizers)
                 .append("customAnalyzers", customAnalyzers)
                 .toString();
@@ -309,7 +329,7 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
                 = new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix, indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
         conf.fieldsLimit = fieldsLimit;
         conf.useCompression = useCompression;
-        conf.charMappings = (charMappings != null) ? new HashMap<>(charMappings) : null;
+        conf.defaultAnalyzerCharMappings = (defaultAnalyzerCharMappings != null) ? new HashMap<>(defaultAnalyzerCharMappings) : null;
         conf.customTokenizers = (customTokenizers != null) ? new ArrayList<>(customTokenizers) : null;
         conf.customAnalyzers = (customAnalyzers != null) ? new ArrayList<>(customAnalyzers) : null;
         return conf;

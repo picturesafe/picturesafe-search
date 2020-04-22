@@ -57,12 +57,16 @@ public class DefaultIndexConfiguration {
     @Value("${elasticsearch.index.max_result_window:10000}")
     private int maxResultWindow;
 
+    @Value("${elasticsearch.index.default_analyzer.enabled:true}")
+    private boolean defaultAnalyzerEnabled;
+
    @Bean
     public StandardIndexPresetConfiguration indexPresetConfiguration() {
         final StandardIndexPresetConfiguration cfg = new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix,
                 indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
         cfg.setFieldsLimit(fieldsLimit);
-        cfg.setCharMappings(defaultCharMapping());
+        cfg.setDefaultAnalyzerEnabled(defaultAnalyzerEnabled);
+        cfg.setDefaultAnalyzerCharMappings(defaultCharMapping());
         return cfg;
     }
 

@@ -409,21 +409,21 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingB
                 result.field("index.codec", "best_compression");
             }
 
-            final boolean hasCharMappings = indexPresetConfiguration.getCharMappings() != null;
-            final boolean hasTokenizers = CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomTokenizers());
-            final boolean hasAnalyzers = CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomAnalyzers());
+            final boolean isDefaultAnalyzerEnabled = indexPresetConfiguration.isDefaultAnalyzerEnabled();
+            final boolean hasCustomAnalyzers = CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomAnalyzers());
+            final boolean hasCustomTokenizers = CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomTokenizers());
 
-            if (hasCharMappings || hasTokenizers || hasAnalyzers) {
+            if (isDefaultAnalyzerEnabled || hasCustomAnalyzers || hasCustomTokenizers) {
                 // start analysis configuration
                 result.startObject("analysis");
 
-                if (hasCharMappings) {
+                if (isDefaultAnalyzerEnabled) {
                     addFiltersToIndexSettings(result, indexPresetConfiguration);
                 }
-                if (hasTokenizers) {
+                if (hasCustomTokenizers) {
                     addTokenizersToIndexSettings(result, indexPresetConfiguration);
                 }
-                if (hasCharMappings || hasAnalyzers) {
+                if (isDefaultAnalyzerEnabled || hasCustomAnalyzers) {
                     addAnalyzersToIndexSettings(result, indexPresetConfiguration);
                 }
 
@@ -442,26 +442,28 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingB
     protected void addFiltersToIndexSettings(XContentBuilder result, IndexPresetConfiguration indexPresetConfiguration) {
 
         try {
-            final Map<String, String> charMappings = indexPresetConfiguration.getCharMappings();
-            if (charMappings != null) {
-                final String[] mappings = new String[charMappings.size()];
-                int i = 0;
-                for (Map.Entry<String, String> entry : charMappings.entrySet()) {
-                    mappings[i++] = entry.getKey() + "=>" + entry.getValue();
-                }
+            if (indexPresetConfiguration.isDefaultAnalyzerEnabled()) {
+                final Map<String, String> defaultAnalyzerCharMappings = indexPresetConfiguration.getDefaultAnalyzerCharMappings();
+                if (defaultAnalyzerCharMappings != null) {
+                    final String[] mappings = new String[defaultAnalyzerCharMappings.size()];
+                    int i = 0;
+                    for (Map.Entry<String, String> entry : defaultAnalyzerCharMappings.entrySet()) {
+                        mappings[i++] = entry.getKey() + "=>" + entry.getValue();
+                    }
 
-                // create char_filter
-                result.startObject("char_filter");
-                result.startObject(CHAR_FILTER_UMLAUT_MAPPING);
-                result.field("type", "mapping");
-                result.field("mappings", mappings);
-                result.endObject();
-                result.endObject();
+                    // create char_filter
+                    result.startObject("char_filter");
+                    result.startObject(CHAR_FILTER_UMLAUT_MAPPING);
+                    result.field("type", "mapping");
+                    result.field("mappings", mappings);
+                    result.endObject();
+                    result.endObject();
+                }
 
                 // create filter
                 result.startObject("filter");
                 result.startObject(FILTER_WORD_DELIMITER);
-                result.field("type", "word_delimiter");
+                result.field("type", "word_delimiter_graph");
                 result.field("split_on_numerics", false);
                 result.field("split_on_case_change", false);
                 result.endObject();
@@ -489,12 +491,14 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingB
             result.startObject("analyzer");
 
             // configure analyzer "default"
-            if (indexPresetConfiguration.getCharMappings() != null) {
+            if (indexPresetConfiguration.isDefaultAnalyzerEnabled()) {
                 // register customer char and token filter
                 final String[] charFilters = {CHAR_FILTER_UMLAUT_MAPPING};
                 final String[] filters = {FILTER_WORD_DELIMITER, "lowercase", "trim"};
                 result.startObject("default");
-                result.field("char_filter", charFilters);
+                if (indexPresetConfiguration.getDefaultAnalyzerCharMappings() != null) {
+                    result.field("char_filter", charFilters);
+                }
                 result.field("tokenizer", "standard");
                 result.field("filter", filters);
                 result.endObject();
