@@ -64,20 +64,6 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
     boolean isUseCompression();
 
     /**
-     * Checks if the built-in default analyzer is enabled.
-     * If disabled the Elasticsearch standard analyzer will be used.
-     * Alternatively, custom analyzers can be configured.
-     * @return TRUE if the default analyzer is enabled
-     */
-    boolean isDefaultAnalyzerEnabled();
-
-    /**
-     * Gets optional character mappings (e.g. for mapping umlauts to latin character sequences) for the default analyzer.
-     * @return Optional character mappings
-     */
-    Map<String, String> getDefaultAnalyzerCharMappings();
-
-    /**
      * Gets optional custom tokenizers.
      * @return Custom tokenizers
      */
@@ -88,6 +74,18 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
      * @return Custom analyzers
      */
     List<IndexSettingsObject> getCustomAnalyzers();
+
+    /**
+     * Gets optional custom filters.
+     * @return Custom filters
+     */
+    List<IndexSettingsObject> getCustomFilters();
+
+    /**
+     * Gets optional custom char filters.
+     * @return Custom char filters
+     */
+    List<IndexSettingsObject> getCustomCharFilters();
 
     /**
      * Creates a new index name based on the given alias name.
@@ -114,10 +112,10 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
                 .put("maxResultWindow", conf.getMaxResultWindow())
                 .put("fieldsLimit", conf.getFieldsLimit())
                 .put("useCompression", conf.isUseCompression())
-                .put("defaultAnalyzerEnabled", conf.isDefaultAnalyzerEnabled())
-                .put("defaultAnalyzerCharMappings", conf.getDefaultAnalyzerCharMappings())
                 .put("customTokenizers", conf.getCustomTokenizers())
                 .put("customAnalyzers", conf.getCustomAnalyzers())
+                .put("customCharFilters", conf.getCustomCharFilters())
+                .put("customFilters", conf.getCustomFilters())
                 .build();
     }
 }

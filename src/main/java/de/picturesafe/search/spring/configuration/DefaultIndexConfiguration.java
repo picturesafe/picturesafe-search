@@ -65,8 +65,9 @@ public class DefaultIndexConfiguration {
         final StandardIndexPresetConfiguration cfg = new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix,
                 indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
         cfg.setFieldsLimit(fieldsLimit);
-        cfg.setDefaultAnalyzerEnabled(defaultAnalyzerEnabled);
-        cfg.setDefaultAnalyzerCharMappings(defaultCharMapping());
+        if (isDefaultAnalyzerEnabled()) {
+            cfg.addDefaultAnalysisSettings(defaultCharMapping());
+        }
         return cfg;
     }
 
@@ -81,6 +82,10 @@ public class DefaultIndexConfiguration {
         final Map<String, List<FieldConfiguration>> fieldConfigurationMap = new HashMap<>();
         fieldConfigurationMap.put(indexPresetConfiguration.getIndexAlias(), fieldConfigurations);
         return new StaticFieldConfigurationProvider(fieldConfigurationMap);
+    }
+
+    protected boolean isDefaultAnalyzerEnabled() {
+       return defaultAnalyzerEnabled;
     }
 
     protected Map<String, String> defaultCharMapping() {
