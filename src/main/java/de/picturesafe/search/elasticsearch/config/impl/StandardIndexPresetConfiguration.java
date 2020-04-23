@@ -190,7 +190,7 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
 
     /**
      * Adds default analysis settings.
-     * @param charMappings  Char mappings für analysis settings
+     * @param charMappings  Char mappings for analysis settings
      */
     public void addDefaultAnalysisSettings(Map<String, String> charMappings) {
         addDefaultCharFilterSettings(charMappings);
