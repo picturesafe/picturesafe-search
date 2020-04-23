@@ -205,8 +205,8 @@ public class AdminIT extends AbstractElasticIntegrationTest {
                         .field("tokenizer", "file_name_tokenizer")
                         .array("filter", "lowercase")
                         .endObject();
-                cfg.addCustomTokenizer(fileNameTokenizer);
-                cfg.addCustomAnalyzer(fileNameAnalyzer);
+                cfg.addCustomTokenizers(fileNameTokenizer);
+                cfg.addCustomAnalyzers(fileNameAnalyzer);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to set custom analyzer!", e);
             }

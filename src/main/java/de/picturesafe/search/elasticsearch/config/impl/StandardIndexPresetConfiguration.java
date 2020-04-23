@@ -28,6 +28,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -258,12 +259,13 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         return customTokenizers;
     }
 
+
     /**
-     * Adds optional custom tokenizer.
-     * @param customTokenizer Custom tokenizer
+     * Adds optional custom tokenizers.
+     * @param customTokenizers Custom tokenizers
      */
-    public void addCustomTokenizer(IndexSettingsObject customTokenizer) {
-        this.customTokenizers.add(customTokenizer);
+    public void addCustomTokenizers(IndexSettingsObject... customTokenizers) {
+        this.customTokenizers.addAll(Arrays.asList(customTokenizers));
     }
 
     @Override
@@ -272,11 +274,11 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     /**
-     * Adds optional custom analyzer.
-     * @param customAnalyzer Custom analyzers
+     * Adds optional custom analyzers.
+     * @param customAnalyzers Custom analyzers
      */
-    public void addCustomAnalyzer(IndexSettingsObject customAnalyzer) {
-        this.customAnalyzers.add(customAnalyzer);
+    public void addCustomAnalyzers(IndexSettingsObject... customAnalyzers) {
+        this.customAnalyzers.addAll(Arrays.asList(customAnalyzers));
     }
 
     @Override
@@ -285,11 +287,11 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     /**
-     * Adds optional custom filter.
-     * @param customFilter Custom filter
+     * Adds optional custom filters.
+     * @param customFilters Custom filters
      */
-    public void addCustomFilter(IndexSettingsObject customFilter) {
-        this.customFilters.add(customFilter);
+    public void addCustomFilters(IndexSettingsObject... customFilters) {
+        this.customFilters.addAll(Arrays.asList(customFilters));
     }
 
     @Override
@@ -298,11 +300,11 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     /**
-     * Adds optional custom char filter.
-     * @param customCharFilter Custom char filter
+     * Adds optional custom char filters.
+     * @param customCharFilters Custom char filters
      */
-    public void addCustomCharFilter(IndexSettingsObject customCharFilter) {
-        this.customCharFilters.add(customCharFilter);
+    public void addCustomCharFilters(IndexSettingsObject... customCharFilters) {
+        this.customCharFilters.addAll(Arrays.asList(customCharFilters));
     }
 
 
