@@ -62,8 +62,8 @@ public interface IndexObject<T extends IndexObject<T>> {
         try {
             final String className = getString(document, CLASS_NAME_FIELD);
             return (className != null)
-                    ? ((T) Class.forName(className).newInstance()).fromDocument(document)
-                    : type.newInstance().fromDocument(document);
+                    ? ((T) Class.forName(className).getDeclaredConstructor().newInstance()).fromDocument(document)
+                    : type.getDeclaredConstructor().newInstance().fromDocument(document);
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert document to object", e);
         }
