@@ -224,7 +224,7 @@ Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:3.2.0:jar (
 
 .Skipping the JavaDoc generation:
 ----
-mvn -Dmaven.javadoc.skip=true package
+mvn -Dmaven.javadoc.skip=true install
 ----
 
 Alternatively you could use the OpenJDK 11 reference build provided by https://jdk.java.net/java-se-ri/11[Oracle], which has the fix included.
