@@ -212,9 +212,27 @@ If you want to build picturesafe-search yourself there are two prerequisites:
 
 You need to have installed a Java Development Kit. The picturesafe-search project is currently developed using Java 8, but has also been tested on Java 11.
 
-**Note when using Java 11:**
-Please use the OpenJDK provided by https://jdk.java.net/java-se-ri/11[Oracle] as there is a Javadoc related
-https://bugs.openjdk.java.net/browse/JDK-8212233[bug] which has not been fixed in AdoptOpenJDK at the moment.
+**Note when using Java 11:** +
+There is a JavaDoc related https://bugs.openjdk.java.net/browse/JDK-8212233[bug] which has not been fixed in Adopt or Corretto OpenJDK at the moment. If your
+are using OpenJDK 11 and you are facing a build error like
+----
+Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:3.2.0:jar (attach-javadocs) on project picturesafe-search: MavenReportException: Error while generating Javadoc:
+
+[ERROR] Exit code: 1 - javadoc: error - The code being documented uses packages in the unnamed module, but the packages defined in https://docs.oracle.com/en/java/javase/11/docs/api/ are in named modules.
+----
+, please skip generating JavaDoc until the fix has become part of the OpenJDK build you are using.
+
+.Skipping the JavaDoc generation:
+----
+mvn -Dmaven.javadoc.skip=true package
+----
+
+Alternatively you could use the OpenJDK 11 reference build provided by https://jdk.java.net/java-se-ri/11[Oracle], which has the fix included.
+
+__Side note on java modules:__ +
+We are not able to provide a `module-info.java` at the moment, because we are using the Elasticsearch high level rest client which has the monolithic
+`elasticsearch.jar` as dependency. The `elasticsearch.jar` has no module-info and it makes auto module detection impossible because of its internal structure.
+Please see this https://github.com/elastic/elasticsearch/issues/38299[issue] for details.
 
 === Apache Maven
 
