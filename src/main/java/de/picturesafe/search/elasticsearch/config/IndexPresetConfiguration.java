@@ -64,12 +64,6 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
     boolean isUseCompression();
 
     /**
-     * Gets optional character mappings (e.g. for mapping umlauts to latin character sequences).
-     * @return Optional character mappings
-     */
-    Map<String, String> getCharMappings();
-
-    /**
      * Gets optional custom tokenizers.
      * @return Custom tokenizers
      */
@@ -80,6 +74,18 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
      * @return Custom analyzers
      */
     List<IndexSettingsObject> getCustomAnalyzers();
+
+    /**
+     * Gets optional custom filters.
+     * @return Custom filters
+     */
+    List<IndexSettingsObject> getCustomFilters();
+
+    /**
+     * Gets optional custom char filters.
+     * @return Custom char filters
+     */
+    List<IndexSettingsObject> getCustomCharFilters();
 
     /**
      * Creates a new index name based on the given alias name.
@@ -106,9 +112,10 @@ public interface IndexPresetConfiguration extends IndexObject<IndexPresetConfigu
                 .put("maxResultWindow", conf.getMaxResultWindow())
                 .put("fieldsLimit", conf.getFieldsLimit())
                 .put("useCompression", conf.isUseCompression())
-                .put("charMappings", conf.getCharMappings())
                 .put("customTokenizers", conf.getCustomTokenizers())
                 .put("customAnalyzers", conf.getCustomAnalyzers())
+                .put("customCharFilters", conf.getCustomCharFilters())
+                .put("customFilters", conf.getCustomFilters())
                 .build();
     }
 }

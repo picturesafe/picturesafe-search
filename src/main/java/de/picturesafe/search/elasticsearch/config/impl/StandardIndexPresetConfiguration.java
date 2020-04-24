@@ -23,19 +23,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getBoolean;
-import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocument;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocuments;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getInt;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
@@ -48,6 +49,9 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     public static final String DEFAULT_INDEX_NAME_DATE_FORMAT = "yyyyMMdd-HHmmss-SSS";
     public static final int DEFAULT_MAX_RESULT_WINDOW = 500_000;
 
+    protected static final String CHAR_FILTER_UMLAUT_MAPPING = "umlaut_mapping";
+    protected static final String FILTER_WORD_DELIMITER = "filter_word_delimiter";
+
     private String indexAlias;
     private String indexNamePrefix;
     private int numberOfShards;
@@ -56,9 +60,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     private String indexNameDateFormat;
     private Integer fieldsLimit;
     private boolean useCompression;
-    private Map<String, String> charMappings;
-    private List<IndexSettingsObject> customTokenizers;
-    private List<IndexSettingsObject> customAnalyzers;
+    private List<IndexSettingsObject> customTokenizers = new ArrayList<>();
+    private List<IndexSettingsObject> customAnalyzers = new ArrayList<>();
+    private List<IndexSettingsObject> customCharFilters = new ArrayList<>();
+    private List<IndexSettingsObject> customFilters = new ArrayList<>();
 
     /**
      * ONLY FOR INTERNAL USAGE
@@ -116,9 +121,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         this(indexAlias, indexAlias, DEFAULT_INDEX_NAME_DATE_FORMAT, conf.getNumberOfShards(), conf.getNumberOfReplicas(), conf.getMaxResultWindow());
         this.fieldsLimit = conf.getFieldsLimit();
         this.useCompression = conf.isUseCompression();
-        this.charMappings = (conf.getCharMappings() != null) ? new HashMap<>(conf.getCharMappings()) : null;
         this.customTokenizers = (conf.getCustomTokenizers() != null) ? new ArrayList<>(conf.getCustomTokenizers()) : null;
         this.customAnalyzers = (conf.getCustomAnalyzers() != null) ? new ArrayList<>(conf.getCustomAnalyzers()) : null;
+        this.customCharFilters = (conf.getCustomCharFilters() != null) ? new ArrayList<>(conf.getCustomCharFilters()) : null;
+        this.customFilters = (conf.getCustomFilters() != null) ? new ArrayList<>(conf.getCustomFilters()) : null;
     }
 
     /**
@@ -183,17 +189,66 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         this.useCompression = useCompression;
     }
 
-    @Override
-    public Map<String, String> getCharMappings() {
-        return charMappings;
+    /**
+     * Adds default analyzer settings.
+     * @param charMappings  Char mappings for analyzer settings
+     */
+    public void addDefaultAnalyzerSettings(Map<String, String> charMappings) {
+        addDefaultCharFilterSettings(charMappings);
+        addDefaultFilterSettings();
+
+        try {
+            final String[] charFilters = {CHAR_FILTER_UMLAUT_MAPPING};
+            final String[] filters = {FILTER_WORD_DELIMITER, "lowercase", "trim"};
+
+            final IndexSettingsObject defaultAnalyzer = new IndexSettingsObject("default");
+            final XContentBuilder settings = defaultAnalyzer.content().startObject();
+            if (charMappings != null) {
+                settings.field("char_filter", charFilters);
+            }
+            settings.field("tokenizer", "standard")
+                    .field("filter", filters);
+            settings.endObject();
+
+            customAnalyzers.add(defaultAnalyzer);
+        } catch (IOException e) {
+            throw new RuntimeException("Adding default analyzer index settings failed!", e);
+        }
     }
 
-    /**
-     * Sets optional character mappings (e.g. for mapping umlauts to latin character sequences).
-     * @param charMappings Optional character mappings
-     */
-    public void setCharMappings(Map<String, String> charMappings) {
-        this.charMappings = charMappings;
+    protected void addDefaultCharFilterSettings(Map<String, String> charMappings) {
+        try {
+            if (charMappings != null) {
+                final String[] mappings = new String[charMappings.size()];
+                int i = 0;
+                for (Map.Entry<String, String> entry : charMappings.entrySet()) {
+                    mappings[i++] = entry.getKey() + "=>" + entry.getValue();
+                }
+
+                final IndexSettingsObject defaultCharFilter = new IndexSettingsObject(CHAR_FILTER_UMLAUT_MAPPING);
+                defaultCharFilter.content().startObject()
+                        .field("type", "mapping")
+                        .field("mappings", mappings)
+                        .endObject();
+                customCharFilters.add(defaultCharFilter);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Adding default char filter index settings failed!", e);
+        }
+    }
+
+    protected void addDefaultFilterSettings() {
+        try {
+            final IndexSettingsObject defaultFilter = new IndexSettingsObject(FILTER_WORD_DELIMITER);
+            defaultFilter.content().startObject()
+                    .field("type", "word_delimiter_graph")
+                    .field("split_on_numerics", false)
+                    .field("split_on_case_change", false)
+                    .endObject();
+            customFilters.add(defaultFilter);
+        } catch (Exception e) {
+            throw new RuntimeException("Adding default filter index settings failed!", e);
+        }
     }
 
     @Override
@@ -202,11 +257,11 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     /**
-     * Sets optional custom tokenizers.
+     * Adds optional custom tokenizers.
      * @param customTokenizers Custom tokenizers
      */
-    public void setCustomTokenizers(List<IndexSettingsObject> customTokenizers) {
-        this.customTokenizers = customTokenizers;
+    public void addCustomTokenizers(IndexSettingsObject... customTokenizers) {
+        this.customTokenizers.addAll(Arrays.asList(customTokenizers));
     }
 
     @Override
@@ -215,12 +270,40 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     /**
-     * Sets optional custom analyzers.
+     * Adds optional custom analyzers.
      * @param customAnalyzers Custom analyzers
      */
-    public void setCustomAnalyzers(List<IndexSettingsObject> customAnalyzers) {
-        this.customAnalyzers = customAnalyzers;
+    public void addCustomAnalyzers(IndexSettingsObject... customAnalyzers) {
+        this.customAnalyzers.addAll(Arrays.asList(customAnalyzers));
     }
+
+    @Override
+    public List<IndexSettingsObject> getCustomFilters() {
+        return customFilters;
+    }
+
+    /**
+     * Adds optional custom filters.
+     * @param customFilters Custom filters
+     */
+    public void addCustomFilters(IndexSettingsObject... customFilters) {
+        this.customFilters.addAll(Arrays.asList(customFilters));
+    }
+
+    @Override
+    public List<IndexSettingsObject> getCustomCharFilters() {
+        return customCharFilters;
+    }
+
+    /**
+     * Adds optional custom char filters.
+     * @param customCharFilters Custom char filters
+     */
+    public void addCustomCharFilters(IndexSettingsObject... customCharFilters) {
+        this.customCharFilters.addAll(Arrays.asList(customCharFilters));
+    }
+
+
 
     @Override
     public String createNewIndexName() {
@@ -245,16 +328,14 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         maxResultWindow = getInt(document, "maxResultWindow", DEFAULT_MAX_RESULT_WINDOW);
         useCompression = getBoolean(document, "useCompression");
 
-        final Map<String, Object> doc = getDocument(document, "charMappings");
-        if (doc != null) {
-            charMappings = new HashMap<>(doc.size());
-            doc.forEach((k, v) -> charMappings.put(k, v.toString()));
-        }
-
         Collection<Map<String, Object>> docs = getDocuments(document, "customTokenizers");
         customTokenizers = (docs != null) ? docs.stream().map(d -> new IndexSettingsObject().fromDocument(d)).collect(Collectors.toList()) : null;
         docs = getDocuments(document, "customAnalyzers");
         customAnalyzers = (docs != null) ? docs.stream().map(d -> new IndexSettingsObject().fromDocument(d)).collect(Collectors.toList()) : null;
+        docs = getDocuments(document, "customFilters");
+        customFilters = (docs != null) ? docs.stream().map(d -> new IndexSettingsObject().fromDocument(d)).collect(Collectors.toList()) : null;
+        docs = getDocuments(document, "customCharFilters");
+        customCharFilters = (docs != null) ? docs.stream().map(d -> new IndexSettingsObject().fromDocument(d)).collect(Collectors.toList()) : null;
         return this;
     }
 
@@ -276,9 +357,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
                 .append(numberOfReplicas, that.numberOfReplicas)
                 .append(maxResultWindow, that.maxResultWindow)
                 .append(useCompression, that.useCompression)
-                .append(charMappings, that.charMappings)
                 .append(customTokenizers, that.customTokenizers)
                 .append(customAnalyzers, that.customAnalyzers)
+                .append(customFilters, that.customFilters)
+                .append(customCharFilters, that.customCharFilters)
                 .isEquals();
     }
 
@@ -296,9 +378,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
                 .append("numberOfShards", numberOfShards)
                 .append("numberOfReplicas", numberOfReplicas)
                 .append("useCompression", useCompression)
-                .append("charMappings", charMappings)
                 .append("customTokenizers", customTokenizers)
                 .append("customAnalyzers", customAnalyzers)
+                .append("customFilters", customFilters)
+                .append("customCharFilters", customCharFilters)
                 .toString();
     }
 
@@ -309,9 +392,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
                 = new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix, indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
         conf.fieldsLimit = fieldsLimit;
         conf.useCompression = useCompression;
-        conf.charMappings = (charMappings != null) ? new HashMap<>(charMappings) : null;
         conf.customTokenizers = (customTokenizers != null) ? new ArrayList<>(customTokenizers) : null;
         conf.customAnalyzers = (customAnalyzers != null) ? new ArrayList<>(customAnalyzers) : null;
+        conf.customFilters = (customFilters != null) ? new ArrayList<>(customFilters) : null;
+        conf.customCharFilters = (customCharFilters != null) ? new ArrayList<>(customCharFilters) : null;
         return conf;
     }
 }

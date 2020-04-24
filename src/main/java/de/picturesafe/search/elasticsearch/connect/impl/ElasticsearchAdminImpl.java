@@ -409,24 +409,13 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingB
                 result.field("index.codec", "best_compression");
             }
 
-            final boolean hasCharMappings = indexPresetConfiguration.getCharMappings() != null;
-            final boolean hasTokenizers = CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomTokenizers());
-            final boolean hasAnalyzers = CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomAnalyzers());
-
-            if (hasCharMappings || hasTokenizers || hasAnalyzers) {
+            if (hasAnalysisSettings(indexPresetConfiguration)) {
                 // start analysis configuration
                 result.startObject("analysis");
-
-                if (hasCharMappings) {
-                    addFiltersToIndexSettings(result, indexPresetConfiguration);
-                }
-                if (hasTokenizers) {
-                    addTokenizersToIndexSettings(result, indexPresetConfiguration);
-                }
-                if (hasCharMappings || hasAnalyzers) {
-                    addAnalyzersToIndexSettings(result, indexPresetConfiguration);
-                }
-
+                addIndexSettings(result, "char_filter", indexPresetConfiguration.getCustomCharFilters());
+                addIndexSettings(result, "filter", indexPresetConfiguration.getCustomFilters());
+                addIndexSettings(result, "analyzer", indexPresetConfiguration.getCustomAnalyzers());
+                addIndexSettings(result, "tokenizer", indexPresetConfiguration.getCustomTokenizers());
                 // end analysis configuration object
                 result.endObject();
             }
@@ -439,77 +428,24 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingB
         return result;
     }
 
-    protected void addFiltersToIndexSettings(XContentBuilder result, IndexPresetConfiguration indexPresetConfiguration) {
-
-        try {
-            final Map<String, String> charMappings = indexPresetConfiguration.getCharMappings();
-            if (charMappings != null) {
-                final String[] mappings = new String[charMappings.size()];
-                int i = 0;
-                for (Map.Entry<String, String> entry : charMappings.entrySet()) {
-                    mappings[i++] = entry.getKey() + "=>" + entry.getValue();
-                }
-
-                // create char_filter
-                result.startObject("char_filter");
-                result.startObject(CHAR_FILTER_UMLAUT_MAPPING);
-                result.field("type", "mapping");
-                result.field("mappings", mappings);
-                result.endObject();
-                result.endObject();
-
-                // create filter
-                result.startObject("filter");
-                result.startObject(FILTER_WORD_DELIMITER);
-                result.field("type", "word_delimiter");
-                result.field("split_on_numerics", false);
-                result.field("split_on_case_change", false);
-                result.endObject();
-                result.endObject();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Adding filters to index settings failed!", e);
-        }
+    protected boolean hasAnalysisSettings(IndexPresetConfiguration indexPresetConfiguration) {
+        return CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomCharFilters())
+                || CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomFilters())
+                || CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomAnalyzers())
+                || CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomTokenizers());
     }
 
-    protected void addTokenizersToIndexSettings(XContentBuilder result, IndexPresetConfiguration indexPresetConfiguration) {
+    protected void addIndexSettings(XContentBuilder result, String analysisType, List<IndexSettingsObject> indexSettingsObjects) {
         try {
-            result.startObject("tokenizer");
-            for (final IndexSettingsObject settings : indexPresetConfiguration.getCustomTokenizers()) {
-                result.rawField(settings.name(), IOUtils.toInputStream(settings.json(), StandardCharsets.UTF_8), XContentType.JSON);
-            }
-            result.endObject();
-        } catch (Exception e) {
-            throw new RuntimeException("Adding tokenizers to index settings failed!", e);
-        }
-    }
-
-    protected void addAnalyzersToIndexSettings(XContentBuilder result, IndexPresetConfiguration indexPresetConfiguration) {
-        try {
-            result.startObject("analyzer");
-
-            // configure analyzer "default"
-            if (indexPresetConfiguration.getCharMappings() != null) {
-                // register customer char and token filter
-                final String[] charFilters = {CHAR_FILTER_UMLAUT_MAPPING};
-                final String[] filters = {FILTER_WORD_DELIMITER, "lowercase", "trim"};
-                result.startObject("default");
-                result.field("char_filter", charFilters);
-                result.field("tokenizer", "standard");
-                result.field("filter", filters);
-                result.endObject();
-            }
-
-            // custom analyzers
-            if (CollectionUtils.isNotEmpty(indexPresetConfiguration.getCustomAnalyzers())) {
-                for (final IndexSettingsObject settings : indexPresetConfiguration.getCustomAnalyzers()) {
+            result.startObject(analysisType);
+            if (CollectionUtils.isNotEmpty(indexSettingsObjects)) {
+                for (final IndexSettingsObject settings : indexSettingsObjects) {
                     result.rawField(settings.name(), IOUtils.toInputStream(settings.json(), StandardCharsets.UTF_8), XContentType.JSON);
                 }
             }
-
             result.endObject();
         } catch (Exception e) {
-            throw new RuntimeException("Adding analyzers to index settings failed!", e);
+            throw new RuntimeException("Adding analysis index settings failed: " + analysisType, e);
         }
     }
 

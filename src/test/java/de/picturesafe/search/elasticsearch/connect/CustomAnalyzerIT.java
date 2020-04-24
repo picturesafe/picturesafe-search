@@ -37,7 +37,6 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -148,8 +147,8 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
                         .field("tokenizer", "file_name_tokenizer")
                         .array("filter", "lowercase")
                         .endObject();
-                cfg.setCustomTokenizers(Collections.singletonList(fileNameTokenizer));
-                cfg.setCustomAnalyzers(Collections.singletonList(fileNameAnalyzer));
+                cfg.addCustomTokenizers(fileNameTokenizer);
+                cfg.addCustomAnalyzers(fileNameAnalyzer);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to set custom analyzer!", e);
             }
