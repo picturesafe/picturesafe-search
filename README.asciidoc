@@ -213,7 +213,7 @@ If you want to build picturesafe-search yourself there are two prerequisites:
 You need to have installed a Java Development Kit. The picturesafe-search project is currently developed using Java 8, but has also been tested on Java 11.
 
 **Note when using Java 11:** +
-There is a JavaDoc related https://bugs.openjdk.java.net/browse/JDK-8212233[bug] which has not been fixed in Adopt or Corretto OpenJDK at the moment. If your
+There is a JavaDoc related https://bugs.openjdk.java.net/browse/JDK-8212233[bug] which has not been fixed in Adopt or Corretto OpenJDK at the moment. If you
 are using OpenJDK 11 and you are facing a build error like
 ----
 Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:3.2.0:jar (attach-javadocs) on project picturesafe-search: MavenReportException: Error while generating Javadoc:
