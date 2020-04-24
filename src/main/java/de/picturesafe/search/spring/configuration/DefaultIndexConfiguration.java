@@ -66,7 +66,7 @@ public class DefaultIndexConfiguration {
                 indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
         cfg.setFieldsLimit(fieldsLimit);
         if (isDefaultAnalyzerEnabled()) {
-            cfg.addDefaultAnalysisSettings(defaultCharMapping());
+            cfg.addDefaultAnalyzerSettings(defaultCharMapping());
         }
         return cfg;
     }

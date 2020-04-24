@@ -190,13 +190,30 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
     }
 
     /**
-     * Adds default analysis settings.
-     * @param charMappings  Char mappings for analysis settings
+     * Adds default analyzer settings.
+     * @param charMappings  Char mappings for analyzer settings
      */
-    public void addDefaultAnalysisSettings(Map<String, String> charMappings) {
+    public void addDefaultAnalyzerSettings(Map<String, String> charMappings) {
         addDefaultCharFilterSettings(charMappings);
         addDefaultFilterSettings();
-        addDefaultAnalyzerSettings(charMappings);
+
+        try {
+            final String[] charFilters = {CHAR_FILTER_UMLAUT_MAPPING};
+            final String[] filters = {FILTER_WORD_DELIMITER, "lowercase", "trim"};
+
+            final IndexSettingsObject defaultAnalyzer = new IndexSettingsObject("default");
+            final XContentBuilder settings = defaultAnalyzer.content().startObject();
+            if (charMappings != null) {
+                settings.field("char_filter", charFilters);
+            }
+            settings.field("tokenizer", "standard")
+                    .field("filter", filters);
+            settings.endObject();
+
+            customAnalyzers.add(defaultAnalyzer);
+        } catch (IOException e) {
+            throw new RuntimeException("Adding default analyzer index settings failed!", e);
+        }
     }
 
     protected void addDefaultCharFilterSettings(Map<String, String> charMappings) {
@@ -234,31 +251,10 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         }
     }
 
-    protected void addDefaultAnalyzerSettings(Map<String, String> charMappings) {
-        try {
-            final String[] charFilters = {CHAR_FILTER_UMLAUT_MAPPING};
-            final String[] filters = {FILTER_WORD_DELIMITER, "lowercase", "trim"};
-
-            final IndexSettingsObject defaultAnalyzer = new IndexSettingsObject("default");
-            final XContentBuilder settings = defaultAnalyzer.content().startObject();
-            if (charMappings != null) {
-                settings.field("char_filter", charFilters);
-            }
-            settings.field("tokenizer", "standard")
-                    .field("filter", filters);
-            settings.endObject();
-
-            customAnalyzers.add(defaultAnalyzer);
-        } catch (IOException e) {
-            throw new RuntimeException("Adding default analyzer index settings failed!", e);
-        }
-    }
-
     @Override
     public List<IndexSettingsObject> getCustomTokenizers() {
         return customTokenizers;
     }
-
 
     /**
      * Adds optional custom tokenizers.
