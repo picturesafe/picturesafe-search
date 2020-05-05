@@ -69,6 +69,10 @@ public class ElasticDocumentUtils {
         return MapUtils.getIntValue(doc, name, fallbackValue);
     }
 
+    public static Integer getInteger(Map<String, Object> doc, String name) {
+        return MapUtils.getInteger(doc, name);
+    }
+
     public static boolean getBoolean(Map<String, Object> doc, String name) {
         return MapUtils.getBooleanValue(doc, name);
     }
