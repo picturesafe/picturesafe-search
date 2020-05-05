@@ -16,9 +16,14 @@
 
 package de.picturesafe.search.elasticsearch.config.impl;
 
+import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
+import de.picturesafe.search.elasticsearch.config.IndexSettingsObject;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -30,7 +35,6 @@ public class StandardIndexPresetConfigurationTest {
 
     @Test
     public void testConstructor() {
-
         String indexAlias = "test-alias";
         String indexNamePrefix = "test-index";
         final String indexNameDateFormat = "yyyyMMdd-HHmmss-SSS";
@@ -73,5 +77,21 @@ public class StandardIndexPresetConfigurationTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Argument 'indexAlias' must not be empty!");
         new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix, indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
+    }
+
+    @Test
+    public void testMarshalling() {
+        final StandardIndexPresetConfiguration srcConfig
+                = new StandardIndexPresetConfiguration("marshalling-test", "marsh-", "yyyy-MM-dd HH/mm/ss", 33, 17, 123456);
+        srcConfig.setFieldsLimit(4321);
+        srcConfig.setUseCompression(true);
+        srcConfig.addCustomTokenizers(new IndexSettingsObject("token-1", "{}"));
+        srcConfig.addCustomFilters(new IndexSettingsObject("filter-1", "{}"));
+        srcConfig.addCustomCharFilters(new IndexSettingsObject("filter-2", "{}"));
+        srcConfig.addCustomAnalyzers(new IndexSettingsObject("analyzer-1", "{}"));
+
+        final Map<String, Object> doc = srcConfig.toDocument();
+        final IndexPresetConfiguration destConfig = IndexObject.fromDocument(doc, IndexPresetConfiguration.class);
+        assertEquals(srcConfig, destConfig);
     }
 }

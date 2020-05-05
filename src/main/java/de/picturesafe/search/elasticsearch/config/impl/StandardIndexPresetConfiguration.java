@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getBoolean;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocuments;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getInt;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getInteger;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 /**
@@ -326,6 +327,7 @@ public class StandardIndexPresetConfiguration implements IndexPresetConfiguratio
         numberOfShards = getInt(document, "numberOfShards", 1);
         numberOfReplicas = getInt(document, "numberOfReplicas", 0);
         maxResultWindow = getInt(document, "maxResultWindow", DEFAULT_MAX_RESULT_WINDOW);
+        fieldsLimit = getInteger(document, "fieldsLimit");
         useCompression = getBoolean(document, "useCompression");
 
         Collection<Map<String, Object>> docs = getDocuments(document, "customTokenizers");
