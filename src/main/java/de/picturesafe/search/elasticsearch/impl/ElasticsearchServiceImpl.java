@@ -225,9 +225,13 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public String removeAlias(String indexAlias) {
-        LOGGER.info("Removing elasticsearch alias '{}'", indexAlias);
-        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
-        return elasticsearch.removeAlias(indexPresetConfiguration);
+        if (elasticsearch.aliasExists(indexAlias)) {
+            LOGGER.info("Removing elasticsearch alias '{}'", indexAlias);
+            final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
+            return elasticsearch.removeAlias(indexPresetConfiguration);
+        } else {
+            return null;
+        }
     }
 
     @Override
