@@ -18,7 +18,7 @@ package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
-import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.expression.Expression;

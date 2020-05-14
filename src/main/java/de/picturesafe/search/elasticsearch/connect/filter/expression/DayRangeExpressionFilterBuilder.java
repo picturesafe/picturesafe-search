@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
-import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.Expression;

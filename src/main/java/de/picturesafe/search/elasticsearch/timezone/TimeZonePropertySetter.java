@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect;
+package de.picturesafe.search.elasticsearch.timezone;
 
-public interface TimeZoneAware {
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
-    String DEFAULT_TIME_ZONE = "Europe/Berlin";
+@Component
+public class TimeZonePropertySetter implements TimeZoneAware {
+
+    public TimeZonePropertySetter(@Qualifier("elasticsearchTimeZone") String timeZone) {
+        System.setProperty(TIME_ZONE_PROPERTY_KEY, timeZone);
+    }
 }

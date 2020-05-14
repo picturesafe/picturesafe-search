@@ -33,7 +33,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.picturesafe.search.elasticsearch.connect.TimeZoneAware.DEFAULT_TIME_ZONE;
+import static de.picturesafe.search.elasticsearch.timezone.TimeZoneAware.DEFAULT_TIME_ZONE;
 
 @Configuration
 @PropertySource("classpath:elasticsearch.properties")

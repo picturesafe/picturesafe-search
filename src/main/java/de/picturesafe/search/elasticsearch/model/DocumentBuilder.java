@@ -17,9 +17,12 @@
 package de.picturesafe.search.elasticsearch.model;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import org.apache.commons.lang3.Validate;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,14 +30,17 @@ import java.util.stream.Collectors;
 /**
  * Simple builder for elasticsearch index documents.
  */
-public class DocumentBuilder {
+public class DocumentBuilder implements TimeZoneAware  {
 
     final Map<String, Object> doc = new HashMap<>();
+    final String timeZone;
 
     private DocumentBuilder() {
+        timeZone = getTimeZone();
     }
 
     private DocumentBuilder(String id) {
+        this();
         doc.put(FieldConfiguration.FIELD_NAME_ID, id);
     }
 
@@ -58,6 +64,13 @@ public class DocumentBuilder {
 
     public DocumentBuilder put(String fieldname, Collection<? extends IndexObject<?>> values) {
         return put(fieldname, (values != null) ? values.stream().map(IndexObject::toDocument).collect(Collectors.toList()) : null);
+    }
+
+    public DocumentBuilder put(String fieldname, Date value) {
+        if (value != null) {
+            doc.put(fieldname, ElasticDateUtils.formatIso(value, timeZone));
+        }
+        return this;
     }
 
     public DocumentBuilder put(String fieldname, Object value) {

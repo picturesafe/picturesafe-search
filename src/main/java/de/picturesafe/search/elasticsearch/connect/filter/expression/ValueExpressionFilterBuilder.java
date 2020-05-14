@@ -20,7 +20,7 @@ import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
-import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalFilterBuilder;
 import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalNestedFilterBuilder;
 import de.picturesafe.search.elasticsearch.connect.filter.internal.InternalPhraseMatchFilterBuilder;

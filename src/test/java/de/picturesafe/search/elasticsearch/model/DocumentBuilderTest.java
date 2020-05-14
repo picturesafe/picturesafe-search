@@ -17,12 +17,14 @@
 package de.picturesafe.search.elasticsearch.model;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
+import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.Date;
 import java.util.Map;
 
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getInt;
@@ -57,6 +59,10 @@ public class DocumentBuilderTest {
         document = DocumentBuilder.id(1).put("title", (String) null).build();
         assertEquals("1", (String) document.get(FieldConfiguration.FIELD_NAME_ID));
         assertNull(document.get("title"));
+
+        final Date date = new Date();
+        document = DocumentBuilder.withoutId().put("date", date).build();
+        assertEquals(date, ElasticDateUtils.parseIso((String) document.get("date")));
 
         exception.expect(NullPointerException.class);
         exception.expectMessage("Parameter 'id' may not be null!");

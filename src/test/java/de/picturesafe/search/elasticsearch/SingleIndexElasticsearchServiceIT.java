@@ -22,7 +22,6 @@ import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
-import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
 import de.picturesafe.search.elasticsearch.impl.StaticIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
@@ -293,7 +292,7 @@ public class SingleIndexElasticsearchServiceIT {
         assertEquals(doc1.get("name"), doc2.get("name"));
         assertEquals(doc1.get("title"), doc2.get("title"));
         assertEquals(doc1.get("caption"), doc2.get("caption"));
-        assertEquals(doc1.get("createDate"), ElasticDateUtils.parseIso((String) doc2.get("createDate")));
+        assertEquals(doc1.get("createDate"), doc2.get("createDate"));
         assertEquals(doc1.get("location"), doc2.get("location"));
     }
 
