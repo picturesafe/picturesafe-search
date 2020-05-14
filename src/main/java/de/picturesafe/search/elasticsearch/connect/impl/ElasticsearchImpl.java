@@ -24,7 +24,7 @@ import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchResult;
 import de.picturesafe.search.elasticsearch.connect.FacetResolver;
-import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientBulkAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientDeleteAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientIndexAction;

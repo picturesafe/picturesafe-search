@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.facet;
 
-import de.picturesafe.search.elasticsearch.connect.TimeZoneAware;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
