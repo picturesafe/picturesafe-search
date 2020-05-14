@@ -20,4 +20,8 @@ public interface TimeZoneAware {
 
     String TIME_ZONE_PROPERTY_KEY = "elasticsearch.time_zone";
     String DEFAULT_TIME_ZONE = "Europe/Berlin";
+
+    default String getTimeZone() {
+        return System.getProperty(TIME_ZONE_PROPERTY_KEY, DEFAULT_TIME_ZONE);
+    }
 }

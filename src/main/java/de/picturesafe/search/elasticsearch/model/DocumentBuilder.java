@@ -36,7 +36,7 @@ public class DocumentBuilder implements TimeZoneAware  {
     final String timeZone;
 
     private DocumentBuilder() {
-        timeZone = System.getProperty(TIME_ZONE_PROPERTY_KEY, DEFAULT_TIME_ZONE);
+        timeZone = getTimeZone();
     }
 
     private DocumentBuilder(String id) {
