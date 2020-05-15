@@ -21,6 +21,7 @@ import java.util.Locale;
 public enum ElasticsearchType {
 
     TEXT,
+    KEYWORD,
     LONG,
     INTEGER,
     SHORT,

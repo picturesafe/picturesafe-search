@@ -139,7 +139,7 @@ public class TestConfiguration {
         testFields.add(StandardFieldConfiguration.builder(
                 "keyword", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true).build());
         testFields.add(StandardFieldConfiguration.builder(
-                "keywordField", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).build());
+                "keywordField", ElasticsearchType.KEYWORD).build());
         testFields.add(StandardFieldConfiguration.builder(
                 "facetResolved", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).build());
         testFields.add(StandardFieldConfiguration.builder(

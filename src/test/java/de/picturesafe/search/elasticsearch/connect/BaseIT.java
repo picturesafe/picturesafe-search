@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
+import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
@@ -370,19 +371,32 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testKeywordField() throws IOException {
-        final Map<String, Object> document = new HashMap<>();
-        document.put("id", "55");
-        document.put("keywordField", "hans meier");
-        elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
-        LOG.debug("Document 1: " + restClient.get(new GetRequest().index(indexAlias).id("55"),
-                                                  RequestOptions.DEFAULT).getSourceAsString());
+        final List<Map<String, Object>> docs = Arrays.asList(
+                DocumentBuilder.id(55).put("caption", "Familie Meier").put("keywordField", "hans meier").build(),
+                DocumentBuilder.id(56).put("caption", "Familie Meier").put("keywordField", "margarete meier").build()
+        );
+        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        LOG.debug("Document 1:\n" + restClient.get(new GetRequest().index(indexAlias).id("55"), RequestOptions.DEFAULT).getSourceAsString());
 
-        final ValueExpression valueExpression = new ValueExpression("keywordField", "hans meier");
+        Expression expression = new ValueExpression("keywordField", "hans meier");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-        final QueryDto queryDto = new QueryDto(valueExpression, queryRangeDto, null, null, null);
-        final ElasticsearchResult elasticsearchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, null);
+        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("Should find document with keyword query: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
 
-        assertEquals("Should find document with keyword query: indexAlias = " + indexAlias, 1, elasticsearchResult.getTotalHitCount());
+        expression = new FulltextExpression("meier");
+        final SortOption sortOption = SortOption.desc("keywordField");
+        final QueryFacetDto queryFacetDto = new QueryFacetDto("keywordField", 10, 100);
+        queryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(sortOption), Collections.singletonList(queryFacetDto), null);
+        result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("Should find documents of 'Famile Meier'': indexAlias = " + indexAlias, 2, result.getTotalHitCount());
+        assertEquals("margarete meier", result.getHits().get(0).get("keywordField"));
+        assertEquals("hans meier", result.getHits().get(1).get("keywordField"));
+        assertEquals(1, result.getFacetDtoList().size());
+        final FacetDto facetDto = result.getFacetDtoList().get(0);
+        assertEquals("keywordField", facetDto.getName());
+        assertEquals(2, facetDto.getCount());
+
     }
 
     @Test
