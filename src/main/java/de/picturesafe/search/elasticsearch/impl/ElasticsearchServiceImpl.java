@@ -203,7 +203,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     public void deleteIndexWithAlias(String indexAlias) {
         LOGGER.info("Deleting elasticsearch indexes for alias: {}", indexAlias);
         for (String indexName : elasticsearch.resolveIndexNames(indexAlias)) {
-            elasticsearch.deleteIndex(indexName);
+            deleteIndex(indexName);
         }
         removeAlias(indexAlias);
     }
