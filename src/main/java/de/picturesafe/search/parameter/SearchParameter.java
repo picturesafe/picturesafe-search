@@ -39,8 +39,7 @@ public class SearchParameter {
     private final boolean ignoreState;
     private final boolean ignoreDeleted;
     private final String language;
-    private final List<AggregationField> aggregationFields;
-    private final int defaultAggregationMaxCount;
+    private final List<SearchAggregation<?>> aggregations;
     private final List<String> fieldsToResolve;
     private final boolean optimizeExpressions;
 
@@ -54,8 +53,7 @@ public class SearchParameter {
         ignoreState = builder.ignoreState;
         ignoreDeleted = builder.ignoreDeleted;
         language = builder.language;
-        aggregationFields = builder.aggregationFields;
-        defaultAggregationMaxCount = builder.defaultAggregationMaxCount;
+        aggregations = builder.aggregations;
         fieldsToResolve = builder.fieldsToResolve;
         optimizeExpressions = builder.optimizeExpressions;
     }
@@ -149,21 +147,12 @@ public class SearchParameter {
     }
 
     /**
-     * Gets the aggregation fields
+     * Gets the aggregations
      *
-     * @return List of aggregation fields
+     * @return List of aggregations
      */
-    public List<AggregationField> getAggregationFields() {
-        return aggregationFields;
-    }
-
-    /**
-     * Gets default maximum count of aggregation results for a field
-     *
-     * @return Default maximum count of aggregation results for a field
-     */
-    public int getDefaultAggregationMaxCount() {
-        return defaultAggregationMaxCount;
+    public List<SearchAggregation<?>> getAggregations() {
+        return aggregations;
     }
 
     /**
@@ -197,8 +186,7 @@ public class SearchParameter {
                 .append("ignoreState", ignoreState) //--
                 .append("ignoreDeleted", ignoreDeleted) //--
                 .append("language", language) //--
-                .append("aggregationFields", aggregationFields) //--
-                .append("defaultAggregationMaxCount", defaultAggregationMaxCount) //--
+                .append("aggregationFields", aggregations) //--
                 .append("fieldsToResolve", fieldsToResolve) //--
                 .append("optimizeExpressions", optimizeExpressions) //--
                 .toString();
@@ -218,8 +206,7 @@ public class SearchParameter {
         boolean ignoreDeleted = true;
         Integer pageIndex;
         String language;
-        List<AggregationField> aggregationFields = new ArrayList<>();
-        int defaultAggregationMaxCount = 10;
+        List<SearchAggregation<?>> aggregations = new ArrayList<>();
         List<String> fieldsToResolve = new ArrayList<>();
         boolean optimizeExpressions;
 
@@ -357,33 +344,22 @@ public class SearchParameter {
         /**
          * Sets the aggregation fields
          *
-         * @param aggregationFields List of aggregation fields
+         * @param aggregations List of aggregations
          * @return Builder
          */
-        public Builder aggregationFields(List<AggregationField> aggregationFields) {
-            this.aggregationFields = aggregationFields;
+        public Builder aggregations(List<SearchAggregation<?>> aggregations) {
+            this.aggregations = aggregations;
             return this;
         }
 
         /**
          * Sets the aggregation fields
          *
-         * @param aggregationFields List of aggregation fields
+         * @param aggregations List of aggregations
          * @return Builder
          */
-        public Builder aggregationFields(AggregationField... aggregationFields) {
-            this.aggregationFields = Arrays.asList(aggregationFields);
-            return this;
-        }
-
-        /**
-         * Sets the default maximum count of aggregation results for a field
-         *
-         * @param defaultAggregationMaxCount default maximum count of aggregation results for a field
-         * @return Builder
-         */
-        public Builder defaultAggregationMaxCount(int defaultAggregationMaxCount) {
-            this.defaultAggregationMaxCount = defaultAggregationMaxCount;
+        public Builder aggregations(SearchAggregation<?>... aggregations) {
+            this.aggregations = Arrays.asList(aggregations);
             return this;
         }
 

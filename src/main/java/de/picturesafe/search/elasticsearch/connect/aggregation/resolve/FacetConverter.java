@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect.impl;
+package de.picturesafe.search.elasticsearch.connect.aggregation.resolve;
 
-import de.picturesafe.search.elasticsearch.connect.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.RangeFacetEntryDto;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
@@ -29,16 +27,18 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class FacetConverter {
 
-    private final QueryDto queryDto;
-
-    public FacetConverter(QueryDto queryDto) {
-        this.queryDto = queryDto;
+    private FacetConverter() {
     }
 
-    public FacetDto convertTermsFacet(Terms terms, FacetResolver facetResolver) {
+    public static FacetDto convertTermsFacet(Terms terms) {
+        return convertTermsFacet(terms, null, null);
+    }
+
+    public static FacetDto convertTermsFacet(Terms terms, FacetResolver facetResolver, Locale locale) {
         final List<FacetEntryDto> facetEntryDtos = new ArrayList<>();
         long totalCount = 0;
         final String originalFacetName = StringUtils.substringBefore(terms.getName(), ".");
@@ -48,8 +48,7 @@ public class FacetConverter {
                 continue;
             }
             final String keyAsString = bucket.getKeyAsString();
-            String value = (facetResolver != null)
-                    ? facetResolver.resolve(keyAsString, bucket.getKeyAsNumber(), queryDto.getLocale()) : keyAsString;
+            String value = (facetResolver != null) ? facetResolver.resolve(keyAsString, bucket.getKeyAsNumber(), locale) : keyAsString;
             if (value == null) {
                 value = keyAsString;
             }
@@ -60,7 +59,11 @@ public class FacetConverter {
         return new FacetDto(originalFacetName, totalCount, facetEntryDtos);
     }
 
-    public FacetDto convertRangeFacet(Range range, FacetResolver facetResolver) {
+    public static FacetDto convertRangeFacet(Range range) {
+        return convertRangeFacet(range, null, null);
+    }
+
+    public static FacetDto convertRangeFacet(Range range, FacetResolver facetResolver, Locale locale) {
         final List<FacetEntryDto> facetEntryDtos = new ArrayList<>();
         long totalCount = 0;
         for (Range.Bucket bucket : range.getBuckets()) {
@@ -71,7 +74,7 @@ public class FacetConverter {
             final FacetEntryDto facet;
             if (facetResolver != null) {
                 final String rangeValue = bucket.getFrom() + " - " + bucket.getTo();
-                final String value = facetResolver.resolve(rangeValue, null, queryDto.getLocale());
+                final String value = facetResolver.resolve(rangeValue, null, locale);
                 facet = new FacetEntryDto(value, bucket.getDocCount());
             } else {
                 facet = new RangeFacetEntryDto(bucket);
@@ -85,7 +88,11 @@ public class FacetConverter {
         return new FacetDto(originalFacetName, totalCount, facetEntryDtos);
     }
 
-    public FacetDto convertHistogramFacet(Histogram histogram, FacetResolver facetResolver) {
+    public static FacetDto convertHistogramFacet(Histogram histogram) {
+        return convertHistogramFacet(histogram, null, null);
+    }
+
+    public static FacetDto convertHistogramFacet(Histogram histogram, FacetResolver facetResolver, Locale locale) {
         final List<FacetEntryDto> facetEntryDtos = new ArrayList<>();
         long totalCount = 0;
         for (Histogram.Bucket bucket : histogram.getBuckets()) {
@@ -96,7 +103,7 @@ public class FacetConverter {
             final String value;
             if (facetResolver != null) {
                 final long time = ((ZonedDateTime) bucket.getKey()).toInstant().toEpochMilli();
-                value = facetResolver.resolve(bucket.getKeyAsString(), time, queryDto.getLocale());
+                value = facetResolver.resolve(bucket.getKeyAsString(), time, locale);
             } else {
                 value = bucket.getKeyAsString();
             }

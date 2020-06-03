@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect.mock;
 
-import de.picturesafe.search.elasticsearch.connect.FacetResolver;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 
 import java.util.Locale;
 

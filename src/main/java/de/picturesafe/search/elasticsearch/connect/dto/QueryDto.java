@@ -18,6 +18,7 @@ package de.picturesafe.search.elasticsearch.connect.dto;
 
 import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.expression.Expression;
+import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.Validate;
@@ -42,7 +43,7 @@ public class QueryDto {
     private final Expression expression;
     private final QueryRangeDto queryRangeDto;
     private final List<SortOption> sortOptions;
-    private final List<QueryFacetDto> queryFacetDtos;
+    private final List<? extends SearchAggregation<?>> aggregations;
     private final Locale locale;
     private final List<String> fieldsToResolve;
     private final FieldResolverType fieldResolverType;
@@ -52,22 +53,22 @@ public class QueryDto {
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
                     List<SortOption> sortOptions,
-                    List<QueryFacetDto> queryFacetDtos,
+                    List<? extends SearchAggregation<?>> aggregations,
                     Locale locale) {
-        this(expression, queryRangeDto, sortOptions, queryFacetDtos, locale, new ArrayList<>(), FieldResolverType.DOC_VALUES);
+        this(expression, queryRangeDto, sortOptions, aggregations, locale, new ArrayList<>(), FieldResolverType.DOC_VALUES);
     }
 
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
                     List<SortOption> sortOptions,
-                    List<QueryFacetDto> queryFacetDtos,
+                    List<? extends SearchAggregation<?>> aggregations,
                     Locale locale,
                     List<String> fieldsToResolve,
                     FieldResolverType fieldResolverType) {
         this.expression = expression;
         this.queryRangeDto = queryRangeDto;
         this.sortOptions = sortOptions;
-        this.queryFacetDtos = queryFacetDtos;
+        this.aggregations = aggregations;
         this.locale = locale;
         this.fieldsToResolve = fieldsToResolve;
         this.fieldResolverType = fieldResolverType;
@@ -76,7 +77,7 @@ public class QueryDto {
     }
 
     public QueryDto(QueryDto queryDto, Expression expression) {
-        this(expression, queryDto.queryRangeDto, queryDto.sortOptions, queryDto.queryFacetDtos, queryDto.locale, queryDto.fieldsToResolve,
+        this(expression, queryDto.queryRangeDto, queryDto.sortOptions, queryDto.aggregations, queryDto.locale, queryDto.fieldsToResolve,
                 queryDto.fieldResolverType);
     }
 
@@ -92,8 +93,8 @@ public class QueryDto {
         return sortOptions;
     }
 
-    public List<QueryFacetDto> getQueryFacetDtos() {
-        return queryFacetDtos;
+    public List<? extends SearchAggregation<?>> getAggregations() {
+        return aggregations;
     }
 
     public Locale getLocale() {
@@ -141,7 +142,7 @@ public class QueryDto {
                     .append(expression, other.expression)
                     .append(queryRangeDto, other.queryRangeDto)
                     .append(sortOptions, other.sortOptions)
-                    .append(queryFacetDtos, other.queryFacetDtos)
+                    .append(aggregations, other.aggregations)
                     .append(locale, other.locale)
                     .append(fieldsToResolve, other.fieldsToResolve)
                     .isEquals();
@@ -154,7 +155,7 @@ public class QueryDto {
                 .append("expression", expression) //--
                 .append("queryRangeDto", queryRangeDto) //--
                 .append("sortOptions", sortOptions) //--
-                .append("queryFacetDtos", queryFacetDtos) //--
+                .append("aggregations", aggregations) //--
                 .append("locale", locale) //--
                 .append("fieldsToResolve", fieldsToResolve) //--
                 .append("fieldResolverType", fieldResolverType) //--

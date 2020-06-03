@@ -23,8 +23,10 @@ import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchResult;
-import de.picturesafe.search.elasticsearch.connect.FacetResolver;
-import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetConverter;
+import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactory;
+import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactoryRegistry;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientBulkAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientDeleteAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientIndexAction;
@@ -33,7 +35,6 @@ import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientSearchA
 import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.connect.error.AliasCreateException;
@@ -43,8 +44,6 @@ import de.picturesafe.search.elasticsearch.connect.error.ElasticsearchException;
 import de.picturesafe.search.elasticsearch.connect.error.IndexCreateException;
 import de.picturesafe.search.elasticsearch.connect.error.IndexMissingException;
 import de.picturesafe.search.elasticsearch.connect.error.QuerySyntaxException;
-import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
-import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactory;
 import de.picturesafe.search.elasticsearch.connect.query.QueryFactoryCaller;
@@ -57,7 +56,9 @@ import de.picturesafe.search.elasticsearch.connect.util.logging.SearchSourceBuil
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.IdFormat;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.expression.SuggestExpression;
+import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
 import org.apache.commons.collections.CollectionUtils;
@@ -90,11 +91,9 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
@@ -116,6 +115,7 @@ import org.springframework.util.StopWatch;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -143,7 +143,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     protected RestHighLevelClient restClient;
     protected List<FilterFactory> filterFactories;
     protected List<QueryFactory> queryFactories;
-    protected AggregationBuilderFactories aggregationBuilderFactories;
+    protected AggregationBuilderFactoryRegistry aggregationBuilderFactoryRegistry;
     protected List<FacetResolver> facetResolvers;
     protected String timeZone;
 
@@ -170,8 +170,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     @Autowired(required = false)
-    public void setAggregationBuilderFactories(AggregationBuilderFactories aggregationBuilderFactories) {
-        this.aggregationBuilderFactories = aggregationBuilderFactories;
+    public void setAggregationBuilderFactoryRegistry(AggregationBuilderFactoryRegistry aggregationBuilderFactoryRegistry) {
+        this.aggregationBuilderFactoryRegistry = aggregationBuilderFactoryRegistry;
     }
 
     @Autowired(required = false)
@@ -543,18 +543,17 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     }
 
     protected List<FacetDto> convertFacets(SearchResponse searchResponse, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final FacetConverter facetConverter = new FacetConverter(queryDto);
         final List<FacetDto> facetResultList = new ArrayList<>();
 
         if (searchResponse.getAggregations() != null) {
             for (Aggregation aggregation : searchResponse.getAggregations()) {
                 FacetDto facetDto = null;
                 if (aggregation instanceof Terms) {
-                    facetDto = facetConverter.convertTermsFacet((Terms) aggregation, facetResolver(aggregation));
+                    facetDto = FacetConverter.convertTermsFacet((Terms) aggregation, facetResolver(aggregation), queryDto.getLocale());
                 } else if (aggregation instanceof Range) {
-                    facetDto = facetConverter.convertRangeFacet((Range) aggregation, facetResolver(aggregation));
+                    facetDto = FacetConverter.convertRangeFacet((Range) aggregation, facetResolver(aggregation), queryDto.getLocale());
                 } else if (aggregation instanceof Histogram) {
-                    facetDto = facetConverter.convertHistogramFacet((Histogram) aggregation, facetResolver(aggregation));
+                    facetDto = FacetConverter.convertHistogramFacet((Histogram) aggregation, facetResolver(aggregation), queryDto.getLocale());
                 }
 
                 if (facetDto != null) {
@@ -618,40 +617,16 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         return searchResponse;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     protected void addFacetsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfiguration, SearchSourceBuilder searchRequestBuilder) {
-        if (queryDto.getQueryFacetDtos() != null) {
-            for (QueryFacetDto queryFacetDto : queryDto.getQueryFacetDtos()) {
-                final String fieldName = queryFacetDto.getField();
-                List<AggregationBuilderFactory> fieldAggregationBuilderFactories = null;
-                if (aggregationBuilderFactories != null) {
-                    fieldAggregationBuilderFactories
-                            = aggregationBuilderFactories.getAggregationBuilderFactories(mappingConfiguration, queryFacetDto.getField());
-                }
-
-                final List<AggregationBuilder> aggregationBuilders = new ArrayList<>();
-                if (CollectionUtils.isNotEmpty(fieldAggregationBuilderFactories)) {
-                    for (final AggregationBuilderFactory factory : fieldAggregationBuilderFactories) {
-                        aggregationBuilders.add(factory.createAggregationBuilder(fieldName, queryFacetDto.getSize(), queryDto.getLocale().getLanguage()));
-                    }
-                } else {
-                    final String aggregationName = StringUtils.substringBefore(fieldName, ".");
-                    final TermsAggregationBuilder termsBuilder = AggregationBuilders.terms(aggregationName);
-
-                    final FieldConfiguration fieldConfig = mappingConfiguration.getFieldConfiguration(fieldName);
-                    if (fieldConfig == null) {
-                        LOG.warn("Missing field configuration for field '{}', aggregations will not work for text fields!", fieldName);
-                    }
-
-                    String aggFieldName = FieldConfigurationUtils.getElasticFieldName(mappingConfiguration, queryFacetDto.getField(), queryDto.getLocale());
-                    aggFieldName = keywordFieldName(fieldConfig, aggFieldName);
-                    termsBuilder.field(aggFieldName).size(queryFacetDto.getSize());
-                    termsBuilder.field(aggFieldName).shardSize(queryFacetDto.getShardSize());
-                    aggregationBuilders.add(termsBuilder);
-                }
-
-                for (final AggregationBuilder aggregationBuilder : aggregationBuilders) {
-                    searchRequestBuilder.aggregation(aggregationBuilder);
-                }
+        if (CollectionUtils.isNotEmpty(queryDto.getAggregations())) {
+            for (SearchAggregation<?> aggregation : queryDto.getAggregations()) {
+                final AggregationBuilderFactory aggregationBuilderFactory = (aggregationBuilderFactoryRegistry != null)
+                        ? aggregationBuilderFactoryRegistry.get(aggregation.getClass()) : null;
+                final List<AggregationBuilder> aggregationBuilders = (aggregationBuilderFactory != null)
+                        ? aggregationBuilderFactory.create(aggregation, mappingConfiguration, queryDto.getLocale())
+                        : Collections.emptyList();
+                aggregationBuilders.forEach(searchRequestBuilder::aggregation);
             }
         }
     }

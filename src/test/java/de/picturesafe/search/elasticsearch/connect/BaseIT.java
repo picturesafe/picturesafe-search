@@ -16,13 +16,12 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
-import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
-import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
+import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
+import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
@@ -33,6 +32,7 @@ import de.picturesafe.search.expression.OperationExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
+import de.picturesafe.search.parameter.aggregation.DefaultAggregation;
 import org.apache.commons.lang3.time.DateUtils;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.get.GetRequest;
@@ -286,8 +286,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = null;
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
-        final List<QueryFacetDto> queryFacetDtos = null;
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, queryFacetDtos, Locale.GERMAN);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOG.debug("result.getCount()=" + result.getTotalHitCount());
@@ -308,8 +307,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = new ValueExpression("id", GE, 2);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
-        final List<QueryFacetDto> queryFacetDtos = null;
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, queryFacetDtos, Locale.GERMAN);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("There should be 6 results: indexAlias = " + indexAlias, 6, result.getTotalHitCount());
@@ -320,12 +318,8 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = new FulltextExpression("{zweiter wert}");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
-        final List<QueryFacetDto> queryFacetDtos = null;
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList,
-                queryFacetDtos, Locale.GERMAN);
-
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
-
         assertEquals("There should 1 result: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
 
@@ -386,8 +380,8 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
         expression = new FulltextExpression("meier");
         final SortOption sortOption = SortOption.desc("keywordField");
-        final QueryFacetDto queryFacetDto = new QueryFacetDto("keywordField", 10, 100);
-        queryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(sortOption), Collections.singletonList(queryFacetDto), null);
+        final DefaultAggregation aggregation = DefaultAggregation.field("keywordField");
+        queryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(sortOption), Collections.singletonList(aggregation), null);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Should find documents of 'Famile Meier'': indexAlias = " + indexAlias, 2, result.getTotalHitCount());
         assertEquals("margarete meier", result.getHits().get(0).get("keywordField"));
@@ -518,7 +512,6 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testMultiFieldSearch() {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
-        final List<QueryFacetDto> queryFacetDtos = null;
 
         Expression expression;
         QueryDto queryDto;
@@ -532,21 +525,18 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
         // 2. Search by value in the whole document (_all), phrase search
         expression = new FulltextExpression("{Bosnien Herzegowina}");
-        queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, queryFacetDtos,
-                Locale.GERMAN);
+        queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("There should be results: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
 
         // 3. Search via individual tokens in the field
         expression = new ValueExpression("location", "Bosnien");
-        queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, queryFacetDtos,
-                Locale.GERMAN);
+        queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("There should be results: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
         // 4. Search by value in field, phrase search in field
         expression = new ValueExpression("location", "{Bosnien Herzegowina}");
-        queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, queryFacetDtos,
-                Locale.GERMAN);
+        queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("There should be results: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }

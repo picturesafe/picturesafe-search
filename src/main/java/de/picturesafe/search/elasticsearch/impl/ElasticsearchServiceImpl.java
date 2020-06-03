@@ -30,7 +30,6 @@ import de.picturesafe.search.elasticsearch.connect.ElasticsearchResult;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
@@ -45,10 +44,8 @@ import de.picturesafe.search.elasticsearch.model.SuggestResult;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.AccountContext;
-import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -75,7 +72,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceImpl.class);
     protected static final int DEFAULT_PAGE_SIZE = 100;
     protected static final int DEFAULT_MAX_PAGE_SIZE = 2000;
-    protected static final int DEFAULT_SHARD_SIZE_FACTOR = 5;
 
     protected final Elasticsearch elasticsearch;
     protected final IndexPresetConfigurationProvider indexPresetConfigurationProvider;
@@ -86,9 +82,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Value("${elasticsearch.service.max_page_size:" + DEFAULT_MAX_PAGE_SIZE + "}")
     protected int maxPageSize = DEFAULT_MAX_PAGE_SIZE;
-
-    @Value("${elasticsearch.service.shard_size_factor:" + DEFAULT_SHARD_SIZE_FACTOR + "}")
-    protected int shardSizeFactor = DEFAULT_SHARD_SIZE_FACTOR;
 
     @Value("${elasticsearch.service.optimize_expressions.enabled:true}")
     protected boolean optimizeExpressionsEnabled = true;
@@ -131,24 +124,6 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
      */
     public void setOptimizeExpressionsEnabled(boolean optimizeExpressionsEnabled) {
         this.optimizeExpressionsEnabled = optimizeExpressionsEnabled;
-    }
-
-    /**
-     * Sets the shard size factor.
-     * <p>
-     * Term aggregation: The higher the requested size is, the more accurate the results will be, but also, the more expensive
-     * it will be to compute the final results The shard_size parameter can be used to minimize the extra work that comes with
-     * bigger requested size. When defined, it will determine how many terms the coordinating node will request from each shard.
-     * Once all the shards responded, the coordinating node will then reduce them to a final result which
-     * will be based on the size parameter - this way, one can increase the accuracy of the returned terms and avoid the overhead
-     * of streaming a big list of buckets back to the client.
-     * <p>
-     * shard_size = size * shardSizeFactor
-     *
-     * @param shardSizeFactor   The shard size factor
-     */
-    public void setShardSizeFactor(int shardSizeFactor) {
-        this.shardSizeFactor = shardSizeFactor;
     }
 
     @Autowired(required = false)
@@ -401,28 +376,13 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             expression = expression.optimize();
         }
         final QueryRangeDto queryRangeDto = new QueryRangeDto(start, limit, searchParameter.getMaxTrackTotalHits());
-
-        final List<QueryFacetDto> queryFacetDtos = new ArrayList<>();
-        final List<AggregationField> aggregationFields = searchParameter.getAggregationFields();
-        if (!CollectionUtils.isEmpty(aggregationFields)) {
-            for (AggregationField aggregationField : aggregationFields) {
-                final int defaultMaxCount = searchParameter.getDefaultAggregationMaxCount();
-                int maxCount = aggregationField.getMaxCount();
-                if (maxCount <= 0 || maxCount > defaultMaxCount) {
-                    maxCount = defaultMaxCount;
-                }
-                final QueryFacetDto facetDto = new QueryFacetDto(aggregationField.getName(), maxCount, maxCount * shardSizeFactor);
-                queryFacetDtos.add(facetDto);
-            }
-        }
-
         final List<String> fieldsToResolve = searchParameter.getFieldsToResolve();
         final QueryDto.FieldResolverType fieldResolverType = QueryDto.FieldResolverType.SOURCE_VALUES;
         final Locale locale = StringUtils.isNotBlank(searchParameter.getLanguage())
                 ? LocaleUtils.toLocale(searchParameter.getLanguage())
                 : accountContext.getUserLanguage();
-        return new QueryDto(expression, queryRangeDto, searchParameter.getSortOptions(), queryFacetDtos, locale, fieldsToResolve, fieldResolverType)
-                .withAccountContext(accountContext);
+        return new QueryDto(expression, queryRangeDto, searchParameter.getSortOptions(), searchParameter.getAggregations(), locale, fieldsToResolve,
+                fieldResolverType).withAccountContext(accountContext);
     }
 
     protected int getMaxResults(String indexAlias, Integer maxResults, long totalHitCount) {

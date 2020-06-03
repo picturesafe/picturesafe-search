@@ -23,9 +23,9 @@ import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.ValueExpression;
-import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
+import de.picturesafe.search.parameter.aggregation.TermsAggregation;
 import de.picturesafe.search.spring.configuration.DefaultElasticConfiguration;
 import org.junit.After;
 import org.junit.Before;
@@ -99,8 +99,8 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, docs);
 
         final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("name", "name"),
-                SearchParameter.builder().aggregationFields(
-                        new AggregationField("group", 1000), new AggregationField("special", 10)).build());
+                SearchParameter.builder().aggregations(
+                        TermsAggregation.field("group").maxCount(1000), TermsAggregation.field("special").maxCount(10)).build());
         assertEquals(5, result.getTotalHitCount());
         assertEquals(5, result.getResultCount());
         assertEquals(2, result.getFacets().size());

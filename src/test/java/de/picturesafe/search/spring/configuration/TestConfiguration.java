@@ -24,34 +24,26 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
-import de.picturesafe.search.elasticsearch.connect.FacetResolver;
-import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactories;
-import de.picturesafe.search.elasticsearch.connect.facet.AggregationBuilderFactory;
-import de.picturesafe.search.elasticsearch.connect.facet.DateHistogramAggregationBuilderFactory;
-import de.picturesafe.search.elasticsearch.connect.facet.DateRangeAggregationBuilderFactory;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.filter.DefaultExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
 import de.picturesafe.search.elasticsearch.connect.impl.ElasticsearchAdminImpl;
 import de.picturesafe.search.elasticsearch.connect.mock.FacetResolverMock;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
 @Configuration
-@Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, ElasticsearchAdminImpl.class})
+@Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class,
+        ElasticsearchAdminImpl.class})
 @PropertySource("classpath:elasticsearch.properties")
 public class TestConfiguration {
-
-    @Autowired
-    private String elasticsearchTimeZone;
 
     @Bean
     protected MappingConfiguration mappingConfiguration() {
@@ -66,18 +58,6 @@ public class TestConfiguration {
     }
 
     @Bean
-    protected AggregationBuilderFactories aggregationBuilderFactories() {
-        final AggregationBuilderFactories aggregationBuilderFactories = new AggregationBuilderFactories();
-        aggregationBuilderFactories.setTypeAggregationBuilderFactories(
-                Collections.singletonMap(
-                        "date",
-                        dateAggregationBuilderFactories()
-                )
-        );
-        return aggregationBuilderFactories;
-    }
-
-    @Bean
     protected FacetResolver facetResolver() {
         return new FacetResolverMock();
     }
@@ -87,34 +67,6 @@ public class TestConfiguration {
                           IndexPresetConfiguration indexPresetConfiguration,
                           ElasticsearchAdmin elasticsearchAdmin) {
         return new IndexSetup(mappingConfiguration, indexPresetConfiguration, elasticsearchAdmin);
-    }
-
-    protected List<AggregationBuilderFactory> dateAggregationBuilderFactories() {
-        final List<AggregationBuilderFactory> aggregationBuilderFactories = new ArrayList<>();
-        aggregationBuilderFactories.add(dateRangeAggregationBuilderFactory());
-        aggregationBuilderFactories.add(dateHistogramAggregationBuilderFactory());
-        return aggregationBuilderFactories;
-    }
-
-    protected DateRangeAggregationBuilderFactory dateRangeAggregationBuilderFactory() {
-        final List<DateRangeAggregationBuilderFactory.Range> ranges = new ArrayList<>();
-        ranges.add(new DateRangeAggregationBuilderFactory.Range("today", "now/d", "now/d+1d"));
-        ranges.add(new DateRangeAggregationBuilderFactory.Range("yesterday", "now/d-1d", "now/d"));
-        ranges.add(new DateRangeAggregationBuilderFactory.Range("week", "now/w", "now/w+1w"));
-        ranges.add(new DateRangeAggregationBuilderFactory.Range("last week", "now/w-1w", "now/w"));
-        ranges.add(new DateRangeAggregationBuilderFactory.Range("month", "now/M", "now/M+1M"));
-        ranges.add(new DateRangeAggregationBuilderFactory.Range("last month", "now/M-1M", "now/M"));
-        final DateRangeAggregationBuilderFactory dateRangeAggregationBuilderFactory
-                = new DateRangeAggregationBuilderFactory(ranges, "dd.MM.yyyy", elasticsearchTimeZone);
-        dateRangeAggregationBuilderFactory.setName("ranges");
-        return dateRangeAggregationBuilderFactory;
-    }
-
-    protected DateHistogramAggregationBuilderFactory dateHistogramAggregationBuilderFactory() {
-        final DateHistogramAggregationBuilderFactory dateHistogramAggregationBuilderFactory
-                = new DateHistogramAggregationBuilderFactory("1y", DateHistogramAggregationBuilderFactory.IntervalType.CALENDAR, "yyyy", elasticsearchTimeZone);
-        dateHistogramAggregationBuilderFactory.setName("years");
-        return dateHistogramAggregationBuilderFactory;
     }
 
     protected List<LanguageSortConfiguration> languageSortConfigurations() {

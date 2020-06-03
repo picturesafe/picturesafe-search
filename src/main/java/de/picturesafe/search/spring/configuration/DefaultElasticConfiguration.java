@@ -6,5 +6,5 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @PropertySource("classpath:elasticsearch.properties")
-@Import({DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class})
+@Import({DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class})
 public class DefaultElasticConfiguration { }

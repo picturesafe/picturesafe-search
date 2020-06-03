@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect.facet;
+package de.picturesafe.search.elasticsearch.connect.aggregation.resolve;
 
-import org.elasticsearch.search.aggregations.AggregationBuilder;
+import java.util.Locale;
 
-public interface AggregationBuilderFactory {
-    AggregationBuilder createAggregationBuilder(String field, int size, String language);
+public interface FacetResolver {
+
+    boolean isResponsible(String field);
+
+    String resolve(String value, Number numberValue, Locale locale);
 }
