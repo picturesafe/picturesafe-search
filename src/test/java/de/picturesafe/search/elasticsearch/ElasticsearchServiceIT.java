@@ -31,6 +31,7 @@ import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.DayExpression;
 import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.Expression;
+import de.picturesafe.search.expression.FindAllExpression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -211,7 +212,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
                 DateUtils.parseDate("28.07.2018", "dd.MM.yyyy"), "Buchholz");
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
-        final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("name", "name"),
+        final SearchResult result = elasticsearchService.search(indexAlias, new FindAllExpression(),
                 SearchParameter.builder().aggregations(
                         DefaultAggregation.field("location"),
                         DateHistogramAggregation.field("createDate").interval(CALENDAR, "1y").format("yyyy").name("years")
