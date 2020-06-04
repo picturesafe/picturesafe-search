@@ -33,7 +33,7 @@ public class DefaultAggregationConfiguration {
     /**
      * The default maximum count for aggregation buckets
      *
-     * Term aggregation: This is the maximum number of aggregation results that will be resolved for one field. The parameter can be overridden dynamically by
+     * Terms aggregation: This is the maximum number of aggregation results that will be resolved for one field. The parameter can be overridden dynamically by
      * the corresponding {@link de.picturesafe.search.parameter.aggregation.TermsAggregation} instance.
      */
     @Value("${elasticsearch.service.aggregation.max_count:" + TermsAggregationBuilderFactory.DEFAULT_MAX_COUNT + "}")
@@ -42,7 +42,7 @@ public class DefaultAggregationConfiguration {
     /**
      * The max count limit for aggregation buckets
      *
-     * Term aggregation: This is the upper limit of the maximum number of aggregation results that will be resolved for one field.
+     * Terms aggregation: This is the upper limit of the maximum number of aggregation results that will be resolved for one field.
      */
     @Value("${elasticsearch.service.aggregation.max_count_limit:" + TermsAggregationBuilderFactory.DEFAULT_MAX_COUNT_LIMIT + "}")
     private int maxCountLimit;
@@ -50,7 +50,7 @@ public class DefaultAggregationConfiguration {
     /**
      * The shard size factor
      *
-     * Term aggregation: The higher the requested size is, the more accurate the results will be, but also, the more expensive
+     * Terms aggregation: The higher the requested size is, the more accurate the results will be, but also, the more expensive
      * it will be to compute the final results. The shard_size parameter can be used to minimize the extra work that comes with
      * bigger requested size. When defined, it will determine how many terms the coordinating node will request from each shard.
      * Once all the shards responded, the coordinating node will then reduce them to a final result which
