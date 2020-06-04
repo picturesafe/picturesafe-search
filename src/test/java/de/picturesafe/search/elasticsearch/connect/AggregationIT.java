@@ -102,14 +102,14 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
     @Test
     public void testTextAggregation() {
         Expression expression = new FulltextExpression("wert");
-        List<TermsAggregation> queryFacetDtos = Collections.singletonList(TermsAggregation.field("caption"));
-        QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
+        List<TermsAggregation> aggregations = Collections.singletonList(TermsAggregation.field("caption"));
+        QueryDto queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 4, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
         expression = new FulltextExpression("released");
-        queryFacetDtos = Collections.singletonList(TermsAggregation.field("released"));
-        queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
+        aggregations = Collections.singletonList(TermsAggregation.field("released"));
+        queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 2, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
@@ -118,8 +118,8 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
     @Test
     public void testFacetResolverOnTextAggregation() {
         final Expression expression = OperationExpression.and(new FulltextExpression("wert"), new ValueExpression("caption", "caption1"));
-        final List<TermsAggregation> queryFacetDtos = Collections.singletonList(TermsAggregation.field("facetResolved"));
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
+        final List<TermsAggregation> aggregations = Collections.singletonList(TermsAggregation.field("facetResolved"));
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         FacetDto facetDto = null;

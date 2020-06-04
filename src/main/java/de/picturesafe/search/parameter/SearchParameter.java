@@ -186,7 +186,7 @@ public class SearchParameter {
                 .append("ignoreState", ignoreState) //--
                 .append("ignoreDeleted", ignoreDeleted) //--
                 .append("language", language) //--
-                .append("aggregationFields", aggregations) //--
+                .append("aggregations", aggregations) //--
                 .append("fieldsToResolve", fieldsToResolve) //--
                 .append("optimizeExpressions", optimizeExpressions) //--
                 .toString();
