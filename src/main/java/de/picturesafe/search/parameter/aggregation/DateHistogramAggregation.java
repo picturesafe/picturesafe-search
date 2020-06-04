@@ -113,7 +113,7 @@ public class DateHistogramAggregation extends AbstractAggregation<DateHistogramA
     }
 
     /**
-     * gets the order of the returned buckets.
+     * Gets the order of the returned buckets.
      *
      * @return Order
      */

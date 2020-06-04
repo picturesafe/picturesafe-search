@@ -22,7 +22,7 @@ package de.picturesafe.search.parameter;
 public interface SearchAggregation {
 
     /**
-     * Get the aggregation field:
+     * Get the aggregation field name.
      *
      * @return Name of the aggregation field
      */

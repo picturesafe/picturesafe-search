@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 picturesafe media/data/bank GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.picturesafe.search.spring.configuration;
 
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactoryRegistry;
@@ -35,7 +51,7 @@ public class DefaultAggregationConfiguration {
      * The shard size factor
      *
      * Term aggregation: The higher the requested size is, the more accurate the results will be, but also, the more expensive
-     * it will be to compute the final results The shard_size parameter can be used to minimize the extra work that comes with
+     * it will be to compute the final results. The shard_size parameter can be used to minimize the extra work that comes with
      * bigger requested size. When defined, it will determine how many terms the coordinating node will request from each shard.
      * Once all the shards responded, the coordinating node will then reduce them to a final result which
      * will be based on the size parameter - this way, one can increase the accuracy of the returned terms and avoid the overhead

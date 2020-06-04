@@ -77,7 +77,7 @@ public class TermsAggregation extends AbstractAggregation<TermsAggregation> {
     }
 
     /**
-     * gets the order of the returned buckets.
+     * Gets the order of the returned buckets.
      *
      * @return Order
      */
