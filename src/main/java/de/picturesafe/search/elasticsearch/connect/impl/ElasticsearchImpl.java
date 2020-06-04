@@ -23,8 +23,8 @@ import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchResult;
-import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetConverter;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactoryRegistry;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientBulkAction;
@@ -105,13 +105,13 @@ import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -134,7 +134,7 @@ import static de.picturesafe.search.elasticsearch.connect.util.FieldConfiguratio
 
 @Component
 @SuppressWarnings({"unused"})
-public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, InitializingBean, TimeZoneAware {
+public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, TimeZoneAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchImpl.class);
 
@@ -196,9 +196,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
         this.missingValueSortPosition = missingValueSortPosition;
     }
 
-    @Override
-    public void afterPropertiesSet() {
+    @PostConstruct
+    public void init() {
         this.restClient = restClientConfiguration.getClient();
+    }
+
+    @Override
+    public RestHighLevelClient getRestClient() {
+        return restClient;
     }
 
     @Override

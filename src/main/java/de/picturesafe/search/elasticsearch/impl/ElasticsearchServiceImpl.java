@@ -49,6 +49,7 @@ import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -415,6 +416,11 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 ? fieldConfigurationProvider.getFieldConfigurations(indexAlias) : null;
         return new MappingConfiguration(
                 (fieldConfigurations != null) ? fieldConfigurations : Collections.emptyList(), languageSortConfigurations);
+    }
+
+    @Override
+    public RestHighLevelClient getRestClient() {
+        return elasticsearch.getRestClient();
     }
 
     protected class InternalSearchContext {

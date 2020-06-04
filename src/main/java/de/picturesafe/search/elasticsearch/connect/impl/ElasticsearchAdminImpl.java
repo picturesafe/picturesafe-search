@@ -56,11 +56,11 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
@@ -72,7 +72,7 @@ import java.util.Map;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 @Component
-public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingBean {
+public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchAdminImpl.class);
 
@@ -87,7 +87,8 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin, InitializingB
         this.restClientConfiguration = restClientConfiguration;
     }
 
-    public void afterPropertiesSet() {
+    @PostConstruct
+    public void init() {
         this.restClient = restClientConfiguration.getClient();
     }
 

@@ -25,6 +25,7 @@ import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.SearchParameter;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Collection;
 import java.util.List;
@@ -243,4 +244,11 @@ public interface ElasticsearchService {
      * @return              SuggestResult
      */
     SuggestResult suggest(String indexAlias, SuggestExpression... expressions);
+
+    /**
+     * Gets the Elasticsearch REST client
+     *
+     * @return REST client
+     */
+    RestHighLevelClient getRestClient();
 }
