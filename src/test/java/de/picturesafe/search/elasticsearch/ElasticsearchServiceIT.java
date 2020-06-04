@@ -200,7 +200,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
     }
 
     @Test
-    public void testSearchFacets() throws Exception {
+    public void testSearchAggregations() throws Exception {
         indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         final Map<String, Object> doc1 = createDocument(4711, "Der Hund beißt sich in den Schwanz in Hamburg",
                 DateUtils.parseDate("10.05.2019", "dd.MM.yyyy"), "Hamburg");

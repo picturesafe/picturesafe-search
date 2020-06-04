@@ -53,9 +53,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class FacetIT  extends AbstractElasticIntegrationTest {
+public class AggregationIT extends AbstractElasticIntegrationTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FacetIT.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AggregationIT.class);
 
     @Autowired
     IndexSetup indexSetup;
@@ -100,7 +100,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     }
 
     @Test
-    public void testTextFacet() {
+    public void testTextAggregation() {
         Expression expression = new FulltextExpression("wert");
         List<TermsAggregation> queryFacetDtos = Collections.singletonList(TermsAggregation.field("caption"));
         QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
@@ -116,7 +116,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     }
 
     @Test
-    public void testFacetResolverOnTextFacet() {
+    public void testFacetResolverOnTextAggregation() {
         final Expression expression = OperationExpression.and(new FulltextExpression("wert"), new ValueExpression("caption", "caption1"));
         final List<TermsAggregation> queryFacetDtos = Collections.singletonList(TermsAggregation.field("facetResolved"));
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
@@ -140,7 +140,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     }
 
     @Test
-    public void testDateFacet() throws Exception {
+    public void testDateAggregation() throws Exception {
         int id = 100;
         elasticsearch.addToIndex(dateDoc(id++, "01.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
         elasticsearch.addToIndex(dateDoc(id++, "10.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
