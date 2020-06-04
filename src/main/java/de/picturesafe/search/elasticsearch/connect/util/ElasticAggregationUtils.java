@@ -8,7 +8,7 @@ public class ElasticAggregationUtils {
     private ElasticAggregationUtils() {
     }
 
-    public static String aggregationName(SearchAggregation<?> aggregation) {
+    public static String aggregationName(SearchAggregation aggregation) {
         return StringUtils.isNotBlank(aggregation.getName()) ? aggregation.getName() : StringUtils.substringBefore(aggregation.getField(), ".");
     }
 }

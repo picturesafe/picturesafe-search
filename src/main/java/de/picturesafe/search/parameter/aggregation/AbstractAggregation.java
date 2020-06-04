@@ -26,23 +26,28 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  *
  * @param <A> Type of the aggregation
  */
-public abstract class AbstractAggregation<A extends SearchAggregation<A>> implements SearchAggregation<A> {
+public abstract class AbstractAggregation<A extends AbstractAggregation<A>> implements SearchAggregation {
 
     protected String field;
     protected String name;
 
-    @Override
-    public String getField() {
-        return field;
-    }
-
-    @Override
+    /**
+     * Sets the name of the aggregation.
+     *
+     * @param name  Name of the aggregation
+     * @return      The aggregation
+     */
     public A name(String name) {
         this.name = name;
         return self();
     }
 
     protected abstract A self();
+
+    @Override
+    public String getField() {
+        return field;
+    }
 
     @Override
     public String getName() {

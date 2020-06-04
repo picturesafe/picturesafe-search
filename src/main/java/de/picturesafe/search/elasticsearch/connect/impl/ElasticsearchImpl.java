@@ -620,7 +620,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Ini
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void addFacetsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfiguration, SearchSourceBuilder searchRequestBuilder) {
         if (CollectionUtils.isNotEmpty(queryDto.getAggregations())) {
-            for (SearchAggregation<?> aggregation : queryDto.getAggregations()) {
+            for (SearchAggregation aggregation : queryDto.getAggregations()) {
                 final AggregationBuilderFactory aggregationBuilderFactory = (aggregationBuilderFactoryRegistry != null)
                         ? aggregationBuilderFactoryRegistry.get(aggregation.getClass()) : null;
                 final List<AggregationBuilder> aggregationBuilders = (aggregationBuilderFactory != null)

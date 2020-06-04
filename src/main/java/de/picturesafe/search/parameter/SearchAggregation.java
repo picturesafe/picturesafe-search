@@ -18,10 +18,8 @@ package de.picturesafe.search.parameter;
 
 /**
  * Definition of an search aggregation
- *
- * @param <A> Type of the aggregation
  */
-public interface SearchAggregation<A extends SearchAggregation<A>> {
+public interface SearchAggregation {
 
     /**
      * Get the aggregation field:
@@ -29,14 +27,6 @@ public interface SearchAggregation<A extends SearchAggregation<A>> {
      * @return Name of the aggregation field
      */
     String getField();
-
-    /**
-     * Sets the name of the aggregation.
-     *
-     * @param name  Name of the aggregation
-     * @return      The aggregation
-     */
-    A name(String name);
 
     /**
      * Gets the name of the aggregation.

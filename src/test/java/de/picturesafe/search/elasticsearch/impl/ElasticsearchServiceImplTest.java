@@ -70,7 +70,7 @@ public class ElasticsearchServiceImplTest {
         final Expression expression = new EmptyExpression();
         final List<String> fieldsToResolve = Arrays.asList("field1", "field2", "field3");
         final List<SortOption> sortOptions = Arrays.asList(SortOption.asc("field3"), SortOption.asc("field2"));
-        final List<SearchAggregation<?>> aggregations = Arrays.asList(TermsAggregation.field("agg1").maxCount(5), TermsAggregation.field("agg2").maxCount(10));
+        final List<SearchAggregation> aggregations = Arrays.asList(TermsAggregation.field("agg1").maxCount(5), TermsAggregation.field("agg2").maxCount(10));
         final int start = 11;
         final int limit = 111;
         final SearchParameter.Builder searchParameterBuilder = SearchParameter.builder()

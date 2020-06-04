@@ -39,7 +39,7 @@ public class SearchParameter {
     private final boolean ignoreState;
     private final boolean ignoreDeleted;
     private final String language;
-    private final List<SearchAggregation<?>> aggregations;
+    private final List<SearchAggregation> aggregations;
     private final List<String> fieldsToResolve;
     private final boolean optimizeExpressions;
 
@@ -151,7 +151,7 @@ public class SearchParameter {
      *
      * @return List of aggregations
      */
-    public List<SearchAggregation<?>> getAggregations() {
+    public List<SearchAggregation> getAggregations() {
         return aggregations;
     }
 
@@ -206,7 +206,7 @@ public class SearchParameter {
         boolean ignoreDeleted = true;
         Integer pageIndex;
         String language;
-        List<SearchAggregation<?>> aggregations = new ArrayList<>();
+        List<SearchAggregation> aggregations = new ArrayList<>();
         List<String> fieldsToResolve = new ArrayList<>();
         boolean optimizeExpressions;
 
@@ -347,7 +347,7 @@ public class SearchParameter {
          * @param aggregations List of aggregations
          * @return Builder
          */
-        public Builder aggregations(List<SearchAggregation<?>> aggregations) {
+        public Builder aggregations(List<SearchAggregation> aggregations) {
             this.aggregations = aggregations;
             return this;
         }
@@ -358,7 +358,7 @@ public class SearchParameter {
          * @param aggregations List of aggregations
          * @return Builder
          */
-        public Builder aggregations(SearchAggregation<?>... aggregations) {
+        public Builder aggregations(SearchAggregation... aggregations) {
             this.aggregations = Arrays.asList(aggregations);
             return this;
         }

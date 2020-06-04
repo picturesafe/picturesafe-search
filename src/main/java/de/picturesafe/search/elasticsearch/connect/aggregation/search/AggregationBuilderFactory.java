@@ -23,7 +23,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import java.util.List;
 import java.util.Locale;
 
-public interface AggregationBuilderFactory<A extends SearchAggregation<A>> {
+public interface AggregationBuilderFactory<A extends SearchAggregation> {
 
     List<AggregationBuilder> create(A aggregation, MappingConfiguration mappingConfiguration, Locale locale);
 

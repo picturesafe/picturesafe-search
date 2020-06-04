@@ -137,7 +137,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
         return search(term, locale, sortOptions, null);
     }
 
-    private ElasticsearchResult search(String term, Locale locale, List<SortOption> sortOptions, List<? extends SearchAggregation<?>> aggregations) {
+    private ElasticsearchResult search(String term, Locale locale, List<SortOption> sortOptions, List<? extends SearchAggregation> aggregations) {
         final Expression expression = new ValueExpression("title", term);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptions, aggregations, locale);

@@ -43,7 +43,7 @@ public class QueryDto {
     private final Expression expression;
     private final QueryRangeDto queryRangeDto;
     private final List<SortOption> sortOptions;
-    private final List<? extends SearchAggregation<?>> aggregations;
+    private final List<? extends SearchAggregation> aggregations;
     private final Locale locale;
     private final List<String> fieldsToResolve;
     private final FieldResolverType fieldResolverType;
@@ -53,7 +53,7 @@ public class QueryDto {
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
                     List<SortOption> sortOptions,
-                    List<? extends SearchAggregation<?>> aggregations,
+                    List<? extends SearchAggregation> aggregations,
                     Locale locale) {
         this(expression, queryRangeDto, sortOptions, aggregations, locale, new ArrayList<>(), FieldResolverType.DOC_VALUES);
     }
@@ -61,7 +61,7 @@ public class QueryDto {
     public QueryDto(Expression expression,
                     QueryRangeDto queryRangeDto,
                     List<SortOption> sortOptions,
-                    List<? extends SearchAggregation<?>> aggregations,
+                    List<? extends SearchAggregation> aggregations,
                     Locale locale,
                     List<String> fieldsToResolve,
                     FieldResolverType fieldResolverType) {
@@ -93,7 +93,7 @@ public class QueryDto {
         return sortOptions;
     }
 
-    public List<? extends SearchAggregation<?>> getAggregations() {
+    public List<? extends SearchAggregation> getAggregations() {
         return aggregations;
     }
 

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class AggregationBuilderFactoryRegistry {
 
-    final Map<Class<? extends SearchAggregation<?>>, AggregationBuilderFactory<?>> factories;
+    final Map<Class<? extends SearchAggregation>, AggregationBuilderFactory<?>> factories;
 
     public AggregationBuilderFactoryRegistry(AggregationBuilderFactory<?>... aggregationBuilderFactories) {
         this(Arrays.asList(aggregationBuilderFactories));
@@ -41,7 +41,7 @@ public class AggregationBuilderFactoryRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    public <A extends SearchAggregation<A>> AggregationBuilderFactory<A> get(Class<A> aggregationType) {
+    public <A extends SearchAggregation> AggregationBuilderFactory<A> get(Class<A> aggregationType) {
         return (AggregationBuilderFactory<A>) factories.get(aggregationType);
     }
 }
