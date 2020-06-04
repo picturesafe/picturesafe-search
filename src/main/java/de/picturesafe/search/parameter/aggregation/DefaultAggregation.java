@@ -20,8 +20,7 @@ import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Default aggregation
- * The actual type of the aggregation will be determined by the field type, and default parameters will be used.
+ * Aggregation with default parameters. The actual type of the aggregation will be determined by the field type.
  */
 public class DefaultAggregation extends AbstractAggregation<DefaultAggregation> {
 
