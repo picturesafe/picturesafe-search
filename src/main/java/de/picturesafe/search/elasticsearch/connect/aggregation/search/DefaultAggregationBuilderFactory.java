@@ -52,7 +52,7 @@ public class DefaultAggregationBuilderFactory implements AggregationBuilderFacto
 
     private List<AggregationBuilder> createDateAggregationBuilders(DefaultAggregation aggregation, MappingConfiguration mappingConfiguration, Locale locale) {
         final List<AggregationBuilder> aggregationBuilders = new ArrayList<>();
-        final String namePrefix = aggregationName(aggregation) + ".";
+        final String namePrefix = aggregationName(aggregation) + "-";
 
         final DateHistogramAggregation dateHistogramAggregation = DateHistogramAggregation.fromDefault(aggregation).name(namePrefix + "histogram");
         final AggregationBuilderFactory<DateHistogramAggregation> dateHistogramFactory = registry.get(DateHistogramAggregation.class);

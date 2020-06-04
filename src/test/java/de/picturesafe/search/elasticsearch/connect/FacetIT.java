@@ -195,7 +195,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
 
         final FacetDto rangesDto = facetDtos.get(0);
         LOGGER.debug("Ranges facet:\n{}", rangesDto);
-        assertEquals(dateFacetField, rangesDto.getName());
+        assertEquals(dateFacetField + "-ranges", rangesDto.getName());
         // Total count = (1 today + 2 yesterday) * 2 [in this or last week] + 3 last week  + 2 last month
         // + (1 today + 2 yesterday + 3 last week) [in this or last month] = 17
         assertEquals(17, rangesDto.getCount());
@@ -216,6 +216,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
 
         final FacetDto yearsDto = facetDtos.get(1);
         LOGGER.debug("Years facet:\n{}", yearsDto);
+        assertEquals(dateFacetField + "-histogram", yearsDto.getName());
         assertEquals(16, yearsDto.getCount());
         assertTrue("Years count should be 3 for most of the year or 4 when in january",
                 yearsDto.getFacetEntryDtos().size() == 3 || yearsDto.getFacetEntryDtos().size() == 4);
