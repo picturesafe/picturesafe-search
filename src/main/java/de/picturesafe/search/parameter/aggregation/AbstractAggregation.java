@@ -14,61 +14,73 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect.dto;
+package de.picturesafe.search.parameter.aggregation;
 
+import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Transports the data for a facet search query.
+ * Abstract implementation of an aggregation definition
+ *
+ * @param <A> Type of the aggregation
  */
-public class QueryFacetDto {
-    private final String field;
-    private final int size;
-    private int shardSize;
+public abstract class AbstractAggregation<A extends AbstractAggregation<A>> implements SearchAggregation {
 
-    public QueryFacetDto(String field, int size, int shardSize) {
-        this.field = field;
-        this.size = size;
-        this.shardSize = shardSize;
+    protected String field;
+    protected String name;
+
+    /**
+     * Sets the name of the aggregation.
+     *
+     * @param name  Name of the aggregation
+     * @return      The aggregation
+     */
+    public A name(String name) {
+        this.name = name;
+        return self();
     }
 
+    protected abstract A self();
+
+    @Override
     public String getField() {
         return field;
     }
 
-    public int getSize() {
-        return size;
-    }
-
-    public int getShardSize() {
-        return shardSize;
-    }
-
     @Override
-    public int hashCode() {
-        return new HashCodeBuilder(5099, 601).append(field).append(size).toHashCode();
+    public String getName() {
+        return name;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof QueryFacetDto)) {
-            return false;
-        } else {
-            final QueryFacetDto target = (QueryFacetDto) o;
-            return new EqualsBuilder().append(field, target.getField()).append(size, target.getSize()).append(shardSize,
-                    target.getShardSize()).isEquals();
+        if (this == o) {
+            return true;
         }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final AbstractAggregation<?> that = (AbstractAggregation<?>) o;
+        return new EqualsBuilder()
+                .append(field, that.field)
+                .append(name, that.name)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return field.hashCode();
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("field", field) //--
-                .append("size", size) //--
-                .append("shardSize", shardSize) //--
+                .append("name", name) //--
                 .toString();
     }
 }

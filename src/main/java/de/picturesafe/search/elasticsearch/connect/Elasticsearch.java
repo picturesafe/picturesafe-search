@@ -26,6 +26,7 @@ import de.picturesafe.search.elasticsearch.connect.error.AliasHasMoreThanOneInde
 import de.picturesafe.search.elasticsearch.connect.error.IndexCreateException;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.expression.SuggestExpression;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Collection;
 import java.util.List;
@@ -232,4 +233,11 @@ public interface Elasticsearch {
      * @return              Suggest result per field
      */
     Map<String, List<String>> suggest(String indexAlias, SuggestExpression... expressions);
+
+    /**
+     * Gets the Elasticsearch REST client
+     *
+     * @return REST client
+     */
+    RestHighLevelClient getRestClient();
 }

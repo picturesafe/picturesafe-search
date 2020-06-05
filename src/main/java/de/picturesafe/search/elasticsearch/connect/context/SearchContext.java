@@ -77,6 +77,10 @@ public class SearchContext {
         return processedExpressions.contains(expression);
     }
 
+    public void setRootExpressionProcessed() {
+        processedExpressions.add(getRootExpression());
+    }
+
     public void setProcessed(Expression expression) {
         processedExpressions.add(expression);
     }

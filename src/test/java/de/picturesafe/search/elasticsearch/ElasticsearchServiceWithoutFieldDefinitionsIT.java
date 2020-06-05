@@ -22,10 +22,11 @@ import de.picturesafe.search.elasticsearch.model.ResultFacet;
 import de.picturesafe.search.elasticsearch.model.ResultFacetItem;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SearchResultItem;
+import de.picturesafe.search.expression.FindAllExpression;
 import de.picturesafe.search.expression.ValueExpression;
-import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
+import de.picturesafe.search.parameter.aggregation.TermsAggregation;
 import de.picturesafe.search.spring.configuration.DefaultElasticConfiguration;
 import org.junit.After;
 import org.junit.Before;
@@ -87,7 +88,7 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
     }
 
     @Test
-    public void testSearchFacets() {
+    public void testSearchAggregations() {
         indexName = elasticsearchService.createIndex(indexAlias);
         elasticsearchService.createAlias(indexAlias, indexName);
         final List<Map<String, Object>> docs = Arrays.asList(
@@ -98,9 +99,9 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
                 DocumentBuilder.id(115).put("name", "name-115").put("group", 2).put("special", false).build());
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, docs);
 
-        final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("name", "name"),
-                SearchParameter.builder().aggregationFields(
-                        new AggregationField("group", 1000), new AggregationField("special", 10)).build());
+        final SearchResult result = elasticsearchService.search(indexAlias, new FindAllExpression(),
+                SearchParameter.builder().aggregations(
+                        TermsAggregation.field("group").maxCount(1000), TermsAggregation.field("special").maxCount(10)).build());
         assertEquals(5, result.getTotalHitCount());
         assertEquals(5, result.getResultCount());
         assertEquals(2, result.getFacets().size());

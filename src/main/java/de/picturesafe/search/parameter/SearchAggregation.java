@@ -14,13 +14,24 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.spring.configuration;
+package de.picturesafe.search.parameter;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
+/**
+ * Definition of an search aggregation
+ */
+public interface SearchAggregation {
 
-@Configuration
-@PropertySource("classpath:elasticsearch.properties")
-@Import({DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class})
-public class DefaultElasticConfiguration { }
+    /**
+     * Get the aggregation field name.
+     *
+     * @return Name of the aggregation field
+     */
+    String getField();
+
+    /**
+     * Gets the name of the aggregation.
+     *
+     * @return Name of the aggregation
+     */
+    String getName();
+}

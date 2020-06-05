@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect;
+package de.picturesafe.search.elasticsearch.connect.aggregation.resolve;
 
 import java.util.Locale;
 

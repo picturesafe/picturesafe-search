@@ -21,13 +21,14 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.ValueExpression;
+import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
+import de.picturesafe.search.parameter.aggregation.DefaultAggregation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,8 +107,8 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testFacets() {
-        final QueryFacetDto queryFacetDto = new QueryFacetDto("title", 10, 100);
-        ElasticsearchResult result = search("Multilang", Locale.GERMANY, null, Collections.singletonList(queryFacetDto));
+        final DefaultAggregation aggregation = DefaultAggregation.field("title");
+        ElasticsearchResult result = search("Multilang", Locale.GERMANY, null, Collections.singletonList(aggregation));
         assertEquals(DOC_COUNT, result.getTotalHitCount());
         assertEquals(1, result.getFacetDtoList().size());
         FacetDto facetDto = result.getFacetDtoList().get(0);
@@ -117,7 +118,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
             assertTrue(entry.getValue().toString().endsWith("de"));
         }
 
-        result = search("Multilang", Locale.UK, null, Collections.singletonList(queryFacetDto));
+        result = search("Multilang", Locale.UK, null, Collections.singletonList(aggregation));
         assertEquals(DOC_COUNT, result.getTotalHitCount());
         assertEquals(1, result.getFacetDtoList().size());
         facetDto = result.getFacetDtoList().get(0);
@@ -136,10 +137,10 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
         return search(term, locale, sortOptions, null);
     }
 
-    private ElasticsearchResult search(String term, Locale locale, List<SortOption> sortOptions, List<QueryFacetDto> facets) {
+    private ElasticsearchResult search(String term, Locale locale, List<SortOption> sortOptions, List<? extends SearchAggregation> aggregations) {
         final Expression expression = new ValueExpression("title", term);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
-        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptions, facets, locale);
+        final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptions, aggregations, locale);
 
         final ElasticsearchResult searchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("{}", searchResult);

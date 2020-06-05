@@ -20,7 +20,6 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
-import de.picturesafe.search.elasticsearch.connect.dto.QueryFacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
@@ -28,6 +27,8 @@ import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.OperationExpression;
 import de.picturesafe.search.expression.ValueExpression;
+import de.picturesafe.search.parameter.aggregation.DefaultAggregation;
+import de.picturesafe.search.parameter.aggregation.TermsAggregation;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
@@ -38,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -53,9 +53,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class FacetIT  extends AbstractElasticIntegrationTest {
+public class AggregationIT extends AbstractElasticIntegrationTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FacetIT.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AggregationIT.class);
 
     @Autowired
     IndexSetup indexSetup;
@@ -69,6 +69,8 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     @Autowired
     @Qualifier("elasticsearchTimeZone")
     String elasticTimeZone;
+
+    final String dateFacetField = "facetDate";
 
     @Before
     public void setup() {
@@ -98,30 +100,26 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     }
 
     @Test
-    public void testTextFacet() {
+    public void testTextAggregation() {
         Expression expression = new FulltextExpression("wert");
-        QueryFacetDto queryFacetDto = new QueryFacetDto("caption", 10, 100);
-        List<QueryFacetDto> queryFacetDtos = Collections.singletonList(queryFacetDto);
-        QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
+        List<TermsAggregation> aggregations = Collections.singletonList(TermsAggregation.field("caption"));
+        QueryDto queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
         ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 4, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
         expression = new FulltextExpression("released");
-        queryFacetDto = new QueryFacetDto("released", 10, 100);
-        queryFacetDtos = Collections.singletonList(queryFacetDto);
-        queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
+        aggregations = Collections.singletonList(TermsAggregation.field("released"));
+        queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 2, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
     }
 
     @Test
-    public void testFacetResolverOnTextFacet() {
+    public void testFacetResolverOnTextAggregation() {
         final Expression expression = OperationExpression.and(new FulltextExpression("wert"), new ValueExpression("caption", "caption1"));
-        final QueryFacetDto queryFacetDto = new QueryFacetDto("facetResolved", 10, 100);
-        final List<QueryFacetDto> queryFacetDtos = new ArrayList<>();
-        queryFacetDtos.add(queryFacetDto);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, queryFacetDtos, Locale.GERMAN);
+        final List<TermsAggregation> aggregations = Collections.singletonList(TermsAggregation.field("facetResolved"));
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         FacetDto facetDto = null;
@@ -142,7 +140,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
     }
 
     @Test
-    public void testDateFacet() throws Exception {
+    public void testDateAggregation() throws Exception {
         int id = 100;
         elasticsearch.addToIndex(dateDoc(id++, "01.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
         elasticsearch.addToIndex(dateDoc(id++, "10.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
@@ -186,18 +184,18 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
         elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
 
         final Expression expression = new FulltextExpression("DateFacetTest");
-        final QueryFacetDto queryFacetDto = new QueryFacetDto("facetDate", 10, 100);
-        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, Collections.singletonList(queryFacetDto), Locale.GERMAN);
+        final DefaultAggregation aggregation = DefaultAggregation.field(dateFacetField);
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, Collections.singletonList(aggregation), Locale.GERMAN);
         final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("Search result for time zone elastic='{}', system='{}':\n{}", elasticTimeZone, TimeZone.getDefault().getID(), result);
-        assertEquals(id -100, result.getTotalHitCount());
+        assertEquals(id - 100, result.getTotalHitCount());
 
         final List<FacetDto> facetDtos = result.getFacetDtoList();
         assertEquals(2, facetDtos.size());
 
         final FacetDto rangesDto = facetDtos.get(0);
         LOGGER.debug("Ranges facet:\n{}", rangesDto);
-        assertEquals("ranges", rangesDto.getName());
+        assertEquals(dateFacetField + "-ranges", rangesDto.getName());
         // Total count = (1 today + 2 yesterday) * 2 [in this or last week] + 3 last week  + 2 last month
         // + (1 today + 2 yesterday + 3 last week) [in this or last month] = 17
         assertEquals(17, rangesDto.getCount());
@@ -218,6 +216,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
 
         final FacetDto yearsDto = facetDtos.get(1);
         LOGGER.debug("Years facet:\n{}", yearsDto);
+        assertEquals(dateFacetField + "-histogram", yearsDto.getName());
         assertEquals(16, yearsDto.getCount());
         assertTrue("Years count should be 3 for most of the year or 4 when in january",
                 yearsDto.getFacetEntryDtos().size() == 3 || yearsDto.getFacetEntryDtos().size() == 4);
@@ -249,7 +248,7 @@ public class FacetIT  extends AbstractElasticIntegrationTest {
         LOGGER.debug(caption);
         return DocumentBuilder.id(id)
                 .put("caption", caption)
-                .put("facetDate", date)
+                .put(dateFacetField, date)
                 .build();
     }
 

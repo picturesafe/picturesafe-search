@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.spring.configuration;
+package de.picturesafe.search.elasticsearch.connect.aggregation.search;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
+import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
+import de.picturesafe.search.parameter.SearchAggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 
-@Configuration
-@PropertySource("classpath:elasticsearch.properties")
-@Import({DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class})
-public class DefaultElasticConfiguration { }
+import java.util.List;
+import java.util.Locale;
+
+public interface AggregationBuilderFactory<A extends SearchAggregation> {
+
+    List<AggregationBuilder> create(A aggregation, MappingConfiguration mappingConfiguration, Locale locale);
+
+    Class<A> getAggregationType();
+}

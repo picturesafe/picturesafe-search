@@ -31,12 +31,14 @@ import de.picturesafe.search.elasticsearch.model.SearchResultItem;
 import de.picturesafe.search.expression.DayExpression;
 import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.Expression;
+import de.picturesafe.search.expression.FindAllExpression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
-import de.picturesafe.search.parameter.AggregationField;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
+import de.picturesafe.search.parameter.aggregation.DateHistogramAggregation;
+import de.picturesafe.search.parameter.aggregation.DefaultAggregation;
 import de.picturesafe.search.spring.configuration.TestConfiguration;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.time.DateUtils;
@@ -59,6 +61,7 @@ import java.util.stream.Collectors;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDate;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
+import static de.picturesafe.search.parameter.aggregation.DateHistogramAggregation.IntervalType.CALENDAR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -197,7 +200,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
     }
 
     @Test
-    public void testSearchFacets() throws Exception {
+    public void testSearchAggregations() throws Exception {
         indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         final Map<String, Object> doc1 = createDocument(4711, "Der Hund beißt sich in den Schwanz in Hamburg",
                 DateUtils.parseDate("10.05.2019", "dd.MM.yyyy"), "Hamburg");
@@ -209,12 +212,14 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
                 DateUtils.parseDate("28.07.2018", "dd.MM.yyyy"), "Buchholz");
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(doc1, doc2, doc3, doc4));
 
-        final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("name", "name"),
-                SearchParameter.builder().aggregationFields(
-                        new AggregationField("createDate", 1000), new AggregationField("location", 10)).build());
+        final SearchResult result = elasticsearchService.search(indexAlias, new FindAllExpression(),
+                SearchParameter.builder().aggregations(
+                        DefaultAggregation.field("location"),
+                        DateHistogramAggregation.field("createDate").interval(CALENDAR, "1y").format("yyyy").name("years")
+                ).build());
         assertEquals(4, result.getTotalHitCount());
         assertEquals(4, result.getResultCount());
-        assertEquals(3, result.getFacets().size());
+        assertEquals(2, result.getFacets().size());
 
         final ResultFacet locationFacet = getFacet(result, "location");
         assertNotNull(locationFacet);
