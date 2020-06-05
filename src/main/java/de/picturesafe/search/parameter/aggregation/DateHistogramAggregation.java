@@ -26,7 +26,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class DateHistogramAggregation extends AbstractAggregation<DateHistogramAggregation> {
 
     public enum IntervalType {CALENDAR, FIXED}
-    public enum Order {COUNT, KEY_ASC, KEY_DESC}
 
     public static final IntervalType DEFAULT_INTERVAL_TYPE = IntervalType.CALENDAR;
     public static final String DEFAULT_INTERVAL = "1y";
@@ -35,7 +34,7 @@ public class DateHistogramAggregation extends AbstractAggregation<DateHistogramA
     private IntervalType intervalType = DEFAULT_INTERVAL_TYPE;
     private String interval = DEFAULT_INTERVAL;
     private String format;
-    private Order order = Order.COUNT;
+    private AggregationOrder order = AggregationOrder.COUNT;
     private int minDocCount = DEFAULT_MIN_DOC_COUNT;
 
     /**
@@ -104,10 +103,10 @@ public class DateHistogramAggregation extends AbstractAggregation<DateHistogramA
     /**
      * Sets the order of the returned buckets.
      *
-     * @param order Order
+     * @param order {@link AggregationOrder}
      * @return      The aggregation
      */
-    public DateHistogramAggregation order(Order order) {
+    public DateHistogramAggregation order(AggregationOrder order) {
         this.order = order;
         return this;
     }
@@ -115,9 +114,9 @@ public class DateHistogramAggregation extends AbstractAggregation<DateHistogramA
     /**
      * Gets the order of the returned buckets.
      *
-     * @return Order
+     * @return AggregationOrder
      */
-    public Order getOrder() {
+    public AggregationOrder getOrder() {
         return order;
     }
 

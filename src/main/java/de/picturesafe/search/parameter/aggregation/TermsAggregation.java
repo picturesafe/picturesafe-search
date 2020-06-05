@@ -27,10 +27,8 @@ public class TermsAggregation extends AbstractAggregation<TermsAggregation> {
 
     public static final int DEFAULT_MIN_DOC_COUNT = 1;
 
-    public enum Order {COUNT, KEY_ASC, KEY_DESC}
-
     private int maxCount;
-    private Order order = Order.COUNT;
+    private AggregationOrder order = AggregationOrder.COUNT;
     private int minDocCount = DEFAULT_MIN_DOC_COUNT;
 
     /**
@@ -68,10 +66,10 @@ public class TermsAggregation extends AbstractAggregation<TermsAggregation> {
     /**
      * Sets the order of the returned buckets.
      *
-     * @param order Order
+     * @param order {@link AggregationOrder}
      * @return      The aggregation
      */
-    public TermsAggregation order(Order order) {
+    public TermsAggregation order(AggregationOrder order) {
         this.order = order;
         return this;
     }
@@ -79,9 +77,9 @@ public class TermsAggregation extends AbstractAggregation<TermsAggregation> {
     /**
      * Gets the order of the returned buckets.
      *
-     * @return Order
+     * @return AggregationOrder
      */
-    public Order getOrder() {
+    public AggregationOrder getOrder() {
         return order;
     }
 
