@@ -16,11 +16,11 @@
 
 package de.picturesafe.search.elasticsearch.model;
 
-import de.picturesafe.search.elasticsearch.api.RangeFacet;
+import de.picturesafe.search.elasticsearch.api.RangeFacetItem;
 
 import java.util.Objects;
 
-public class ResultRangeFacetItem extends ResultFacetItem implements RangeFacet {
+public class ResultRangeFacetItem extends ResultFacetItem implements RangeFacetItem {
     private final String from;
     private final String to;
 
@@ -39,11 +39,11 @@ public class ResultRangeFacetItem extends ResultFacetItem implements RangeFacet 
     }
 
     /**
-     * Constructor for {@link RangeFacet}
+     * Constructor for {@link RangeFacetItem}
      *
-     * @param facet {@link RangeFacet}
+     * @param facet {@link RangeFacetItem}
      */
-    public ResultRangeFacetItem(RangeFacet facet) {
+    public ResultRangeFacetItem(RangeFacetItem facet) {
         this(facet.getValue(), facet.getCount(), facet.getFrom(), facet.getTo());
     }
 

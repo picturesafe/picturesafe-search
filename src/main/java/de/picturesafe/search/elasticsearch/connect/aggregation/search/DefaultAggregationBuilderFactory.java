@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticAggregationUtils.aggregationName;
+import static de.picturesafe.search.parameter.aggregation.DefaultAggregation.NAME_SEPARATOR;
 
 public class DefaultAggregationBuilderFactory implements AggregationBuilderFactory<DefaultAggregation> {
 
@@ -52,7 +53,7 @@ public class DefaultAggregationBuilderFactory implements AggregationBuilderFacto
 
     private List<AggregationBuilder> createDateAggregationBuilders(DefaultAggregation aggregation, MappingConfiguration mappingConfiguration, Locale locale) {
         final List<AggregationBuilder> aggregationBuilders = new ArrayList<>();
-        final String namePrefix = aggregationName(aggregation) + "-";
+        final String namePrefix = aggregationName(aggregation) + NAME_SEPARATOR;
 
         final DateHistogramAggregation dateHistogramAggregation = DateHistogramAggregation.fromDefault(aggregation).name(namePrefix + "histogram");
         final AggregationBuilderFactory<DateHistogramAggregation> dateHistogramFactory = registry.get(DateHistogramAggregation.class);

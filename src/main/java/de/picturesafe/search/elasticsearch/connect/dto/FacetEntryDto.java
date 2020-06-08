@@ -16,13 +16,14 @@
 
 package de.picturesafe.search.elasticsearch.connect.dto;
 
-import de.picturesafe.search.elasticsearch.api.Facet;
+import de.picturesafe.search.elasticsearch.api.FacetItem;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class FacetEntryDto implements Facet {
+public class FacetEntryDto implements FacetItem {
+
     private final Object value;
     private final long count;
 

@@ -17,20 +17,25 @@
 package de.picturesafe.search.elasticsearch.api;
 
 /**
- * Interface for result facet
+ * Interface for a range facet item.
  */
-public interface Facet {
-    /**
-     * Gets the value of the item.
-     *
-     * @return Value
-     */
-    Object getValue();
+public interface RangeFacetItem extends FacetItem {
 
     /**
-     * Gets the count of documents.
+     * Beginning of the range.
+     * <p>
+     * Can be {@code null} which means open (unbounded) interval, i.e. infinity.
      *
-     * @return Count of documents
+     * @return beginning of closed interval or {@code null} for open interval.
      */
-    long getCount();
+    String getFrom();
+
+    /**
+     * End of the range.
+     * <p>
+     * Can be {@code null} which means open (unbounded) interval, i.e. infinity.
+     *
+     * @return end of closed interval or {@code null} for open interval.
+     */
+    String getTo();
 }

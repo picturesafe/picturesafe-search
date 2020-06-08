@@ -20,7 +20,7 @@ import de.picturesafe.search.elasticsearch.DataChangeProcessingMode;
 import de.picturesafe.search.elasticsearch.ElasticsearchService;
 import de.picturesafe.search.elasticsearch.FieldConfigurationProvider;
 import de.picturesafe.search.elasticsearch.IndexPresetConfigurationProvider;
-import de.picturesafe.search.elasticsearch.api.RangeFacet;
+import de.picturesafe.search.elasticsearch.api.RangeFacetItem;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
@@ -404,7 +404,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     protected ResultFacetItem convertFacetItem(FacetEntryDto entryDto) {
-        return entryDto instanceof RangeFacet ? new ResultRangeFacetItem((RangeFacet) entryDto) : new ResultFacetItem(entryDto);
+        return entryDto instanceof RangeFacetItem ? new ResultRangeFacetItem((RangeFacetItem) entryDto) : new ResultFacetItem(entryDto);
     }
 
     protected MappingConfiguration getMappingConfiguration(String indexAlias, boolean addFieldConfigurations) {
