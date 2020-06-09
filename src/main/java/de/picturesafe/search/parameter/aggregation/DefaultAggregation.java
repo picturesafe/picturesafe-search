@@ -25,6 +25,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class DefaultAggregation extends AbstractAggregation<DefaultAggregation> {
 
     /**
+     * Separator for name suffixes, if the default for the given field results in multiple aggregations.
+     */
+    public static final String NAME_SEPARATOR = "~";
+
+    /**
      * Creates a default aggregation for the given field.
      *
      * @param field Name of the field

@@ -16,12 +16,13 @@
 
 package de.picturesafe.search.elasticsearch.connect.dto;
 
-import de.picturesafe.search.elasticsearch.api.RangeFacet;
+import de.picturesafe.search.elasticsearch.api.RangeFacetItem;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 
 import java.util.Objects;
 
-public class RangeFacetEntryDto extends FacetEntryDto implements RangeFacet {
+public class RangeFacetEntryDto extends FacetEntryDto implements RangeFacetItem {
+
     private final String from;
     private final String to;
 

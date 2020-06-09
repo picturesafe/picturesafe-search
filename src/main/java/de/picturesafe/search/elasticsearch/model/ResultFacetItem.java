@@ -16,7 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.model;
 
-import de.picturesafe.search.elasticsearch.api.Facet;
+import de.picturesafe.search.elasticsearch.api.FacetItem;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * Item of a result facet
  */
-public class ResultFacetItem implements Facet {
+public class ResultFacetItem implements FacetItem {
 
     private final Object value;
     private final long count;
@@ -41,8 +41,8 @@ public class ResultFacetItem implements Facet {
         this.count = count;
     }
 
-    public ResultFacetItem(Facet facet) {
-        this(facet.getValue(), facet.getCount());
+    public ResultFacetItem(FacetItem facetItem) {
+        this(facetItem.getValue(), facetItem.getCount());
     }
 
     @Override
