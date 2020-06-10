@@ -76,7 +76,7 @@ public class SearchResultTest {
     private List<SearchResultItem> getTestSearchResultItems(int resultCount) {
         final List<SearchResultItem> testSearchResultItems = new ArrayList<>();
         for (long id = 1; id <= resultCount; id++) {
-            testSearchResultItems.add(new SearchResultItem(DocumentBuilder.id(id).build()));
+            testSearchResultItems.add(new SearchResultItem(String.valueOf(id), DocumentBuilder.id(id).build()));
         }
         return testSearchResultItems;
     }

@@ -20,6 +20,8 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchHitDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.DayRangeExpression;
@@ -117,14 +119,14 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testSearch() {
-        final ElasticsearchResult shouldBeFound = defaultSearch("cAption1");
+        final SearchResultDto shouldBeFound = defaultSearch("cAption1");
         assertEquals("Can not find required value in index: indexAlias = " + indexAlias, 1, shouldBeFound.getTotalHitCount());
 
-        final ElasticsearchResult mustNotBeFound = defaultSearch("illegalValue");
+        final SearchResultDto mustNotBeFound = defaultSearch("illegalValue");
         assertEquals("Found value that was not added to index: indexAlias = " + indexAlias, 0, mustNotBeFound.getTotalHitCount());
     }
 
-    private ElasticsearchResult defaultSearch(String value) {
+    private SearchResultDto defaultSearch(String value) {
         LOG.debug("Searching fulltext: indexAlias = {}, value = {}", indexAlias, value);
         final Expression expression = new FulltextExpression(value);
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
@@ -141,7 +143,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
                 new FulltextExpression("wert"),
                 new ValueExpression("caption", "caption1"));
         final QueryDto queryDto = new QueryDto(andExpression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -150,7 +152,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testFieldExpression() {
         final Expression expression = new ValueExpression("caption", "caption1");
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -159,7 +161,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testDateExpression() {
         final Expression expression = new DayRangeExpression("createDate", yesterday(), tomorrow());
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -168,7 +170,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testTodayExpression() {
         final Expression expression = new DayRangeExpression("createDate", today(), today());
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -181,7 +183,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Date until = DateUtils.addDays(thatday, +1);
         final Expression expression = new DayRangeExpression("createDate", from, until);
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -192,7 +194,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Date thatday = DateUtils.parseDate("01.01.1923", STANDARD_DATE_FORMAT);
         final Expression expression = new DayRangeExpression("createDate", thatday, thatday);
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -201,7 +203,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testFieldExpressionWithoutLocale() {
         final Expression expression = new ValueExpression("caption", "caption1");
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, null);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -210,14 +212,14 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testFieldExpressionWithoutLocaleOnMultiligual() {
         final Expression expression = new ValueExpression("title", "erster");
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, null);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 0, result.getTotalHitCount());
     }
 
     @Test
     public void testFulltextExpression() {
-        final ElasticsearchResult result = defaultSearch("wert");
+        final SearchResultDto result = defaultSearch("wert");
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 5, result.getTotalHitCount());
     }
@@ -226,7 +228,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testExpressionOnMultiple() {
         final Expression expression = new ValueExpression("title", "erster");
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Expression not working: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
@@ -236,7 +238,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = new ValueExpression("id", LE, 3);
         final List<SortOption> sortOptions = Collections.singletonList(SortOption.desc("facetResolved"));
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptions, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Desc sort option not working: indexAlias = " + indexAlias, "3", result.getHits().get(0).get("facetResolved"));
         assertEquals("Desc sort option not working: indexAlias = " + indexAlias, "1", result.getHits().get(2).get("facetResolved"));
@@ -247,7 +249,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = new ValueExpression("id", LE, 3);
         final List<SortOption> sortOptions = Collections.singletonList(SortOption.asc("facetResolved"));
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), sortOptions, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Asc sort option not working: indexAlias = " + indexAlias, "1", result.getHits().get(0).get("facetResolved"));
         assertEquals("Asc sort option not working: indexAlias = " + indexAlias, "3", result.getHits().get(2).get("facetResolved"));
@@ -276,7 +278,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Expression expression = new FulltextExpression("wert");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 1);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("Result should contain 1 value: indexAlias = " + indexAlias, 1, result.getHits().size());
     }
@@ -288,7 +290,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final List<SortOption> sortOptionList = new ArrayList<>();
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOG.debug("result.getCount()=" + result.getTotalHitCount());
 
         assertEquals("There should be exactly 7 results: indexAlias = " + indexAlias, 7, result.getTotalHitCount());
@@ -308,7 +310,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertEquals("There should be 6 results: indexAlias = " + indexAlias, 6, result.getTotalHitCount());
     }
@@ -319,7 +321,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("There should 1 result: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
     }
 
@@ -341,26 +343,26 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final ValueExpression valueExpression = new ValueExpression("treePaths", "Bla\\/Bli*");
         final QueryDto queryDto = new QueryDto(valueExpression, new QueryRangeDto(0, 10), null, null,
                 Locale.GERMAN);
-        final ElasticsearchResult elasticsearchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto searchResultDto = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
-        LOG.debug(elasticsearchResult.toString());
-        assertEquals("Should find 2 documents for path Bla/Bli: indexAlias = " + indexAlias, 2, elasticsearchResult.getTotalHitCount());
+        LOG.debug(searchResultDto.toString());
+        assertEquals("Should find 2 documents for path Bla/Bli: indexAlias = " + indexAlias, 2, searchResultDto.getTotalHitCount());
 
         final ValueExpression valueExpression2 = new ValueExpression("treePaths", "Bla\\/Bli\\/Blub*");
         final QueryDto queryDto2 = new QueryDto(valueExpression2, new QueryRangeDto(0, 10), null, null,
                 Locale.GERMAN);
-        final ElasticsearchResult elasticsearchResult2 = elasticsearch.search(queryDto2, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto searchResultDto2 = elasticsearch.search(queryDto2, mappingConfiguration, indexPresetConfiguration);
 
-        LOG.debug(elasticsearchResult2.toString());
-        assertEquals("Should find 2 documents for path Bla/Bli/Blub: indexAlias = " + indexAlias, 1, elasticsearchResult2.getTotalHitCount());
+        LOG.debug(searchResultDto2.toString());
+        assertEquals("Should find 2 documents for path Bla/Bli/Blub: indexAlias = " + indexAlias, 1, searchResultDto2.getTotalHitCount());
 
         final ValueExpression valueExpression3 = new ValueExpression("treePaths", "Rums*");
         final QueryDto queryDto3 = new QueryDto(valueExpression3, new QueryRangeDto(0, 10), null, null,
                 Locale.GERMAN);
-        final ElasticsearchResult elasticsearchResult3 = elasticsearch.search(queryDto3, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto searchResultDto3 = elasticsearch.search(queryDto3, mappingConfiguration, indexPresetConfiguration);
 
-        LOG.debug(elasticsearchResult3.toString());
-        assertEquals("Should find 1 document for path Rums: indexAlias = " + indexAlias, 1, elasticsearchResult3.getTotalHitCount());
+        LOG.debug(searchResultDto3.toString());
+        assertEquals("Should find 1 document for path Rums: indexAlias = " + indexAlias, 1, searchResultDto3.getTotalHitCount());
     }
 
     @Test
@@ -375,7 +377,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         Expression expression = new ValueExpression("keywordField", "hans meier");
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, null);
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Should find document with keyword query: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
 
         expression = new FulltextExpression("meier");
@@ -409,15 +411,15 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         valueExpression.setMatchPhrase(true);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final QueryDto queryDto = new QueryDto(valueExpression, queryRangeDto, null, null, null);
-        final ElasticsearchResult elasticsearchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto searchResultDto = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
-        assertEquals("Should find document with keyword query: indexAlias = " + indexAlias, 1, elasticsearchResult.getTotalHitCount());
+        assertEquals("Should find document with keyword query: indexAlias = " + indexAlias, 1, searchResultDto.getTotalHitCount());
     }
 
     @Test
     public void testAddToAll() {
-        final ElasticsearchResult elasticsearchResult = defaultSearch("system1");
-        assertEquals("Non all field value should not be found: indexAlias = " + indexAlias, 0, elasticsearchResult.getTotalHitCount());
+        final SearchResultDto searchResultDto = defaultSearch("system1");
+        assertEquals("Non all field value should not be found: indexAlias = " + indexAlias, 0, searchResultDto.getTotalHitCount());
     }
 
     @Test
@@ -427,18 +429,18 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
 
         Expression expression = new IsNullExpression("caption", true);
-        ElasticsearchResult elasticsearchResult = elasticsearch.search(
+        SearchResultDto searchResultDto = elasticsearch.search(
                 new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN),
                 mappingConfiguration, indexPresetConfiguration
             );
-        assertEquals("Should find one document without caption: indexAlias = " + indexAlias, 1, elasticsearchResult.getTotalHitCount());
+        assertEquals("Should find one document without caption: indexAlias = " + indexAlias, 1, searchResultDto.getTotalHitCount());
 
         expression = new IsNullExpression("caption", false);
-        elasticsearchResult = elasticsearch.search(
+        searchResultDto = elasticsearch.search(
                 new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN),
                 mappingConfiguration, indexPresetConfiguration
             );
-        assertEquals("Should find 7 documents without caption: indexAlias = " + indexAlias, 7, elasticsearchResult.getTotalHitCount());
+        assertEquals("Should find 7 documents without caption: indexAlias = " + indexAlias, 7, searchResultDto.getTotalHitCount());
     }
 
     @Test
@@ -449,13 +451,13 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         fieldsToResolve.add("caption");
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null,
                 null, fieldsToResolve, QueryDto.FieldResolverType.DOC_VALUES);
-        final ElasticsearchResult results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertTrue("There must be search results to test: indexAlias = " + indexAlias, results.getTotalHitCount() > 0);
-        for (Map<String, Object> result : results.getHits()) {
-            assertEquals("There must be two fields in a search result element: indexAlias = " + indexAlias, 2, result.keySet().size());
-            assertNotNull("The field id must always be returned: indexAlias = " + indexAlias, result);
-            assertNotNull(result.get("caption.keyword"));
+        for (SearchHitDto hit : results.getHits()) {
+            assertEquals("There must be only one field in the search hit: indexAlias = " + indexAlias, 1, hit.size());
+            assertNotNull("The id must not be null: indexAlias = " + indexAlias, hit.getId());
+            assertNotNull(hit.get("caption.keyword"));
         }
     }
 
@@ -469,13 +471,13 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 1000);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null,
                 null, searchParameter.getFieldsToResolve(), QueryDto.FieldResolverType.SOURCE_VALUES);
-        final ElasticsearchResult results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertTrue("There must be search results to test: indexAlias = " + indexAlias, results.getTotalHitCount() > 0);
-        for (Map<String, Object> result : results.getHits()) {
-            assertEquals("There must be two fields in a search result element: indexAlias = " + indexAlias, 2, result.keySet().size());
-            assertNotNull("The field id must always be returned: indexAlias = " + indexAlias, result);
-            assertNotNull(result.get("caption"));
+        for (SearchHitDto hit : results.getHits()) {
+            assertEquals("There must be only one field in the search hit: indexAlias = " + indexAlias, 1, hit.size());
+            assertNotNull("The id must not be null: indexAlias = " + indexAlias, hit.getId());
+            assertNotNull(hit.get("caption"));
         }
     }
 
@@ -489,12 +491,12 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 1000);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null,
                 null, searchParameter.getFieldsToResolve(), QueryDto.FieldResolverType.SOURCE_VALUES);
-        final ElasticsearchResult results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto results = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         assertTrue("There must be search results to test: indexAlias = " + indexAlias, results.getTotalHitCount() > 0);
-        for (Map<String, Object> result : results.getHits()) {
-            assertEquals("There must be only one field in a search result element: indexAlias = " + indexAlias, 1, result.keySet().size());
-            assertNotNull("The only field in a search result must be id: indexAlias = " + indexAlias, result);
+        for (SearchHitDto hit : results.getHits()) {
+            assertEquals("There must be only one field in a search result element: indexAlias = " + indexAlias, 1, hit.size());
+            assertNotNull("The only field in a search result must be id: indexAlias = " + indexAlias, hit);
         }
     }
 
@@ -515,7 +517,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
         Expression expression;
         QueryDto queryDto;
-        ElasticsearchResult result;
+        SearchResultDto result;
 
         // 1. Search via single tokens in the whole document (_all)
         expression = new FulltextExpression("Bosnien");
@@ -545,7 +547,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testBoolean() {
         Expression expression = new ValueExpression("released", true);
         QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Expression does not work: indexAlias = " + indexAlias, 1, result.getTotalHitCount());
 
         expression = new ValueExpression("released", false);
@@ -560,7 +562,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
                 new ValueExpression("title", "wert"),
                 new MustNotExpression(new ValueExpression("caption", "caption1")));
         QueryDto queryDto = new QueryDto(operationExpression, defaultRange(), null, null, Locale.GERMAN);
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Expression does not work: indexAlias = " + indexAlias, 4, result.getTotalHitCount());
 
         final OperationExpression innerOpExpression = OperationExpression.and(new ValueExpression("caption", "caption1"));
@@ -578,8 +580,8 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final OperationExpression operationExpression = OperationExpression.and(
                 new FulltextExpression("wert"), new MustNotExpression(innerOpExpression));
 
-        QueryDto queryDto = new QueryDto(operationExpression, defaultRange(), null, null, Locale.GERMAN);
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final QueryDto queryDto = new QueryDto(operationExpression, defaultRange(), null, null, Locale.GERMAN);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Expression does not work: indexAlias = " + indexAlias, 4, result.getTotalHitCount());
     }
 }

@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-package de.picturesafe.search.elasticsearch.connect;
+package de.picturesafe.search.elasticsearch.connect.dto;
 
-import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
-import java.util.Map;
 
-public class ElasticsearchResult {
+public class SearchResultDto {
 
     private final long totalHitCount;
     private final boolean exactCount;
-    private final List<Map<String, Object>> hits;
+    private final List<SearchHitDto> hits;
     private final List<FacetDto> facetDtoList;
 
-    public ElasticsearchResult(long totalHitCount, boolean exactCount, List<Map<String, Object>> hits, List<FacetDto> facetDtoList) {
+    public SearchResultDto(long totalHitCount, boolean exactCount, List<SearchHitDto> hits, List<FacetDto> facetDtoList) {
         this.totalHitCount = totalHitCount;
         this.exactCount = exactCount;
         this.hits = hits;
@@ -48,7 +45,7 @@ public class ElasticsearchResult {
         return exactCount;
     }
 
-    public List<Map<String, Object>> getHits() {
+    public List<SearchHitDto> getHits() {
         return hits;
     }
 
@@ -66,10 +63,10 @@ public class ElasticsearchResult {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ElasticsearchResult)) {
+        if (!(o instanceof SearchResultDto)) {
             return false;
         } else {
-            final ElasticsearchResult that = (ElasticsearchResult) o;
+            final SearchResultDto that = (SearchResultDto) o;
             return new EqualsBuilder()
                     .append(totalHitCount, that.totalHitCount)
                     .append(exactCount, that.exactCount)

@@ -19,6 +19,8 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchHitDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.InExpression;
@@ -41,7 +43,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
 import static org.junit.Assert.assertEquals;
 
 public class ReferenceIT extends AbstractElasticIntegrationTest {
@@ -139,9 +140,9 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 7);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("should find only one doc", 1, result.getTotalHitCount());
-        assertEquals("did not find reference", 23, getId(result.getHits().get(0), -1));
+        assertEquals("did not find reference", "23", result.getHits().get(0).getId());
     }
 
     @Test
@@ -164,9 +165,9 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         Expression expression = new InExpression("referenceWithSort." + FIELD_TARGET_ID, 7);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("should find only one doc", 1, result.getTotalHitCount());
-        assertEquals("did not find reference", 123, getId(result.getHits().get(0), -1));
+        assertEquals("did not find reference", "123", result.getHits().get(0).getId());
 
         expression = new InExpression("referenceWithSort." + FIELD_TARGET_ID, 7, 8);
         queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
@@ -198,7 +199,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
                 new InExpression("referenceWithSort." + FIELD_TARGET_ID));
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("should find two docs", 2, result.getTotalHitCount());
     }
 
@@ -222,7 +223,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
                 new IsNullExpression("referenceWithSort." + FIELD_TARGET_ID));
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, null, null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("should find only one doc", 1, result.getTotalHitCount());
     }
 
@@ -232,25 +233,25 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_SORT_ORDER));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResult.getHits()) {
-            LOG.debug(searchHit.toString());
+        for (SearchHitDto searchHit : sortedResult.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
+        assertEquals("result is not sorted", "21", sortedResult.getHits().get(0).getId());
+        assertEquals("result is not sorted", "20", sortedResult.getHits().get(1).getId());
 
         final List<SortOption> sortOptionsDesc = Collections.singletonList(SortOption.desc("referenceWithSort." + FIELD_SORT_ORDER));
         final QueryDto queryDtoDesc = new QueryDto(expression, queryRangeDto, sortOptionsDesc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResultDesc.getHits()) {
-            LOG.debug(searchHit.toString());
+        for (SearchHitDto searchHit : sortedResultDesc.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0), -1));
-        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1), -1));
+        assertEquals("result is not sorted", "20", sortedResultDesc.getHits().get(0).getId());
+        assertEquals("result is not sorted", "21", sortedResultDesc.getHits().get(1).getId());
     }
 
     @Test
@@ -274,16 +275,16 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final SortOption sortOption =  SortOption.asc("referenceWithSort." + FIELD_LINKING_TIME);
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(sortOption), null, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
-        assertEquals("result is not sorted correctly", 1001, getId(result.getHits().get(0), -1));
-        assertEquals("result is not sorted correctly", 1002, getId(result.getHits().get(1), -1));
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("result is not sorted correctly", "1001", result.getHits().get(0).getId());
+        assertEquals("result is not sorted correctly", "1002", result.getHits().get(1).getId());
 
         final SortOption filteredSortOption =  SortOption.asc("referenceWithSort." + FIELD_LINKING_TIME)
                 .filter(new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888));
         final QueryDto filteredQueryDto = new QueryDto(expression, queryRangeDto, Collections.singletonList(filteredSortOption), null, Locale.GERMAN);
-        final ElasticsearchResult filteredResult = elasticsearch.search(filteredQueryDto, mappingConfiguration, indexPresetConfiguration);
-        assertEquals("result is not sorted correctly", 1002, getId(filteredResult.getHits().get(0), -1));
-        assertEquals("result is not sorted correctly", 1001, getId(filteredResult.getHits().get(1), -1));
+        final SearchResultDto filteredResult = elasticsearch.search(filteredQueryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals("result is not sorted correctly", "1002", filteredResult.getHits().get(0).getId());
+        assertEquals("result is not sorted correctly", "1001", filteredResult.getHits().get(1).getId());
     }
 
     @Test
@@ -292,25 +293,25 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_LINKING_TIME));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResult.getHits()) {
-            LOG.debug(searchHit.toString());
+        for (SearchHitDto searchHit : sortedResult.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(0), -1));
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(1), -1));
+        assertEquals("result is not sorted", "20", sortedResult.getHits().get(0).getId());
+        assertEquals("result is not sorted", "21", sortedResult.getHits().get(1).getId());
 
         final List<SortOption> sortOptionsDesc = Collections.singletonList(SortOption.desc("referenceWithSort." + FIELD_LINKING_TIME));
         final QueryDto queryDtoDesc = new QueryDto(expression, queryRangeDto, sortOptionsDesc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResultDesc.getHits()) {
-            LOG.debug("Hit: " + searchHit.toString());
+        for (SearchHitDto searchHit : sortedResultDesc.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(0), -1));
-        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(1), -1));
+        assertEquals("result is not sorted", "21", sortedResultDesc.getHits().get(0).getId());
+        assertEquals("result is not sorted", "20", sortedResultDesc.getHits().get(1).getId());
     }
     @Test
     public void testSortOnNote() {
@@ -318,25 +319,25 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_NOTE));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResult.getHits()) {
-            LOG.debug(searchHit.toString());
+        for (SearchHitDto searchHit : sortedResult.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
+        assertEquals("result is not sorted", "21", sortedResult.getHits().get(0).getId());
+        assertEquals("result is not sorted", "20", sortedResult.getHits().get(1).getId());
 
         final List<SortOption> sortOptionsDesc = Collections.singletonList(SortOption.desc("referenceWithSort." + FIELD_NOTE));
         final QueryDto queryDtoDesc = new QueryDto(expression, queryRangeDto, sortOptionsDesc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResultDesc = elasticsearch.search(queryDtoDesc, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResultDesc.getHits()) {
-            LOG.debug(searchHit.toString());
+        for (SearchHitDto searchHit : sortedResultDesc.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 20, getId(sortedResultDesc.getHits().get(0), -1));
-        assertEquals("result is not sorted", 21, getId(sortedResultDesc.getHits().get(1), -1));
+        assertEquals("result is not sorted", "20", sortedResultDesc.getHits().get(0).getId());
+        assertEquals("result is not sorted", "21", sortedResultDesc.getHits().get(1).getId());
     }
 
     @Test
@@ -352,14 +353,14 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
         final List<SortOption> sortOptionsAsc = Collections.singletonList(SortOption.asc("referenceWithSort." + FIELD_SORT_ORDER));
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionsAsc, null, Locale.GERMAN);
-        final ElasticsearchResult sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto sortedResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
-        for (Map<String, Object> searchHit : sortedResult.getHits()) {
-            LOG.debug(searchHit.toString());
+        for (SearchHitDto searchHit : sortedResult.getHits()) {
+            LOG.debug("{}", searchHit);
         }
 
-        assertEquals("result is not sorted", 21, getId(sortedResult.getHits().get(0), -1));
-        assertEquals("result is not sorted", 20, getId(sortedResult.getHits().get(1), -1));
+        assertEquals("result is not sorted", "21", sortedResult.getHits().get(0).getId());
+        assertEquals("result is not sorted", "20", sortedResult.getHits().get(1).getId());
     }
 
     @After

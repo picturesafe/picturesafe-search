@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
@@ -74,7 +75,7 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
             final List<SortOption> sortOptionList = new ArrayList<>();
             final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
-            final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+            final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
             assertEquals("searching for \"" + keyword + "\" ", 1L, result.getTotalHitCount());
         }
@@ -89,7 +90,7 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
             final List<SortOption> sortOptionList = new ArrayList<>();
             final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
-            final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+            final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
             assertEquals("searching for \"" + keyword + "\" returns " + result.getTotalHitCount() + " instead of 1 result",
                     1L, result.getTotalHitCount());

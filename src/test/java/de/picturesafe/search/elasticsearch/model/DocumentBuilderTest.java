@@ -86,10 +86,10 @@ public class DocumentBuilderTest {
         private String textField;
         private int numberField;
 
-        public TestObject() {
+        TestObject() {
         }
 
-        public TestObject(String textField, int numberField) {
+        TestObject(String textField, int numberField) {
             this.textField = textField;
             this.numberField = numberField;
         }

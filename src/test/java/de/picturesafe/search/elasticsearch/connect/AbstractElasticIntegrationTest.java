@@ -19,7 +19,6 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
-import de.picturesafe.search.elasticsearch.connect.impl.ElasticsearchAdminImpl;
 import de.picturesafe.search.elasticsearch.connect.impl.ElasticsearchImpl;
 import de.picturesafe.search.spring.configuration.TestConfiguration;
 import org.apache.commons.lang3.time.DateUtils;

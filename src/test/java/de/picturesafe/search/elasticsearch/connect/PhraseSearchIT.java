@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.ValueExpression;
@@ -76,7 +77,7 @@ public class PhraseSearchIT extends AbstractElasticIntegrationTest {
         assertEquals(0, phraseSearch("dies das").getTotalHitCount());
     }
 
-    private ElasticsearchResult phraseSearch(String term) {
+    private SearchResultDto phraseSearch(String term) {
         final ValueExpression expression = new ValueExpression("keyword", term);
         expression.setMatchPhrase(true);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);

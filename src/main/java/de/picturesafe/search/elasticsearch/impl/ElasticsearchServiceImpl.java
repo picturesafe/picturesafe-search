@@ -26,7 +26,7 @@ import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
-import de.picturesafe.search.elasticsearch.connect.ElasticsearchResult;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
@@ -291,20 +291,20 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
         final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
         final int pageSize = getPageSize(searchParameter);
-        final ElasticsearchResult elasticsearchResult
+        final SearchResultDto searchResultDto
                 = getElasticsearchResult(new InternalSearchContext(indexPresetConfiguration, accountContext, expression, searchParameter, pageSize), sw);
         final List<SearchResultItem> resultItems
-                = elasticsearchResult.getHits().stream().map(hit -> new SearchResultItem(hit, idFormat)).collect(Collectors.toList());
+                = searchResultDto.getHits().stream().map(hit -> new SearchResultItem(hit.getId(), hit.getAttributes(), idFormat)).collect(Collectors.toList());
 
         sw.start("get max results");
-        final long totalHitCount = elasticsearchResult.getTotalHitCount();
+        final long totalHitCount = searchResultDto.getTotalHitCount();
         final int resultCount = getMaxResults(indexAlias, searchParameter.getMaxResults(), totalHitCount);
         sw.stop();
 
         LOGGER.debug("Performed search on index '{}':\n{}", indexAlias, new StopWatchPrettyPrint(sw));
         final int pageIndex = (searchParameter.getPageIndex() != null) ? searchParameter.getPageIndex() : 1;
-        return new SearchResult(resultItems, pageIndex, pageSize, resultCount, totalHitCount, elasticsearchResult.isExactCount(),
-                convertFacets(elasticsearchResult.getFacetDtoList()));
+        return new SearchResult(resultItems, pageIndex, pageSize, resultCount, totalHitCount, searchResultDto.isExactCount(),
+                convertFacets(searchResultDto.getFacetDtoList()));
     }
 
     @Override
@@ -336,7 +336,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         return pageSize;
     }
 
-    protected ElasticsearchResult getElasticsearchResult(InternalSearchContext context) {
+    protected SearchResultDto getElasticsearchResult(InternalSearchContext context) {
         final StopWatch sw = new StopWatch();
         try {
             return getElasticsearchResult(context, sw);
@@ -345,7 +345,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         }
     }
 
-    protected ElasticsearchResult getElasticsearchResult(InternalSearchContext context, StopWatch sw) {
+    protected SearchResultDto getElasticsearchResult(InternalSearchContext context, StopWatch sw) {
         SearchParameter searchParameter = context.searchParameter;
         if (searchParameter == null) {
             searchParameter = SearchParameter.DEFAULT;
@@ -362,7 +362,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         sw.stop();
 
         sw.start("process search");
-        final ElasticsearchResult result = elasticsearch.search(queryDto, context.mappingConfiguration(), context.indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, context.mappingConfiguration(), context.indexPresetConfiguration);
         sw.stop();
 
         return result;
