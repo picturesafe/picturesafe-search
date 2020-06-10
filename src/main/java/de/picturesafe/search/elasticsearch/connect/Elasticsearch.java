@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.connect.error.AliasCreateException;
 import de.picturesafe.search.elasticsearch.connect.error.AliasHasMoreThanOneIndexException;
@@ -212,9 +213,9 @@ public interface Elasticsearch {
      * @param queryDto                      {@link QueryDto}
      * @param mappingConfiguration          {@link MappingConfiguration}
      * @param indexPresetConfiguration      {@link IndexPresetConfiguration}
-     * @return                              {@link ElasticsearchResult}
+     * @return                              {@link SearchResultDto}
      */
-    ElasticsearchResult search(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration);
+    SearchResultDto search(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration);
 
     /**
      * Gets a document from the index.

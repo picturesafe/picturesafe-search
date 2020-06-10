@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
@@ -92,7 +93,7 @@ public class LikeIT extends AbstractElasticIntegrationTest {
         assertEquals(4, search("vir??infektion", true).getTotalHitCount());
     }
 
-    private ElasticsearchResult search(String query, boolean negate) {
+    private SearchResultDto search(String query, boolean negate) {
         final ValueExpression.Comparison comparison = negate ? NOT_LIKE : LIKE;
         final Expression expression = new ValueExpression("caption", comparison, query);
 

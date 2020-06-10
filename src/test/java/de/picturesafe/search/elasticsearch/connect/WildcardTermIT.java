@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.ConditionExpression;
@@ -128,11 +129,11 @@ public class WildcardTermIT extends AbstractElasticIntegrationTest {
         assertEquals(0, search(TERM_WILDCARD, "*titel*").getTotalHitCount());
     }
 
-    private ElasticsearchResult search(ConditionExpression.Comparison comparison, String term) {
+    private SearchResultDto search(ConditionExpression.Comparison comparison, String term) {
         return search(comparison, term, false);
     }
 
-    private ElasticsearchResult search(ConditionExpression.Comparison comparison, String term, boolean negate) {
+    private SearchResultDto search(ConditionExpression.Comparison comparison, String term, boolean negate) {
         Expression expression = new ValueExpression("caption", comparison, term);
         if (negate) {
             expression = new MustNotExpression(expression);

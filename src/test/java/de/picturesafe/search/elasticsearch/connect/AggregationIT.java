@@ -21,6 +21,7 @@ import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
@@ -104,7 +105,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
         Expression expression = new FulltextExpression("wert");
         List<TermsAggregation> aggregations = Collections.singletonList(TermsAggregation.field("caption"));
         QueryDto queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
-        ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals(1, result.getFacetDtoList().size());
         assertEquals("Facet not working: indexAlias = " + indexAlias, 4, result.getFacetDtoList().get(0).getFacetEntryDtos().size());
         expression = new FulltextExpression("released");
@@ -120,7 +121,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
         final Expression expression = OperationExpression.and(new FulltextExpression("wert"), new ValueExpression("caption", "caption1"));
         final List<TermsAggregation> aggregations = Collections.singletonList(TermsAggregation.field("facetResolved"));
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, aggregations, Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
         FacetDto facetDto = null;
         for (FacetDto current : result.getFacetDtoList()) {
@@ -186,7 +187,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
         final Expression expression = new FulltextExpression("DateFacetTest");
         final DefaultAggregation aggregation = DefaultAggregation.field(dateFacetField);
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, Collections.singletonList(aggregation), Locale.GERMAN);
-        final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("Search result for time zone elastic='{}', system='{}':\n{}", elasticTimeZone, TimeZone.getDefault().getID(), result);
         assertEquals(id - 100, result.getTotalHitCount());
 

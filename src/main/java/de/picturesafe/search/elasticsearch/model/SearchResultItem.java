@@ -17,7 +17,6 @@
 package de.picturesafe.search.elasticsearch.model;
 
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
-import de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -40,23 +39,34 @@ public class SearchResultItem {
      * @param attributes    Attributes of the result item's document
      */
     public SearchResultItem(Map<String, Object> attributes) {
-        this(attributes, IdFormat.DEFAULT);
+        this(null, attributes);
     }
 
     /**
      * Constructor
      *
+     * @param id            ID of the result item
+     * @param attributes    Attributes of the result item's document
+     */
+    public SearchResultItem(String id, Map<String, Object> attributes) {
+        this(id, attributes, IdFormat.DEFAULT);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param id            ID of the result item
      * @param attributes    Attributes of the result item's document
      * @param idFormat      {@link IdFormat}
      */
-    public SearchResultItem(Map<String, Object> attributes, IdFormat idFormat) {
-        this.id = ElasticDocumentUtils.getId(attributes);
+    public SearchResultItem(String id, Map<String, Object> attributes, IdFormat idFormat) {
+        this.id = id;
         this.attributes = attributes;
         this.idFormat = idFormat;
     }
 
     /**
-     * Gets the ID of the result items's document.
+     * Gets the ID of the result item.
      *
      * @return ID
      */
@@ -65,14 +75,14 @@ public class SearchResultItem {
     }
 
     /**
-     * Gets the ID of the result items's document.
+     * Gets the ID of the result item.
      *
      * @param <T>   Type of the ID
      * @param type  Type class of the ID
      * @return ID
      */
     public <T> T getId(Class<T> type) {
-        return idFormat.parse(id, type);
+        return (id != null) ? idFormat.parse(id, type) : null;
     }
 
     /**

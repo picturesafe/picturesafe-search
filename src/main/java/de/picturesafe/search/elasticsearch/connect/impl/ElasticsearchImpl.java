@@ -22,7 +22,6 @@ import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
-import de.picturesafe.search.elasticsearch.connect.ElasticsearchResult;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetConverter;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactory;
@@ -36,6 +35,8 @@ import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchHitDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.error.AliasAlreadyExistsException;
 import de.picturesafe.search.elasticsearch.connect.error.AliasCreateException;
 import de.picturesafe.search.elasticsearch.connect.error.AliasHasMoreThanOneIndexException;
@@ -122,7 +123,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_ID;
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
 import static de.picturesafe.search.elasticsearch.connect.filter.util.FilterFactoryUtils.createFilter;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
@@ -438,25 +438,23 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     @Override
-    public ElasticsearchResult search(final QueryDto queryDto, final MappingConfiguration mappingConfiguration,
-                                      IndexPresetConfiguration indexPresetConfiguration) {
-        return new WatchedTask<ElasticsearchResult>(LOG, "search") {
+    public SearchResultDto search(final QueryDto queryDto, final MappingConfiguration mappingConfiguration,
+                                  IndexPresetConfiguration indexPresetConfiguration) {
+        return new WatchedTask<SearchResultDto>(LOG, "search") {
             @Override
-            public ElasticsearchResult process() {
+            public SearchResultDto process() {
                 try {
-                    final List<Map<String, Object>> result = new ArrayList<>();
                     final SearchResponse searchResponse = internalSearch(queryDto, mappingConfiguration, indexPresetConfiguration);
                     final SearchHits searchHits = searchResponse.getHits();
-                    final SearchHit[] hits = searchHits.getHits();
                     final TotalHits totalHits = searchHits.getTotalHits();
 
-                    for (SearchHit hit : hits) {
-                        final Map<String, Object> doc = convertSearchHit(hit, mappingConfiguration);
-                        result.add(doc);
+                    final List<SearchHitDto> searchHitDtos = new ArrayList<>();
+                    for (SearchHit hit : searchHits.getHits()) {
+                        searchHitDtos.add(convertSearchHit(hit, mappingConfiguration));
                     }
                     final List<FacetDto> facetDtos = convertFacets(searchResponse, queryDto, mappingConfiguration);
 
-                    return new ElasticsearchResult(totalHits.value, totalHits.relation == TotalHits.Relation.EQUAL_TO, result, facetDtos);
+                    return new SearchResultDto(totalHits.value, totalHits.relation == TotalHits.Relation.EQUAL_TO, searchHitDtos, facetDtos);
                 } catch (IndexMissingException e) {
                     throw new IndexMissingException(indexPresetConfiguration.getIndexAlias());
                 }
@@ -519,32 +517,28 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         return null;
     }
 
-    protected Map<String, Object> convertSearchHit(SearchHit hit, MappingConfiguration mappingConfiguration) {
+    protected SearchHitDto convertSearchHit(SearchHit hit, MappingConfiguration mappingConfiguration) {
         final Map<String, Object> source = hit.getSourceAsMap();
         final Map<String, DocumentField> fields = hit.getFields();
-        final Map<String, Object> result = new HashMap<>();
+        final Map<String, Object> attributes = new HashMap<>();
         if (source != null) {
             for (Map.Entry<String, Object> entry : source.entrySet()) {
                 final String key = entry.getKey();
                 final Object value = entry.getValue();
-                result.put(key, value);
+                attributes.put(key, value);
             }
         } else if (fields != null) {
             for (Map.Entry<String, DocumentField> field : fields.entrySet()) {
                 final String key = field.getKey();
                 final DocumentField documentField = field.getValue();
                 final Object value = documentField.getValue();
-                result.put(key, value);
+                attributes.put(key, value);
             }
         } else {
             throw new RuntimeException("Missing data in search result!");
         }
 
-        if (!result.containsKey(FIELD_NAME_ID)) {
-            result.put(FIELD_NAME_ID, hit.getId());
-        }
-
-        return result;
+        return new SearchHitDto(hit.getId(), attributes);
     }
 
     protected List<FacetDto> convertFacets(SearchResponse searchResponse, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
@@ -761,9 +755,6 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     protected void addSourceValuesToSearchRequest(List<String> fields, SearchSourceBuilder searchRequestBuilder) {
-        if (!fields.contains(FIELD_NAME_ID)) {
-            fields.add(FIELD_NAME_ID); // mandatory for elasticsearch service
-        }
         final String[] includes = fields.toArray(new String[0]);
         final String[] excludes = new String[0];
         searchRequestBuilder.fetchSource(includes, excludes);

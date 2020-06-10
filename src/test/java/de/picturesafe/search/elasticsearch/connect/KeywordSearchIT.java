@@ -19,6 +19,7 @@ package de.picturesafe.search.elasticsearch.connect;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.ConditionExpression;
@@ -74,7 +75,7 @@ public class KeywordSearchIT extends AbstractElasticIntegrationTest {
     @Test
     public void testEquals() {
         for (String keyword : KEYWORDS) {
-            final ElasticsearchResult result = keywordSearch(keyword);
+            final SearchResultDto result = keywordSearch(keyword);
             assertEquals("searching for \"" + keyword + "\" ", 1L, result.getTotalHitCount());
         }
 
@@ -90,17 +91,17 @@ public class KeywordSearchIT extends AbstractElasticIntegrationTest {
         assertEquals(3, keywordSearch("und", NOT_EQ).getTotalHitCount());
     }
 
-    private ElasticsearchResult keywordSearch(String term) {
+    private SearchResultDto keywordSearch(String term) {
         return keywordSearch(term, EQ);
     }
 
-    private ElasticsearchResult keywordSearch(String term, ConditionExpression.Comparison comparison) {
+    private SearchResultDto keywordSearch(String term, ConditionExpression.Comparison comparison) {
         final KeywordExpression expression = new KeywordExpression("keyword", comparison, term);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 10);
         final List<SortOption> sortOptionList = new ArrayList<>();
         final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
-        final ElasticsearchResult searchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        final SearchResultDto searchResult = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOGGER.debug("{}", searchResult);
         return searchResult;
     }

@@ -25,6 +25,7 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.ValueExpression;
@@ -83,7 +84,7 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
             elasticsearch.addToIndex(createTestDocument(5, "test.jpg"), mappingConfiguration, indexAlias, true);
             elasticsearch.addToIndex(createTestDocument(6, "my_document.doc"), mappingConfiguration, indexAlias, true);
 
-            ElasticsearchResult result = search("filenameWithAnalyzer", "test1.pdf");
+            SearchResultDto result = search("filenameWithAnalyzer", "test1.pdf");
             assertEquals(1, result.getTotalHitCount());
             result = search("filenameWithAnalyzer", "test1");
             assertEquals(1, result.getTotalHitCount());
@@ -179,7 +180,7 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
                 .build();
     }
 
-    private ElasticsearchResult search(String fieldname, String value) {
+    private SearchResultDto search(String fieldname, String value) {
         final Expression expression = new ValueExpression(fieldname, value);
         final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
         return elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);

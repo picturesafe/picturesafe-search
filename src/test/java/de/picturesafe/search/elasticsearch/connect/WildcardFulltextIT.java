@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
@@ -79,7 +80,7 @@ public class WildcardFulltextIT extends AbstractElasticIntegrationTest {
             final List<SortOption> sortOptionList = new ArrayList<>();
             final QueryDto queryDto = new QueryDto(expression, queryRangeDto, sortOptionList, null, Locale.GERMAN);
 
-            final ElasticsearchResult result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+            final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
 
             LOG.debug("result.getCount()=" + result.getTotalHitCount());
 
