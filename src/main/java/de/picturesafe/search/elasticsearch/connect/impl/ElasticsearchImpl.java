@@ -23,6 +23,7 @@ import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetConverter;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetConverterChain;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactoryRegistry;
@@ -92,9 +93,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
-import org.elasticsearch.search.aggregations.bucket.range.Range;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
@@ -144,6 +142,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     protected List<FilterFactory> filterFactories;
     protected List<QueryFactory> queryFactories;
     protected AggregationBuilderFactoryRegistry aggregationBuilderFactoryRegistry;
+    protected FacetConverterChain facetConverterChain;
     protected List<FacetResolver> facetResolvers;
     protected String timeZone;
 
@@ -172,6 +171,11 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     @Autowired(required = false)
     public void setAggregationBuilderFactoryRegistry(AggregationBuilderFactoryRegistry aggregationBuilderFactoryRegistry) {
         this.aggregationBuilderFactoryRegistry = aggregationBuilderFactoryRegistry;
+    }
+
+    @Autowired(required = false)
+    public void setFacetConverterChain(FacetConverterChain facetConverterChain) {
+        this.facetConverterChain = facetConverterChain;
     }
 
     @Autowired(required = false)
@@ -542,25 +546,25 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     protected List<FacetDto> convertFacets(SearchResponse searchResponse, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
-        final List<FacetDto> facetResultList = new ArrayList<>();
+        final List<FacetDto> result = new ArrayList<>();
 
         if (searchResponse.getAggregations() != null) {
-            for (Aggregation aggregation : searchResponse.getAggregations()) {
-                FacetDto facetDto = null;
-                if (aggregation instanceof Terms) {
-                    facetDto = FacetConverter.convertTermsFacet((Terms) aggregation, facetResolver(aggregation), queryDto.getLocale());
-                } else if (aggregation instanceof Range) {
-                    facetDto = FacetConverter.convertRangeFacet((Range) aggregation, facetResolver(aggregation), queryDto.getLocale());
-                } else if (aggregation instanceof Histogram) {
-                    facetDto = FacetConverter.convertHistogramFacet((Histogram) aggregation, facetResolver(aggregation), queryDto.getLocale());
-                }
+            if (facetConverterChain != null) {
+                final Locale locale = queryDto.getLocale();
 
-                if (facetDto != null) {
-                    facetResultList.add(facetDto);
+                for (Aggregation aggregation : searchResponse.getAggregations()) {
+                    final FacetConverter facetConverter = facetConverterChain.getFirstResponsible(aggregation);
+                    if (facetConverter != null) {
+                        result.add(facetConverter.convert(aggregation, facetResolver(aggregation), locale));
+                    } else {
+                        LOG.warn("Missing facet converter for aggregation: {}", aggregation);
+                    }
                 }
+            } else {
+                LOG.warn("Search response contains aggregations but facet converter chain is not defined!");
             }
         }
-        return facetResultList;
+        return result;
     }
 
     protected FacetResolver facetResolver(Aggregation aggregation) {

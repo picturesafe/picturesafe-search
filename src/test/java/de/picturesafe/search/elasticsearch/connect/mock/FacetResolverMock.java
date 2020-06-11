@@ -23,8 +23,8 @@ import java.util.Locale;
 public class FacetResolverMock implements FacetResolver {
 
     @Override
-    public boolean isResponsible(String field) {
-        return field.equals("facetResolved");
+    public boolean isResponsible(String aggregationName) {
+        return aggregationName.equals("facetResolved");
     }
 
     @Override

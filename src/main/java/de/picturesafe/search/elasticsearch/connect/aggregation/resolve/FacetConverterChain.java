@@ -16,11 +16,20 @@
 
 package de.picturesafe.search.elasticsearch.connect.aggregation.resolve;
 
-import java.util.Locale;
+import org.elasticsearch.search.aggregations.Aggregation;
 
-public interface FacetResolver {
+import java.util.ArrayList;
+import java.util.Collections;
 
-    boolean isResponsible(String aggregationName);
+public class FacetConverterChain extends ArrayList<FacetConverter> {
 
-    String resolve(String value, Number numberValue, Locale locale);
+    public static FacetConverterChain of(FacetConverter... facetConverters) {
+        final FacetConverterChain chain = new FacetConverterChain();
+        Collections.addAll(chain, facetConverters);
+        return chain;
+    }
+
+    public FacetConverter getFirstResponsible(Aggregation aggregation) {
+        return this.stream().filter(converter -> converter.isResponsible(aggregation)).findFirst().orElse(null);
+    }
 }
