@@ -16,6 +16,10 @@
 
 package de.picturesafe.search.spring.configuration;
 
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetConverterChain;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.HistogramFacetConverter;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.RangeFacetConverter;
+import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.TermsFacetConverter;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactoryRegistry;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.DateHistogramAggregationBuilderFactory;
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.DateRangeAggregationBuilderFactory;
@@ -71,5 +75,14 @@ public class DefaultAggregationConfiguration {
         );
         registry.put(new DefaultAggregationBuilderFactory(registry));
         return registry;
+    }
+
+    @Bean
+    public FacetConverterChain facetConverterChain() {
+        return FacetConverterChain.of(
+                new TermsFacetConverter(),
+                new RangeFacetConverter(),
+                new HistogramFacetConverter()
+        );
     }
 }
