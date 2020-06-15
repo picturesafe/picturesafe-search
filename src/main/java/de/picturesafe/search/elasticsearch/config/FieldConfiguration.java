@@ -36,7 +36,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     FieldConfiguration ID_FIELD = StandardFieldConfiguration.builder(FIELD_NAME_ID, ElasticsearchType.TEXT).sortable(true).build();
     FieldConfiguration FULLTEXT_FIELD = StandardFieldConfiguration.builder(FIELD_NAME_FULLTEXT, ElasticsearchType.TEXT).build();
-    FieldConfiguration SUGGEST_FIELD = new SuggestFieldConfiguration(FIELD_NAME_SUGGEST);
+    FieldConfiguration SUGGEST_FIELD = SuggestFieldConfiguration.name(FIELD_NAME_SUGGEST);
 
     String getName();
 
@@ -62,6 +62,8 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     boolean isNestedObject();
 
+    Map<String, Object> getAdditionalParameters();
+
     FieldConfiguration getParent();
 
     @Override
@@ -78,6 +80,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("withoutIndexing", isWithoutIndexing())
                 .put("copyToFields", getCopyToFields())
                 .put("nestedFields", getNestedFields())
+                .put("additionalParameters", getAdditionalParameters())
                 .build();
     }
 }

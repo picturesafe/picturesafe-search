@@ -25,13 +25,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocument;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 
 public class SuggestFieldConfiguration implements FieldConfiguration {
 
     private String name;
     private String elasticsearchType;
+    private Map<String, Object> additionalParameters;
 
     /**
      * ONLY FOR INTERNAL USAGE
@@ -40,10 +43,14 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
         elasticsearchType = ElasticsearchType.COMPLETION.toString();
     }
 
-    public SuggestFieldConfiguration(String name) {
+    private SuggestFieldConfiguration(String name) {
         this();
         Validate.isTrue(!name.contains("."), "Parameter 'name' must not contain a '.'!");
         this.name = name;
+    }
+
+    public static SuggestFieldConfiguration name(String name) {
+        return new SuggestFieldConfiguration(name);
     }
 
     @Override
@@ -106,6 +113,24 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
+    public Map<String, Object> getAdditionalParameters() {
+        return additionalParameters;
+    }
+
+    public SuggestFieldConfiguration additionalParameters(Map<String, Object> additionalParameters) {
+        this.additionalParameters = additionalParameters;
+        return this;
+    }
+
+    public SuggestFieldConfiguration additionalParameter(String name, Object value) {
+        if (additionalParameters == null) {
+            additionalParameters = new TreeMap<>();
+        }
+        additionalParameters.put(name, value);
+        return this;
+    }
+
+    @Override
     public FieldConfiguration getParent() {
         return null;
     }
@@ -114,6 +139,7 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     public FieldConfiguration fromDocument(Map<String, Object> document) {
         name = getString(document, "name");
         elasticsearchType = getString(document, "elasticsearchType");
+        additionalParameters = getDocument(document, "additionalParameters");
         return this;
     }
 
@@ -128,7 +154,11 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
         }
 
         final SuggestFieldConfiguration that = (SuggestFieldConfiguration) o;
-        return new EqualsBuilder().append(name, that.name).append(elasticsearchType, that.elasticsearchType).isEquals();
+        return new EqualsBuilder()
+                .append(name, that.name)
+                .append(elasticsearchType, that.elasticsearchType)
+                .append(additionalParameters, that.additionalParameters)
+                .isEquals();
     }
 
     @Override

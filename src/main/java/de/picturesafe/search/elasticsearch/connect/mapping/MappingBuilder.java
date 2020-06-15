@@ -22,6 +22,7 @@ import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.util.logging.XcontentToString;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import static de.picturesafe.search.elasticsearch.connect.mapping.MappingConstants.KEYWORD_FIELD;
 import static de.picturesafe.search.elasticsearch.connect.mapping.MappingConstants.MULTILINGUAL_KEYWORD_FIELD;
@@ -96,12 +98,13 @@ public class MappingBuilder {
                     addNestedObject(mapping, fieldConfig);
                 } else {
                     mapping.field("type", fieldConfig.getElasticsearchType());
+                    if (fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.OBJECT.toString())
+                            && fieldConfig.isWithoutIndexing()) {
+                        mapping.field("enabled", false);
+                    }
+                    addCopyTo(mapping, fieldConfig);
+                    addAdditionalParameters(mapping, fieldConfig);
                 }
-                if (fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.OBJECT.toString())
-                        && fieldConfig.isWithoutIndexing()) {
-                    mapping.field("enabled", false);
-                }
-                addCopyTo(fieldConfig, mapping);
             }
 
             if (StringUtils.isNoneBlank(fieldConfig.getAnalyzer())) {
@@ -118,7 +121,7 @@ public class MappingBuilder {
             final String localeSubName = languageSortConfiguration.getLanguage();
             mapping.startObject(localeSubName);
             mapping.field("type", "text");
-            addCopyTo(fieldConfiguration, mapping);
+            addCopyTo(mapping, fieldConfiguration);
 
             if (fieldConfiguration.isSortable() || fieldConfiguration.isAggregatable()) {
                 mapping.startObject("fields");
@@ -139,6 +142,8 @@ public class MappingBuilder {
                 }
                 mapping.endObject();
             }
+
+            addAdditionalParameters(mapping, fieldConfiguration);
             mapping.endObject();
         }
 
@@ -147,7 +152,7 @@ public class MappingBuilder {
 
     private void addTextField(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
         mapping.field("type", "text");
-        addCopyTo(fieldConfiguration, mapping);
+        addCopyTo(mapping, fieldConfiguration);
 
         if (fieldConfiguration.isAggregatable() || fieldConfiguration.isSortable()) {
             mapping.startObject("fields");
@@ -156,6 +161,7 @@ public class MappingBuilder {
             mapping.endObject();
             mapping.endObject();
         }
+        addAdditionalParameters(mapping, fieldConfiguration);
     }
 
     private void addNestedObject(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
@@ -165,9 +171,17 @@ public class MappingBuilder {
         mapping.endObject();
     }
 
-    private void addCopyTo(FieldConfiguration field, XContentBuilder mapping) throws IOException {
-        if (CollectionUtils.isNotEmpty(field.getCopyToFields())) {
-            mapping.field("copy_to", field.getCopyToFields());
+    private void addCopyTo(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
+        if (CollectionUtils.isNotEmpty(fieldConfiguration.getCopyToFields())) {
+            mapping.field("copy_to", fieldConfiguration.getCopyToFields());
+        }
+    }
+
+    private void addAdditionalParameters(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
+        if (MapUtils.isNotEmpty(fieldConfiguration.getAdditionalParameters())) {
+            for (final Map.Entry<String, Object> entry : fieldConfiguration.getAdditionalParameters().entrySet()) {
+                mapping.field(entry.getKey(), entry.getValue());
+            }
         }
     }
 }

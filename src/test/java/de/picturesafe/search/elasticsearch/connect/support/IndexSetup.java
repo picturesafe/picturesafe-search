@@ -47,13 +47,13 @@ public class IndexSetup {
         this.elasticsearchAdmin = elasticsearchAdmin;
     }
 
-    public void createIndex(String indexAlias) {
-        createIndex(elasticsearchAdmin, indexAlias);
+    public String createIndex(String indexAlias) {
+        return createIndex(elasticsearchAdmin, indexAlias);
     }
 
-    public void createIndex(ElasticsearchAdmin elasticsearchAdmin, String indexAlias) {
+    public String createIndex(ElasticsearchAdmin elasticsearchAdmin, String indexAlias) {
         LOG.info("Creating index: indexAlias = " + indexAlias);
-        elasticsearchAdmin.createIndexWithAlias(new StandardIndexPresetConfiguration(indexPresetConfiguration, indexAlias), mappingConfiguration);
+        return elasticsearchAdmin.createIndexWithAlias(new StandardIndexPresetConfiguration(indexPresetConfiguration, indexAlias), mappingConfiguration);
     }
 
     public void tearDownIndex(String indexAlias) {

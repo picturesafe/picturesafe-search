@@ -182,7 +182,7 @@ public class AdminIT extends AbstractElasticIntegrationTest {
         }
     }
 
-    @ComponentScan(basePackageClasses = {MultilinguaCustomResolverlIT.class})
+    @ComponentScan(basePackageClasses = {AdminIT.class})
     static class Config {
 
         @Bean

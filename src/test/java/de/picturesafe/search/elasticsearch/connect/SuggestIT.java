@@ -35,6 +35,8 @@ import static org.junit.Assert.assertTrue;
 
 public class SuggestIT extends AbstractElasticIntegrationTest {
 
+    private static final String LONG_CAPTION = "Hier ist ein Titel mit mehr als den standardmäßig indexierten 50 Zeichen.";
+
     private static final String[] CAPTIONS = {
         "Dies ist ein schöner Titel",
         "Dies ist meiner Meinung nach der schönste Titel",
@@ -47,7 +49,8 @@ public class SuggestIT extends AbstractElasticIntegrationTest {
         "Dort stehen schöne Titel",
         "Dieser Titel macht keinen Sinn",
         "Titel machen generell keinen Sinn",
-        "Jetzt einen Cappuccino"
+        "Jetzt einen Cappuccino",
+        LONG_CAPTION
     };
 
     @Autowired
@@ -126,5 +129,15 @@ public class SuggestIT extends AbstractElasticIntegrationTest {
         assertTrue(result.containsKey("suggest"));
         final List<String> suggestions = result.get("suggest");
         assertEquals(2, suggestions.size());
+    }
+
+    @Test
+    public void testSuggestLongCaption() {
+        final SuggestExpression expression = new SuggestExpression("Hier", 1);
+        final Map<String, List<String>> result = elasticsearch.suggest(indexAlias, expression);
+        assertTrue(result.containsKey("suggest"));
+        final List<String> suggestions = result.get("suggest");
+        assertEquals(1, suggestions.size());
+        assertEquals(LONG_CAPTION, suggestions.get(0));
     }
 }
