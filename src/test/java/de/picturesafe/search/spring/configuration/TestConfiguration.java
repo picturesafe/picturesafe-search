@@ -23,6 +23,7 @@ import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.config.QueryConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
+import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.filter.DefaultExpressionFilterFactory;
@@ -38,6 +39,8 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_SUGGEST;
 
 @Configuration
 @Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class,
@@ -103,7 +106,7 @@ public class TestConfiguration {
         testFields.add(StandardFieldConfiguration.builder(
                 "objectField", ElasticsearchType.OBJECT).withoutIndexing().build());
         testFields.add(referenceWithSortFieldConfiguration());
-        testFields.add(FieldConfiguration.SUGGEST_FIELD);
+        testFields.add(SuggestFieldConfiguration.name(FIELD_NAME_SUGGEST).additionalParameter("max_input_length", 100));
         return testFields;
     }
 

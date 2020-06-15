@@ -29,10 +29,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getBoolean;
+import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocument;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocuments;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getString;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getStringSet;
@@ -52,6 +54,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private List<StandardFieldConfiguration> nestedFields;
     private Set<String> copyToFields;
     private FieldConfiguration parent;
+    private Map<String, Object> additionalParameters;
 
     /**
      * ONLY FOR INTERNAL USAGE
@@ -68,6 +71,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         this.analyzer = builder.analyzer;
         this.withoutIndexing = builder.withoutIndexing;
         this.copyToFields = builder.copyToFields;
+        this.additionalParameters = builder.additionalParameters;
         this.nestedFields = builder.nestedFields;
         initNestedFields();
     }
@@ -148,6 +152,11 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
+    public Map<String, Object> getAdditionalParameters() {
+        return additionalParameters;
+    }
+
+    @Override
     public FieldConfiguration getParent() {
         return parent;
     }
@@ -170,6 +179,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         private boolean withoutIndexing;
         private List<StandardFieldConfiguration> nestedFields;
         private Set<String> copyToFields;
+        private Map<String, Object> additionalParameters;
 
         public Builder(String name, ElasticsearchType elasticsearchType) {
             this.name = name;
@@ -254,6 +264,19 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             return this;
         }
 
+        public Builder additionalParameters(Map<String, Object> additionalParameters) {
+            this.additionalParameters = additionalParameters;
+            return this;
+        }
+
+        public Builder additionalParameter(String name, Object value) {
+            if (additionalParameters == null) {
+                additionalParameters = new TreeMap<>();
+            }
+            additionalParameters.put(name, value);
+            return this;
+        }
+
         public StandardFieldConfiguration build() {
             final StandardFieldConfiguration fieldConfiguration = new StandardFieldConfiguration(this);
             validateFieldConfiguration(fieldConfiguration);
@@ -281,6 +304,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         analyzer = getString(document, "analyzer");
         withoutIndexing = getBoolean(document, "withoutIndexing");
         copyToFields = getStringSet(document, "copyToFields");
+        additionalParameters = getDocument(document, "additionalParameters");
 
         final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "nestedFields");
         nestedFields = (nestedDocuments != null)
@@ -310,6 +334,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append(withoutIndexing, that.withoutIndexing)
                 .append(nestedFields, that.nestedFields)
                 .append(copyToFields, that.copyToFields)
+                .append(additionalParameters, that.additionalParameters)
                 .isEquals();
     }
 
@@ -328,8 +353,9 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append("multilingual", multilingual) //--
                 .append("analyzer", analyzer) //--
                 .append("withoutIndexing", withoutIndexing) //--
-                .append("copyToFields", copyToFields) //--
                 .append("nestedFields", nestedFields) //--
+                .append("copyToFields", copyToFields) //--
+                .append("additionalParameters", additionalParameters) //--
                 .append("parent", (parent != null) ? parent.getName() : null) //--
                 .toString();
     }

@@ -312,7 +312,16 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
     }
 
     @Override
+    public Map<String, Object> getMapping(String indexName) {
+        return doGetMapping(indexName).sourceAsMap();
+    }
+
+    @Override
     public String getMappingAsJson(String indexName) {
+        return doGetMapping(indexName).source().toString();
+    }
+
+    private MappingMetaData doGetMapping(String indexName) {
         final GetMappingsRequest request = new GetMappingsRequest();
         request.indices(indexName);
         final GetMappingsResponse getMappingResponse;
@@ -322,8 +331,7 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
             throw new RuntimeException("Failed to load mapping for index name '" + indexName + "'!", ioe);
         }
         final Map<String, MappingMetaData> allMappings = getMappingResponse.mappings();
-        final MappingMetaData typeMapping = allMappings.get(indexName);
-        return typeMapping.source().toString();
+        return allMappings.get(indexName);
     }
 
     @Override

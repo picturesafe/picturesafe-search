@@ -27,6 +27,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ElasticsearchAdmin {
 
@@ -112,7 +113,15 @@ public interface ElasticsearchAdmin {
     boolean aliasOrIndexExists(String indexAlias);
 
     /**
-     * Get index mapping as JSON string.
+     * Gets the index mapping.
+     *
+     * @param indexName The index name
+     * @return          The index mapping
+     */
+    Map<String, Object> getMapping(String indexName);
+
+    /**
+     * Gets index mapping as JSON string.
      *
      * @param indexName     The index name
      * @return              The index mapping as JSON string

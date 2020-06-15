@@ -57,6 +57,7 @@ public class FieldConfigurationTest {
                 .sortable(true)
                 .multilingual(true)
                 .analyzer("specialAnalyzer")
+                .additionalParameter("abc", "def")
                 .build();
 
         assertTrue(fieldConfiguration.isCopyToFulltext());
@@ -64,6 +65,8 @@ public class FieldConfigurationTest {
         assertTrue(fieldConfiguration.isSortable());
         assertTrue(fieldConfiguration.isMultilingual());
         assertEquals("specialAnalyzer", fieldConfiguration.getAnalyzer());
+        assertNotNull(fieldConfiguration.getAdditionalParameters());
+        assertEquals("def", fieldConfiguration.getAdditionalParameters().get("abc"));
     }
 
     @Test
@@ -72,7 +75,7 @@ public class FieldConfigurationTest {
         exception.expectMessage("Parameter 'name' must not contain a '.'!");
         StandardFieldConfiguration.builder("text.field", ElasticsearchType.TEXT).build();
 
-        new SuggestFieldConfiguration("suggest.field");
+        SuggestFieldConfiguration.name("suggest.field");
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Parameter 'name' must not contain a '.'!");
     }
@@ -98,7 +101,7 @@ public class FieldConfigurationTest {
 
     @Test
     public void testSuggestFieldConfiguration() {
-        FieldConfiguration fieldConfiguration = new SuggestFieldConfiguration("mySuggestField");
+        FieldConfiguration fieldConfiguration = SuggestFieldConfiguration.name("mySuggestField").additionalParameter("max_input_length", 100);
         assertEquals("mySuggestField", fieldConfiguration.getName());
         assertEquals(ElasticsearchType.COMPLETION.toString(), fieldConfiguration.getElasticsearchType());
         assertFalse(fieldConfiguration.isCopyToFulltext());
@@ -106,10 +109,13 @@ public class FieldConfigurationTest {
         assertFalse(fieldConfiguration.isSortable());
         assertFalse(fieldConfiguration.isMultilingual());
         assertFalse(fieldConfiguration.isNestedObject());
+        assertNotNull(fieldConfiguration.getAdditionalParameters());
+        assertEquals(100, fieldConfiguration.getAdditionalParameters().get("max_input_length"));
 
         fieldConfiguration = FieldConfiguration.SUGGEST_FIELD;
         assertEquals(FieldConfiguration.FIELD_NAME_SUGGEST, fieldConfiguration.getName());
         assertEquals(ElasticsearchType.COMPLETION.toString(), fieldConfiguration.getElasticsearchType());
+        assertNull(fieldConfiguration.getAdditionalParameters());
     }
 
     @Test
