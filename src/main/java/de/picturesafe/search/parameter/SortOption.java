@@ -19,6 +19,7 @@ package de.picturesafe.search.parameter;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -27,12 +28,14 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class SortOption {
 
     public enum Direction {ASC, DESC}
+    public enum ArrayMode {MIN, MAX, SUM, AVG, MEDIAN, DEFAULT}
 
     public static final String RELEVANCE_NAME = "_score";
 
     private final String fieldName;
     private final Direction sortDirection;
     private Expression filter;
+    private ArrayMode arrayMode = ArrayMode.DEFAULT;
 
     /**
      * Creates a sort option with ascending direction.
@@ -92,18 +95,29 @@ public class SortOption {
     /**
      * Sets an optional filter expression (for nested objects).
      * @param filter Filter expression
-     */
-    public void setFilter(Expression filter) {
-        this.filter = filter;
-    }
-
-    /**
-     * Sets an optional filter expression (for nested objects).
-     * @param filter Filter expression
      * @return SortOption
      */
     public SortOption filter(Expression filter) {
-        setFilter(filter);
+        this.filter = filter;
+        return this;
+    }
+
+    /**
+     * Gets the mode for sorting by array or multi-valued fields.
+     * @return ArrayMode
+     */
+    public ArrayMode getArrayMode() {
+        return arrayMode;
+    }
+
+    /**
+     * Sets the mode for sorting by array or multi-valued fields.
+     * @param arrayMode Mode for sorting by array or multi-valued fields
+     * @return SortOption
+     */
+    public SortOption arrayMode(ArrayMode arrayMode) {
+        Validate.notNull(arrayMode, "Parameter 'arrayMode' may not be null!");
+        this.arrayMode = arrayMode;
         return this;
     }
 
@@ -113,6 +127,7 @@ public class SortOption {
                 .append("fieldName", fieldName)
                 .append("sortDirection", sortDirection)
                 .append("filter", filter)
+                .append("arrayMode", arrayMode)
                 .toString();
     }
 }
