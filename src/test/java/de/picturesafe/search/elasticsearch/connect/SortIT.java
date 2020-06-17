@@ -42,7 +42,7 @@ public class SortIT extends AbstractElasticIntegrationTest {
         indexSetup.createIndex(indexAlias);
 
         final List<Map<String, Object>> docs = Arrays.asList(
-                DocumentBuilder.id(1).put("caption", "sorting").put("numbers", Arrays.asList(1, 2, 3, 4)).build(), // sum= 10, avg=3
+                DocumentBuilder.id(1).put("caption", "sorting").put("numbers", Arrays.asList(1, 2, 3, 4)).build(), // sum=10, avg=3
                 DocumentBuilder.id(2).put("caption", "sorting").put("numbers", Arrays.asList(1, 2, 3)).build(), // sum=6, avg=2
                 DocumentBuilder.id(3).put("caption", "sorting").put("numbers", Arrays.asList(2, 3, 4)).build(), // sum=9, avg=3
                 DocumentBuilder.id(4).put("caption", "sorting").put("numbers", Arrays.asList(2, 3)).build()); // sum=5, avg=3
