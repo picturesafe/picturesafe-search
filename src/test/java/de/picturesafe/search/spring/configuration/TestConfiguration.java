@@ -105,6 +105,8 @@ public class TestConfiguration {
                 "facetDate", ElasticsearchType.DATE).aggregatable(true).build());
         testFields.add(StandardFieldConfiguration.builder(
                 "objectField", ElasticsearchType.OBJECT).withoutIndexing().build());
+        testFields.add(StandardFieldConfiguration.builder(
+                "numbers", ElasticsearchType.INTEGER).build());
         testFields.add(referenceWithSortFieldConfiguration());
         testFields.add(SuggestFieldConfiguration.name(FIELD_NAME_SUGGEST).additionalParameter("max_input_length", 100));
         return testFields;

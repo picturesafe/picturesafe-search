@@ -98,6 +98,7 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortMode;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -666,7 +667,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                     }
 
                     if (sortBuilder == null) {
-                        sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).missing(sortMissing());
+                        sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
                     }
                 }
 
@@ -683,6 +684,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                 .fieldSort(sortFieldName)
                 .order(sortOrder(sortOption))
                 .missing(sortMissing())
+                .sortMode(sortMode(sortOption))
                 .setNestedSort(nestedSortBuilder(queryDto, fieldConfiguration.getName(), sortOption, mappingConfiguration));
     }
 
@@ -698,6 +700,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
 
     private SortOrder sortOrder(SortOption sortOption) {
         return (sortOption.getSortDirection() == SortOption.Direction.ASC) ? SortOrder.ASC : SortOrder.DESC;
+    }
+
+    private SortMode sortMode(SortOption sortOption) {
+        if (sortOption.getArrayMode() == SortOption.ArrayMode.DEFAULT) {
+            return (sortOption.getSortDirection() == SortOption.Direction.ASC) ? SortMode.MIN : SortMode.MAX;
+        } else {
+            return SortMode.valueOf(sortOption.getArrayMode().name());
+        }
     }
 
     private String sortMissing() {
