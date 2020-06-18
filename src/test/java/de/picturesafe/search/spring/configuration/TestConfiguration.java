@@ -42,7 +42,7 @@ import java.util.Locale;
 @Configuration
 @Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class,
         ElasticsearchAdminImpl.class})
-@PropertySource("classpath:elasticsearch.properties")
+@PropertySource(value = "classpath:${ES_PROPERTIES_CLASSPATH:elasticsearch.properties}", ignoreResourceNotFound = true)
 public class TestConfiguration {
 
     @Bean
