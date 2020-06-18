@@ -64,7 +64,7 @@ public class WriteRequestHandlerTest {
     public void setup() {
         final ElasticsearchAdmin elasticsearchAdmin = mock(ElasticsearchAdmin.class);
         elasticsearch
-                = spy(new ElasticsearchImpl(elasticsearchAdmin, restClientConfiguration, Collections.emptyList(), Collections.emptyList(), "Europe/berlin"));
+                = spy(new ElasticsearchImpl(elasticsearchAdmin, restClientConfiguration, Collections.emptyList(), Collections.emptyList(), "Europe/Berlin"));
         elasticsearch.setWriteRequestHandler(requestHandler);
         elasticsearch.indexingBulkSize = 100;
         doAnswer(invocation -> {
