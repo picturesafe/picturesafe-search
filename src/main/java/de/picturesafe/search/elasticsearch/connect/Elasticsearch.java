@@ -42,54 +42,41 @@ public interface Elasticsearch {
      * Adds a document to the index. If a document with the same ID already exists it will be updated.
      * NOTE: key "id" must be present in document.
      *
-     * @param document                  Document to be added
-     * @param mappingConfiguration      {@link MappingConfiguration}
      * @param indexAlias                The index alias
-     * @param applyIndexRefresh         Should the search index be forced to be updated immediately?
-     *                                  Be careful and use false as default.
+     * @param applyIndexRefresh         Should the search index be forced to be updated immediately? Be careful and use false as default.
+     * @param document                  Document to be added
      */
-    void addToIndex(Map<String, Object> document, MappingConfiguration mappingConfiguration, String indexAlias, boolean applyIndexRefresh);
+    void addToIndex(String indexAlias, boolean applyIndexRefresh, Map<String, Object> document);
 
     /**
      * Adds multiple documents to the index. If a document with the same ID already exists it will be updated.
      * NOTE: key "id" must be present in documents.
      *
-     * @param documents                 Documents to be added
-     * @param mappingConfiguration      {@link MappingConfiguration}
      * @param indexAlias                The index alias
-     * @param applyIndexRefresh         Should the search index be forced to be updated immediately?
-     *                                  Be careful and use false as default.
-     * @param execeptionOnFailure       Throw Exception if update of at least one document fails
+     * @param applyIndexRefresh         Should the search index be forced to be updated immediately? Be careful and use false as default.
+     * @param exceptionOnFailure        Throw Exception if update of at least one document fails
+     * @param documents                 Documents to be added
      * @return                          Status of indexing per document (id, true|false)
      */
-    Map<String, Boolean> addToIndex(List<Map<String, Object>> documents,
-                                  MappingConfiguration mappingConfiguration,
-                                  String indexAlias,
-                                  boolean applyIndexRefresh,
-                                  boolean execeptionOnFailure);
+    Map<String, Boolean> addToIndex(String indexAlias, boolean applyIndexRefresh, boolean exceptionOnFailure, List<Map<String, Object>> documents);
 
     /**
      * Removes a document from the index.
      *
-     * @param mappingConfiguration          {@link MappingConfiguration}
-     * @param indexPresetConfiguration      {@link IndexPresetConfiguration}
-     * @param applyIndexRefresh             Should the search index be forced to be updated immediately?
-     *                                      Be careful and use false as default.
-     * @param id                            ID of the document to be removed
+     * @param indexAlias        The index alias
+     * @param applyIndexRefresh Should the search index be forced to be updated immediately? Be careful and use false as default.
+     * @param id                ID of the document to be removed
      */
-    void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration, boolean applyIndexRefresh, Object id);
+    void removeFromIndex(String indexAlias, boolean applyIndexRefresh, Object id);
 
     /**
      * Removes multiple documents from the index.
      *
-     * @param mappingConfiguration          {@link MappingConfiguration}
-     * @param indexPresetConfiguration      {@link IndexPresetConfiguration}
-     * @param applyIndexRefresh             Should the search index be forced to be updated immediately?
-     *                                      Be careful and use false as default.
-     * @param ids                           IDs of the documents to be removed
+     * @param indexAlias            The index alias
+     * @param applyIndexRefresh     Should the search index be forced to be updated immediately? Be careful and use false as default.
+     * @param ids                   IDs of the documents to be removed
      */
-    void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
-                         boolean applyIndexRefresh, Collection<?> ids);
+    void removeFromIndex(String indexAlias, boolean applyIndexRefresh, Collection<?> ids);
 
     /**
      * Checks if elasticsearch service is available.
@@ -186,9 +173,8 @@ public interface Elasticsearch {
      *
      * @param indexAlias            Name of the alias
      * @param indexVersion          Version of the index
-     * @param mappingConfiguration  {@link MappingConfiguration}
      */
-    void setIndexVersion(String indexAlias, int indexVersion, MappingConfiguration mappingConfiguration);
+    void setIndexVersion(String indexAlias, int indexVersion);
 
     /**
      * Adds one or more field configurations to the index mapping.

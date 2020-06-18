@@ -59,7 +59,7 @@ public class UmlautIT extends AbstractElasticIntegrationTest {
         final Map<String, Object> document = DocumentBuilder.id(42)
                 .put("caption", "Die Bälle hüpfen im Kreißsaal wild herum, Äpfel liegen überall!")
                 .build();
-        elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, document);
     }
 
     @After

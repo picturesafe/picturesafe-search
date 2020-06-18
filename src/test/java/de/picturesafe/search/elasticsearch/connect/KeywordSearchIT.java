@@ -63,7 +63,7 @@ public class KeywordSearchIT extends AbstractElasticIntegrationTest {
         int i = 1;
         for (String keyword : KEYWORDS) {
             final Map<String, Object> doc = DocumentBuilder.id(i++).put("keyword", keyword).build();
-            elasticsearch.addToIndex(doc, mappingConfiguration, indexAlias, true);
+            elasticsearch.addToIndex(indexAlias, true, doc);
         }
     }
 

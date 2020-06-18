@@ -69,7 +69,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
                 documentBuilder.put("title." + languageSortConfiguration.getLanguage(),
                         "Multilang Titel" + i + " " + languageSortConfiguration.getLanguage());
             }
-            elasticsearch.addToIndex(documentBuilder.build(), mappingConfiguration, indexAlias, true);
+            elasticsearch.addToIndex(indexAlias, true, documentBuilder.build());
         }
     }
 

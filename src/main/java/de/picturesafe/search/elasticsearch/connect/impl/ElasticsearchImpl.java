@@ -79,6 +79,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.MainResponse;
@@ -140,12 +141,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     protected ElasticsearchAdmin elasticsearchAdmin;
     protected RestClientConfiguration restClientConfiguration;
     protected RestHighLevelClient restClient;
-    protected List<FilterFactory> filterFactories;
     protected List<QueryFactory> queryFactories;
+    protected List<FilterFactory> filterFactories;
+    protected String timeZone;
+
     protected AggregationBuilderFactoryRegistry aggregationBuilderFactoryRegistry;
     protected FacetConverterChain facetConverterChain;
     protected List<FacetResolver> facetResolvers;
-    protected String timeZone;
+    protected WriteRequestHandler writeRequestHandler;
 
     @Value("${elasticsearch.service.check_cluster_status_timeout:10000}")
     protected long checkClusterStatusTimeout;
@@ -189,6 +192,11 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         this.idFormat = idFormat;
     }
 
+    @Autowired(required = false)
+    public void setWriteRequestHandler(WriteRequestHandler writeRequestHandler) {
+        this.writeRequestHandler = writeRequestHandler;
+    }
+
     public void setCheckClusterStatusTimeout(long checkClusterStatusTimeout) {
         this.checkClusterStatusTimeout = checkClusterStatusTimeout;
     }
@@ -212,16 +220,18 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     @Override
-    public void addToIndex(Map<String, Object> document, MappingConfiguration mappingConfiguration, String indexAlias, boolean applyIndexRefresh) {
-        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null!");
-        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be empty!");
-        try {
-            final IndexRequest indexRequest = createIndexRequest(document, mappingConfiguration, indexAlias, applyIndexRefresh);
+    public void addToIndex(String indexAlias, boolean applyIndexRefresh, Map<String, Object> document) {
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
+        Validate.notNull(document, "Parameter 'document' may not be null!");
 
-            final IndexResponse indexResponse = new RestClientIndexAction().action(restClient, indexRequest);
-            if (indexResponse.status() != RestStatus.CREATED && indexResponse.status() != RestStatus.OK) {
-                throw new ElasticsearchException(
-                        "Adding document to index '" + indexAlias + "' failed with response: " + indexResponse.status().getStatus());
+        try {
+            final IndexRequest indexRequest = createIndexRequest(document, indexAlias, applyIndexRefresh);
+            if (!handleRequestExternally(indexRequest)) {
+                final IndexResponse indexResponse = handleRequest(indexRequest);
+                if (indexResponse.status() != RestStatus.CREATED && indexResponse.status() != RestStatus.OK) {
+                    throw new ElasticsearchException(
+                            "Adding document to index '" + indexAlias + "' failed with response: " + indexResponse.status().getStatus());
+                }
             }
         } catch (Exception e) {
             throw new ElasticsearchException("Failed to add document to index '" + indexAlias + "'!", e);
@@ -229,9 +239,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     @Override
-    public Map<String, Boolean> addToIndex(List<Map<String, Object>> docs, MappingConfiguration mappingConfiguration, String indexAlias,
-                                         boolean applyIndexRefresh, boolean execeptionOnFailure) {
-        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null!");
+    public Map<String, Boolean> addToIndex(String indexAlias, boolean applyIndexRefresh, boolean exceptionOnFailure, List<Map<String, Object>> docs) {
         Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be empty!");
 
         final Map<String, Boolean> results = new HashMap<>();
@@ -250,53 +258,53 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                 }
 
                 final Map<String, Object> doc = docs.get(i);
-                final IndexRequest indexRequest = createIndexRequest(doc, mappingConfiguration, indexAlias, false);
+                final IndexRequest indexRequest = createIndexRequest(doc, indexAlias, false);
                 bulkRequest.add(indexRequest);
                 if (bulkRequest.numberOfActions() > indexingBulkSize || i == size - 1) {
-                    LOG.debug("Adding {} documents to index '{}'.", bulkRequest.numberOfActions(), indexAlias);
+                    if (!handleRequestExternally(bulkRequest)) {
+                        LOG.debug("Adding {} documents to index '{}'.", bulkRequest.numberOfActions(), indexAlias);
 
-                    sw.start("add");
-                    final BulkResponse bulkResponse = new RestClientBulkAction().action(restClient, bulkRequest);
-                    if (execeptionOnFailure && bulkResponse.hasFailures()) {
-                        throw new ElasticsearchException("Add to index failed: " + bulkResponse.buildFailureMessage());
+                        sw.start("add");
+                        final BulkResponse bulkResponse = handleRequest(bulkRequest);
+                        LOG.debug("Bulk add response: {}", bulkResponse);
+                        if (exceptionOnFailure && bulkResponse.hasFailures()) {
+                            throw new ElasticsearchException("Add to index failed: " + bulkResponse.buildFailureMessage());
+                        }
+                        bulkResponse.forEach(itemResponse -> results.put(itemResponse.getId(), itemResponse.getFailure() == null));
+                        sw.stop();
                     }
-                    bulkResponse.forEach(itemResponse -> results.put(itemResponse.getId(), itemResponse.getFailure() == null));
-                    sw.stop();
-
                     bulkRequest = null;
                 }
             }
             LOG.debug("{}", new StopWatchPrettyPrint(sw));
 
             return results;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to index document for elasticsearch", e);
+        } catch (Exception e) {
+            throw new ElasticsearchException("Failed to add documents to index: indexAlias=" + indexAlias, e);
         }
     }
 
     @Override
-    public void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
-                                boolean applyIndexRefresh, Object id) {
-        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null.");
-        Validate.notNull(indexPresetConfiguration, "Parameter 'indexPresetConfiguration' may not be null.");
+    public void removeFromIndex(String indexAlias, boolean applyIndexRefresh, Object id) {
+        Validate.notNull(indexAlias, "Parameter 'indexAlias' may not be null.");
         Validate.notNull(id, "Parameter 'id' may not be null.");
 
-        final String index = indexPresetConfiguration.getIndexAlias();
-
-        final DeleteRequest deleteRequest = new DeleteRequest(index, idFormat.format(id)).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
-        final DeleteResponse deleteResponse = new RestClientDeleteAction().action(restClient, deleteRequest);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("ElasticSearch Client Response: " + deleteResponse);
+        final DeleteRequest deleteRequest = createDeleteRequest(id, indexAlias, applyIndexRefresh);
+        if (!handleRequestExternally(deleteRequest)) {
+            final DeleteResponse deleteResponse = handleRequest(deleteRequest);
+            LOG.debug("Delete response: {}", deleteResponse);
         }
     }
 
-    @Override
-    public void removeFromIndex(MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
-                                boolean applyIndexRefresh, Collection<?> ids) {
-        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null!");
-        Validate.notNull(indexPresetConfiguration, "Parameter 'indexPresetConfiguration' may not be null!");
+    protected DeleteRequest createDeleteRequest(Object id, String indexAlias, boolean applyIndexRefresh) {
+        final DeleteRequest deleteRequest = new DeleteRequest(indexAlias, idFormat.format(id)).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
+        LOG.debug("Created delete request: {}", deleteRequest);
+        return deleteRequest;
+    }
 
+    @Override
+    public void removeFromIndex(String indexAlias, boolean applyIndexRefresh, Collection<?> ids) {
+        Validate.notNull(indexAlias, "Parameter 'indexAlias' may not be null!");
 
         if (CollectionUtils.isEmpty(ids)) {
             return;
@@ -306,10 +314,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
 
         final int maxSize = 10000;
         if (idsAsArray.length == 1) {
-            removeFromIndex(mappingConfiguration, indexPresetConfiguration, applyIndexRefresh, idsAsArray[0]);
+            removeFromIndex(indexAlias, applyIndexRefresh, idsAsArray[0]);
         } else {
-            final String index = indexPresetConfiguration.getIndexAlias();
-
             // Execution of the deletion in a loop to avoid OutOfMemory problems
             int count = 0;
             do {
@@ -317,14 +323,13 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                 final int size = Math.min(maxSize, idsAsArray.length - count);
                 final BulkRequest bulkRequest = new BulkRequest().setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
                 for (int i = count; i < count + size; i++) {
-                    bulkRequest.add(new DeleteRequest(index, idsAsArray[i]));
+                    bulkRequest.add(new DeleteRequest(indexAlias, idsAsArray[i]));
                 }
 
-                final BulkResponse bulkResponse = new RestClientBulkAction().action(restClient, bulkRequest);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ElasticSearch Client Response: " + bulkResponse);
+                if (!handleRequestExternally(bulkRequest)) {
+                    final BulkResponse bulkResponse = handleRequest(bulkRequest);
+                    LOG.debug("Bulk remove response: {}", bulkResponse);
                 }
-
                 count += size;
             } while (count < idsAsArray.length);
         }
@@ -386,9 +391,9 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     @Override
-    public void setIndexVersion(String indexAlias, int indexVersion, MappingConfiguration mappingConfiguration) {
+    public void setIndexVersion(String indexAlias, int indexVersion) {
         final Map<String, Object> document = DocumentBuilder.id(0, idFormat).put(INDEX_VERSION, indexVersion).build();
-        addToIndex(document, mappingConfiguration, indexAlias, true);
+        addToIndex(indexAlias, true, document);
     }
 
     @Override
@@ -783,26 +788,24 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         return searchSourceBuilder;
     }
 
-    protected IndexRequest createIndexRequest(Map<String, Object> doc, MappingConfiguration mappingConfiguration, String indexName, boolean applyIndexRefresh)
-            throws IOException {
-        final XContentBuilder contentBuilder = XContentFactory.jsonBuilder();
-        contentBuilder.startObject();
-        addToIndexRequestContent(contentBuilder, doc, mappingConfiguration);
-        contentBuilder.endObject();
-        final String id = getId(doc);
-        final IndexRequest indexRequest = new IndexRequest(indexName).id(id)
-                .source(contentBuilder).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Trying to index " + indexRequest.toString());
+    protected IndexRequest createIndexRequest(Map<String, Object> doc, String indexAlias, boolean applyIndexRefresh) {
+        final XContentBuilder contentBuilder;
+        try {
+            contentBuilder = XContentFactory.jsonBuilder();
+            contentBuilder.startObject();
+            addToIndexRequestContent(contentBuilder, doc);
+            contentBuilder.endObject();
+        } catch (IOException e) {
+            throw new ElasticsearchException("Failed to create index request: indexAlias=" + indexAlias, e);
         }
-
+        final String id = getId(doc);
+        final IndexRequest indexRequest = new IndexRequest(indexAlias).id(id).source(contentBuilder).setRefreshPolicy(getRefreshPolicy(applyIndexRefresh));
+        LOG.debug("Created index request: {}", indexRequest);
         return indexRequest;
     }
 
     @SuppressWarnings("unchecked")
-    protected void addToIndexRequestContent(XContentBuilder contentBuilder, Map<String, Object> doc,
-                                          MappingConfiguration mappingConfiguration) throws IOException {
+    protected void addToIndexRequestContent(XContentBuilder contentBuilder, Map<String, Object> doc) throws IOException {
         for (Map.Entry<String, Object> entry : doc.entrySet()) {
             if (entry.getValue() != null) {
                 final String fieldName = entry.getKey();
@@ -810,7 +813,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                     final List<?> list = (List<?>) entry.getValue();
                     if (list.size() > 0 && list.get(0) instanceof Map) {
                         final List<Map<String, Object>> nestedObjectList = (List<Map<String, Object>>) list;
-                        addNestedObjectsToIndexRequestContent(contentBuilder, fieldName, nestedObjectList, mappingConfiguration);
+                        addNestedObjectsToIndexRequestContent(contentBuilder, fieldName, nestedObjectList);
                     } else {
                         final List<?> trimmedList = StringTrimUtility.trimListValues((List<?>) entry.getValue());
                         contentBuilder.array(fieldName, trimmedList.toArray());
@@ -832,14 +835,31 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         }
     }
 
-    protected void addNestedObjectsToIndexRequestContent(XContentBuilder contentBuilder, String fieldName, List<Map<String, Object>> nestedObjectList,
-                                                       MappingConfiguration mappingConfiguration) throws IOException {
+    protected void addNestedObjectsToIndexRequestContent(XContentBuilder contentBuilder, String fieldName, List<Map<String, Object>> nestedObjectList)
+            throws IOException {
         contentBuilder.startArray(fieldName);
         for (final Map<String, Object> doc : nestedObjectList) {
             contentBuilder.startObject();
-            addToIndexRequestContent(contentBuilder, doc, mappingConfiguration);
+            addToIndexRequestContent(contentBuilder, doc);
             contentBuilder.endObject();
         }
         contentBuilder.endArray();
+    }
+
+    protected boolean handleRequestExternally(WriteRequest<?> request) {
+        return writeRequestHandler != null && writeRequestHandler.handle(request);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <Req extends WriteRequest<Req>, Resp> Resp handleRequest(WriteRequest<Req> request) {
+        if (request instanceof IndexRequest) {
+            return (Resp) new RestClientIndexAction().action(restClient, (IndexRequest) request);
+        } else if (request instanceof DeleteRequest) {
+            return (Resp) new RestClientDeleteAction().action(restClient, (DeleteRequest) request);
+        } else if (request instanceof BulkRequest) {
+            return (Resp) new RestClientBulkAction().action(restClient, (BulkRequest) request);
+        } else {
+            throw new RuntimeException("Unsupported request type: " + request.getClass().getName());
+        }
     }
 }

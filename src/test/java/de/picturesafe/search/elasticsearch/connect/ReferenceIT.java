@@ -88,9 +88,9 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         references3.add(generateReference(9, 2L, null));
         data3.put("referenceWithSort", references3);
 
-        elasticsearch.addToIndex(data, mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(data2, mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(data3, mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, data);
+        elasticsearch.addToIndex(indexAlias, true, data2);
+        elasticsearch.addToIndex(indexAlias, true, data3);
 
         indexSetup.dumpIndexData(restClient, indexAlias);
     }
@@ -118,7 +118,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         references.add(generateReference(10, null, null));
         data.put("referenceWithSort", references);
 
-        elasticsearch.addToIndex(data, mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, data);
     }
 
     @Test
@@ -135,7 +135,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         references.add(generateReference(8, null, null));
         doc2.put("referenceWithSort", references);
 
-        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, Arrays.asList(doc1, doc2));
 
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 7);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
@@ -160,7 +160,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         references.add(generateReference(8, null, null));
         doc2.put("referenceWithSort", references);
 
-        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, Arrays.asList(doc1, doc2));
 
         Expression expression = new InExpression("referenceWithSort." + FIELD_TARGET_ID, 7);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);
@@ -192,7 +192,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         references.add(generateReference(8, null, null));
         doc2.put("referenceWithSort", references);
 
-        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, Arrays.asList(doc1, doc2));
 
         final OperationExpression expression = OperationExpression.and(
                 new ValueExpression("caption", "SearchEmptyIn"),
@@ -216,7 +216,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         doc2.put("id", "324");
         doc2.put("caption", "SearchIsNull");
 
-        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, Arrays.asList(doc1, doc2));
 
         final OperationExpression expression = OperationExpression.and(
                 new ValueExpression("caption", "SearchIsNull"),
@@ -269,7 +269,7 @@ public class ReferenceIT extends AbstractElasticIntegrationTest {
         references.add(generateReference(888, null, 2L));
         doc2.put("referenceWithSort", references);
 
-        elasticsearch.addToIndex(Arrays.asList(doc1, doc2), mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, Arrays.asList(doc1, doc2));
 
         final Expression expression = new ValueExpression("referenceWithSort." + FIELD_TARGET_ID, 888);
         final QueryRangeDto queryRangeDto = new QueryRangeDto(0, 40);

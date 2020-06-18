@@ -75,7 +75,7 @@ public class SuggestIT extends AbstractElasticIntegrationTest {
                     .build();
             docs.add(document);
         }
-        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
     }
 
     @After
