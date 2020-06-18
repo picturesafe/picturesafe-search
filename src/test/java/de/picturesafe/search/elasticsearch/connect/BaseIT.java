@@ -96,7 +96,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
                 .build(),
             DocumentBuilder.id(7).put("title.de", "Not released").put("caption", "Record not released").put("released", false)
                 .build());
-        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
     }
 
     @After
@@ -108,7 +108,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testAdd() throws IOException {
         final Map<String, Object> data = new HashMap<>();
         data.put("id", "15");
-        elasticsearch.addToIndex(data, mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, data);
         GetResponse res = restClient.get(new GetRequest().index(indexAlias).id("15"), RequestOptions.DEFAULT);
 
         assertTrue("Cannot find required document: indexAlias = " + indexAlias, res.isExists());
@@ -295,7 +295,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
         assertEquals("There should be exactly 7 results: indexAlias = " + indexAlias, 7, result.getTotalHitCount());
 
-        elasticsearch.removeFromIndex(mappingConfiguration, indexPresetConfiguration, true, Arrays.asList(2L, 3L));
+        elasticsearch.removeFromIndex(indexAlias, true, Arrays.asList(2L, 3L));
 
         result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         LOG.debug("result.getCount()=" + result.getTotalHitCount());
@@ -328,9 +328,9 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testPath() throws IOException {
-        elasticsearch.addToIndex(addTreePathDocument("1", "Bla/Bli/Blub"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(addTreePathDocument("2", "Bla/Bli/Bla"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(addTreePathDocument("3", "Rums/Bums"), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, addTreePathDocument("1", "Bla/Bli/Blub"));
+        elasticsearch.addToIndex(indexAlias, true, addTreePathDocument("2", "Bla/Bli/Bla"));
+        elasticsearch.addToIndex(indexAlias, true, addTreePathDocument("3", "Rums/Bums"));
         restClient.indices().refresh(new RefreshRequest().indices(indexAlias), RequestOptions.DEFAULT);
 
         LOG.debug("Document 1: " + restClient.get(new GetRequest().index(indexAlias).id("1"),
@@ -371,7 +371,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
                 DocumentBuilder.id(55).put("caption", "Familie Meier").put("keywordField", "hans meier").build(),
                 DocumentBuilder.id(56).put("caption", "Familie Meier").put("keywordField", "margarete meier").build()
         );
-        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
         LOG.debug("Document 1:\n" + restClient.get(new GetRequest().index(indexAlias).id("55"), RequestOptions.DEFAULT).getSourceAsString());
 
         Expression expression = new ValueExpression("keywordField", "hans meier");
@@ -400,7 +400,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final Map<String, Object> document = new HashMap<>();
         document.put("id", "55");
         document.put("keywordField", "urn:newsml:dpa.com:20090101:121024-99-04786");
-        elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, document);
         LOG.debug("Document 1: " + restClient.get(new GetRequest().index(indexAlias).id("55"),
                                                   RequestOptions.DEFAULT).getSourceAsString());
 
@@ -426,7 +426,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
     public void testIsNullExpression() {
         final Map<String, Object> document = new HashMap<>();
         document.put("id", "99");
-        elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, document);
 
         Expression expression = new IsNullExpression("caption", true);
         SearchResultDto searchResultDto = elasticsearch.search(

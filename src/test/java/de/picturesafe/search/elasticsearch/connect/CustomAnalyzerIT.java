@@ -77,12 +77,12 @@ public class CustomAnalyzerIT extends AbstractElasticIntegrationTest {
         final String indexAlias = indexPresetConfiguration.getIndexAlias();
         try {
             elasticsearchAdmin.createIndexWithAlias(indexPresetConfiguration, mappingConfiguration);
-            elasticsearch.addToIndex(createTestDocument(1, "test1.pdf"), mappingConfiguration, indexAlias, true);
-            elasticsearch.addToIndex(createTestDocument(2, "test2.pdf"), mappingConfiguration, indexAlias, true);
-            elasticsearch.addToIndex(createTestDocument(3, "test3.jpg"), mappingConfiguration, indexAlias, true);
-            elasticsearch.addToIndex(createTestDocument(4, "test.jpg"), mappingConfiguration, indexAlias, true);
-            elasticsearch.addToIndex(createTestDocument(5, "test.jpg"), mappingConfiguration, indexAlias, true);
-            elasticsearch.addToIndex(createTestDocument(6, "my_document.doc"), mappingConfiguration, indexAlias, true);
+            elasticsearch.addToIndex(indexAlias, true, createTestDocument(1, "test1.pdf"));
+            elasticsearch.addToIndex(indexAlias, true, createTestDocument(2, "test2.pdf"));
+            elasticsearch.addToIndex(indexAlias, true, createTestDocument(3, "test3.jpg"));
+            elasticsearch.addToIndex(indexAlias, true, createTestDocument(4, "test.jpg"));
+            elasticsearch.addToIndex(indexAlias, true, createTestDocument(5, "test.jpg"));
+            elasticsearch.addToIndex(indexAlias, true, createTestDocument(6, "my_document.doc"));
 
             SearchResultDto result = search("filenameWithAnalyzer", "test1.pdf");
             assertEquals(1, result.getTotalHitCount());

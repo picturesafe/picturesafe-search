@@ -63,7 +63,7 @@ public class WildcardFulltextIT extends AbstractElasticIntegrationTest {
             DocumentBuilder.id(2).put("location", "Bremen").build(),
             DocumentBuilder.id(3).put("location", "Rostock").build(),
             DocumentBuilder.id(4).put("location", "Bosnien Herzegowina").build());
-        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
     }
 
     @After

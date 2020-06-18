@@ -92,7 +92,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
                 .build(),
             DocumentBuilder.id(7).put("title.de", "Not released").put("caption", "Record not released").put("released", false)
                 .build());
-        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
     }
 
     @After
@@ -143,46 +143,46 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
     @Test
     public void testDateAggregation() throws Exception {
         int id = 100;
-        elasticsearch.addToIndex(dateDoc(id++, "01.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, "10.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, "20.01.2018 12:00:00"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, "01.02.2018 12:00:00"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, "10.02.2018 12:00:00"), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "01.01.2018 12:00:00"));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "10.01.2018 12:00:00"));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "20.01.2018 12:00:00"));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "01.02.2018 12:00:00"));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "10.02.2018 12:00:00"));
 
-        elasticsearch.addToIndex(dateDoc(id++, "01.01.2017 12:00:00"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, "20.01.2017 12:00:00"), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, "01.02.2017 12:00:00"), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "01.01.2017 12:00:00"));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "20.01.2017 12:00:00"));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, "01.02.2017 12:00:00"));
 
         // today
         Date date = todayNoon().getTime();
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
         // yesterday
         date = DateUtils.addDays(date, -1);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
 
         // last week
         Calendar cal = todayNoon();
         cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
         final Date startOfWeek = cal.getTime();
         date = DateUtils.addWeeks(startOfWeek, -1);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
         // last week + 1 day
         date = DateUtils.addDays(date, 1);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
         // last week + 2 days
         date = DateUtils.addDays(date, 1);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
 
         // last month
         cal = todayNoon();
         cal.set(Calendar.DAY_OF_MONTH, 15);
         final Date middleOfMonth = cal.getTime();
         date = DateUtils.addMonths(middleOfMonth, -1);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
         // last month + 1 day
         date = DateUtils.addDays(date, 1);
-        elasticsearch.addToIndex(dateDoc(id++, date), mappingConfiguration, indexAlias, true);
+        elasticsearch.addToIndex(indexAlias, true, dateDoc(id++, date));
 
         final Expression expression = new FulltextExpression("DateFacetTest");
         final DefaultAggregation aggregation = DefaultAggregation.field(dateFacetField);

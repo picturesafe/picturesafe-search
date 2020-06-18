@@ -72,7 +72,7 @@ public class WildcardTermIT extends AbstractElasticIntegrationTest {
             final Map<String, Object> document = DocumentBuilder.id(i++).put("caption", caption).build();
             docs.add(document);
         }
-        elasticsearch.addToIndex(docs, mappingConfiguration, indexAlias, true, true);
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
     }
 
     @After

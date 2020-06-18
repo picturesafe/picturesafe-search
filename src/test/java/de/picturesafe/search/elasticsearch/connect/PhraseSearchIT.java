@@ -56,7 +56,7 @@ public class PhraseSearchIT extends AbstractElasticIntegrationTest {
         int i = 1;
         for (String keyword : TERMS) {
             final Map<String, Object> document = DocumentBuilder.id(i++).put("keyword", keyword).build();
-            elasticsearch.addToIndex(document, mappingConfiguration, indexAlias, true);
+            elasticsearch.addToIndex(indexAlias, true, document);
         }
     }
 

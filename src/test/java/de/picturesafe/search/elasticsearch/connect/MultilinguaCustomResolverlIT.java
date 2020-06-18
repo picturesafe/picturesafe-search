@@ -67,7 +67,7 @@ public class MultilinguaCustomResolverlIT extends AbstractElasticIntegrationTest
                 documentBuilder.put("title." + languageSortConfiguration.getLocale().getLanguage(),
                         "Multilang Titel" + i + " " + languageSortConfiguration.getLocale().getLanguage());
             }
-            elasticsearch.addToIndex(documentBuilder.build(), mappingConfiguration, indexAlias, true);
+            elasticsearch.addToIndex(indexAlias, true, documentBuilder.build());
         }
     }
 

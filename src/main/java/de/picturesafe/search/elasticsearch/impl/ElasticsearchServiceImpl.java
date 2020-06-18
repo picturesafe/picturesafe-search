@@ -212,8 +212,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public void setIndexVersion(String indexAlias, int indexVersion) {
-        final MappingConfiguration mappingConfiguration = getMappingConfiguration(indexAlias, false);
-        elasticsearch.setIndexVersion(indexAlias, indexVersion, mappingConfiguration);
+        elasticsearch.setIndexVersion(indexAlias, indexVersion);
     }
 
     @Override
@@ -227,7 +226,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(document, "Parameter 'document' may not be null!");
 
-        elasticsearch.addToIndex(document, getMappingConfiguration(indexAlias, true), indexAlias, dataChangeProcessingMode.isRefresh());
+        elasticsearch.addToIndex(indexAlias, dataChangeProcessingMode.isRefresh(), document);
     }
 
     @Override
@@ -250,7 +249,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(documents, "Parameter 'documents' may not be null!");
 
-        elasticsearch.addToIndex(documents, getMappingConfiguration(indexAlias, true), indexAlias, dataChangeProcessingMode.isRefresh(), true);
+        elasticsearch.addToIndex(indexAlias, dataChangeProcessingMode.isRefresh(), true, documents);
     }
 
     @Override
@@ -264,8 +263,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
 
-        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
-        elasticsearch.removeFromIndex(getMappingConfiguration(indexAlias, false), indexPresetConfiguration, dataChangeProcessingMode.isRefresh(), id);
+        elasticsearch.removeFromIndex(indexAlias, dataChangeProcessingMode.isRefresh(), id);
     }
 
     @Override
@@ -274,8 +272,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(ids, "Parameter 'ids' may not be null!");
 
-        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
-        elasticsearch.removeFromIndex(getMappingConfiguration(indexAlias, false), indexPresetConfiguration, dataChangeProcessingMode.isRefresh(), ids);
+        elasticsearch.removeFromIndex(indexAlias, dataChangeProcessingMode.isRefresh(), ids);
     }
 
     @Override
