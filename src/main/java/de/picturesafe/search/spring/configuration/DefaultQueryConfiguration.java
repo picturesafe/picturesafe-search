@@ -36,7 +36,7 @@ import java.util.List;
 import static de.picturesafe.search.elasticsearch.timezone.TimeZoneAware.DEFAULT_TIME_ZONE;
 
 @Configuration
-@PropertySource("classpath:elasticsearch.properties")
+@PropertySource(value = "classpath:${ES_PROPERTIES_CLASSPATH:elasticsearch.properties}", ignoreResourceNotFound = true)
 @Import({FulltextQueryFactory.class, NestedQueryFactory.class, OperationExpressionQueryFactory.class, StandardQuerystringPreprocessor.class})
 public class DefaultQueryConfiguration {
 
