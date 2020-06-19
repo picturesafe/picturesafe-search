@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Configuration
-@PropertySource("classpath:elasticsearch.properties")
+@PropertySource(value = "classpath:${ES_PROPERTIES_CLASSPATH:elasticsearch.properties}", ignoreResourceNotFound = true)
 public class DefaultIndexConfiguration {
 
     @Value("${elasticsearch.index.alias:default}")
