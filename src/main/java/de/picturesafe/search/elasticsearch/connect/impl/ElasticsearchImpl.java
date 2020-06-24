@@ -122,6 +122,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
 import static de.picturesafe.search.elasticsearch.connect.filter.util.FilterFactoryUtils.createFilter;
@@ -137,6 +138,7 @@ import static de.picturesafe.search.elasticsearch.connect.util.FieldConfiguratio
 public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, TimeZoneAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchImpl.class);
+    private static final Logger QUERY_LOGGER = LoggerFactory.getLogger("elasticsearch-query");
 
     protected ElasticsearchAdmin elasticsearchAdmin;
     protected RestClientConfiguration restClientConfiguration;
@@ -605,7 +607,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         addFacetsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
         addFieldsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
 
-        LOG.debug("Search request:\n{}", new SearchSourceBuilderToString(searchSourceBuilder));
+        final UUID queryId = UUID.randomUUID();
+        QUERY_LOGGER.debug("Search request {}:\n{}\n{}", queryId, queryDto, new SearchSourceBuilderToString(searchSourceBuilder));
 
         final SearchRequest searchRequest = new SearchRequest(indexPresetConfiguration.getIndexAlias());
         searchRequest.source(searchSourceBuilder);
@@ -622,7 +625,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
             }
         }
 
-        LOG.debug("Search response:\n{},", new SearchResponseToString(searchResponse));
+        QUERY_LOGGER.debug("Search response {}:\n{},", queryId, new SearchResponseToString(searchResponse));
         return searchResponse;
     }
 
