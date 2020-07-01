@@ -19,6 +19,83 @@ The following features are included:
 * Filter builder API for easy implementation of customized search filters
 * Aggregation builder API for easy implementation of customized aggregation builders (facets)
 
+== Make Elasticsearch queries easy
+
+Elasticsearch is a very powerful search engine, but has a high complexity and requires a long learning curve.
+
+The following example compares the execution of the logical search expression `fulltext contains "(test && title)" and count >= 102 sort by id` between the Elasticsearch REST API, the Elasticsearch Java High Level REST Client and the picturesafe-search Java service wrapper:
+
+.Elasticsearch REST API
+[source]
+----
+POST /picturesafe-search-sample/_search
+----
+[source,json]
+----
+{
+  "query": {
+    "bool": {
+      "must": [{
+        "bool": {
+          "filter": [{
+            "query_string": {
+              "query": "(test && title)",
+              "fields": ["fulltext^1.0"]
+            }
+          }]
+        }
+      }],
+      "filter": [{
+        "range": {
+          "count": {
+            "from": 102,
+            "to": null
+          }
+        }
+      }]
+    }
+  },
+  "sort": [{
+    "id.keyword": {
+      "order": "desc",
+      "missing": "_last"
+    }
+  }]
+}
+----
+
+.Elasticsearch Java High Level REST Client
+[source,java]
+----
+SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+    .query(QueryBuilders.boolQuery()
+    .must(QueryBuilders.queryStringQuery("test && title")
+            .field("fulltext")
+            .defaultOperator(Operator.AND))
+    .filter(QueryBuilders.rangeQuery("count").gte(102)))
+    .sort(SortBuilders
+            .fieldSort("id.keyword")
+            .missing("_last")
+            .order(SortOrder.DESC));
+
+SearchRequest searchRequest = new SearchRequest("picturesafe-search-sample");
+searchRequest.source(searchSourceBuilder);
+SearchResponse searchResponse = new RestClientSearchAction()
+    .action(restHighLevelClient, searchRequest);
+----
+
+.picturesafe-search Java service wrapper
+[source,java]
+----
+SearchResult searchResult = elasticsearchService.search("picturesafe-search-sample",
+    OperationExpression.and(
+        new FulltextExpression("test title"),
+        new ValueExpression("count", ValueExpression.Comparison.GE, 102)),
+    SearchParameter.builder().sortOptions(SortOption.desc("id")).build());
+----
+
+As you can see, picturesafe-search focuses more on WHAT to search for than on HOW to search it and abstracts some complexity.
+
 == Getting started
 
 Only a few steps are necessary to get started with a standard configuration.
