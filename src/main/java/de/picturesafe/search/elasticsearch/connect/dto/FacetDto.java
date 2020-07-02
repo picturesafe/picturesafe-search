@@ -59,10 +59,10 @@ public class FacetDto {
         } else {
             final FacetDto target = (FacetDto) o;
             return new EqualsBuilder()
-                    .append(name, target.getName())
-                    .append(fieldName, target.getName())
-                    .append(count, target.getCount())
-                    .append(facetEntryDtos, target.getFacetEntryDtos())
+                    .append(name, target.name)
+                    .append(fieldName, target.fieldName)
+                    .append(count, target.count)
+                    .append(facetEntryDtos, target.facetEntryDtos)
                     .isEquals();
         }
     }
