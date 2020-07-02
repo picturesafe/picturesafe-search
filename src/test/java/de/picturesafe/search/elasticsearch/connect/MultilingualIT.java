@@ -113,6 +113,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
         assertEquals(1, result.getFacetDtoList().size());
         FacetDto facetDto = result.getFacetDtoList().get(0);
         assertEquals("title", facetDto.getName());
+        assertEquals("title", facetDto.getFieldName());
 
         for (final FacetEntryDto entry : facetDto.getFacetEntryDtos()) {
             assertTrue(entry.getValue().toString().endsWith("de"));
@@ -123,6 +124,7 @@ public class MultilingualIT extends AbstractElasticIntegrationTest {
         assertEquals(1, result.getFacetDtoList().size());
         facetDto = result.getFacetDtoList().get(0);
         assertEquals("title", facetDto.getName());
+        assertEquals("title", facetDto.getFieldName());
 
         for (final FacetEntryDto entry : facetDto.getFacetEntryDtos()) {
             assertTrue(entry.getValue().toString().endsWith("en"));

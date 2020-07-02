@@ -19,7 +19,6 @@ package de.picturesafe.search.elasticsearch.connect.aggregation.resolve;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.RangeFacetEntryDto;
-import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 
@@ -35,9 +34,8 @@ public class RangeFacetConverter implements FacetConverter {
     }
 
     @Override
-    public FacetDto convert(Aggregation aggregation, FacetResolver facetResolver, Locale locale) {
+    public FacetDto convert(Aggregation aggregation, FacetResolver facetResolver, String fieldName, Locale locale) {
         final Range range = (Range) aggregation;
-        final String originalFacetName = StringUtils.substringBefore(range.getName(), ".");
 
         final List<FacetEntryDto> facetEntryDtos = new ArrayList<>();
         long totalCount = 0;
@@ -59,6 +57,6 @@ public class RangeFacetConverter implements FacetConverter {
 
             totalCount += bucket.getDocCount();
         }
-        return new FacetDto(originalFacetName, totalCount, facetEntryDtos);
+        return new FacetDto(aggregation.getName(), fieldName, totalCount, facetEntryDtos);
     }
 }

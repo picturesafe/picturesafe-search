@@ -397,7 +397,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     protected ResultFacet convertFacet(FacetDto facetDto) {
         final List<ResultFacetItem> facetItems = facetDto.getFacetEntryDtos().stream().map(this::convertFacetItem).collect(Collectors.toList());
-        return new ResultFacet(facetDto.getName(), facetDto.getCount(), facetItems);
+        return new ResultFacet(facetDto.getName(), facetDto.getFieldName(), facetDto.getCount(), facetItems);
     }
 
     protected ResultFacetItem convertFacetItem(FacetEntryDto entryDto) {

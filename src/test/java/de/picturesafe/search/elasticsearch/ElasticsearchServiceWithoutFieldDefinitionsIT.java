@@ -108,6 +108,7 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
 
         final ResultFacet groupFacet = getFacet(result, "group");
         assertNotNull(groupFacet);
+        assertEquals("group", groupFacet.getFieldName());
         assertEquals(5, groupFacet.getCount());
         ResultFacetItem facetItem = groupFacet.getFacetItems().get(0);
         assertEquals("1", facetItem.getValue());
@@ -118,6 +119,7 @@ public class ElasticsearchServiceWithoutFieldDefinitionsIT extends AbstractElast
 
         final ResultFacet specialFacet = getFacet(result, "special");
         assertNotNull(specialFacet);
+        assertEquals("special", specialFacet.getFieldName());
         assertEquals(5, specialFacet.getCount());
         facetItem = specialFacet.getFacetItems().get(0);
         assertEquals("false", facetItem.getValue());
