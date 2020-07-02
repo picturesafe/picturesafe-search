@@ -223,6 +223,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
         final ResultFacet locationFacet = getFacet(result, "location");
         assertNotNull(locationFacet);
+        assertEquals("location", locationFacet.getFieldName());
         assertEquals(4, locationFacet.getCount());
         ResultFacetItem facetItem = locationFacet.getFacetItems().get(0);
         assertEquals("Hamburg", facetItem.getValue());
@@ -233,6 +234,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
 
         final ResultFacet yearsFacet = getFacet(result, "years");
         assertNotNull(yearsFacet);
+        assertEquals("createDate", yearsFacet.getFieldName());
         assertEquals(4, yearsFacet.getCount());
         final Map<String, ResultFacetItem> years = yearsFacet.getFacetItems().stream().collect(Collectors.toMap(f -> f.getValue().toString(), f -> f));
         final ResultFacetItem year2019 = years.get("2019");

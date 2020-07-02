@@ -130,6 +130,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
             }
         }
         assertNotNull("Facet not working: indexAlias = " + indexAlias, facetDto);
+        assertEquals("facetResolved", facetDto.getFieldName());
 
         FacetEntryDto facetEntryDto = null;
         for (FacetEntryDto current : facetDto.getFacetEntryDtos()) {
@@ -197,6 +198,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
         final FacetDto rangesDto = facetDtos.get(0);
         LOGGER.debug("Ranges facet:\n{}", rangesDto);
         assertEquals(dateFacetField + DefaultAggregation.NAME_SEPARATOR + "ranges", rangesDto.getName());
+        assertEquals(dateFacetField, rangesDto.getFieldName());
         // Total count = (1 today + 2 yesterday) * 2 [in this or last week] + 3 last week  + 2 last month
         // + (1 today + 2 yesterday + 3 last week) [in this or last month] = 17
         assertEquals(17, rangesDto.getCount());
@@ -218,6 +220,7 @@ public class AggregationIT extends AbstractElasticIntegrationTest {
         final FacetDto yearsDto = facetDtos.get(1);
         LOGGER.debug("Years facet:\n{}", yearsDto);
         assertEquals(dateFacetField + DefaultAggregation.NAME_SEPARATOR + "histogram", yearsDto.getName());
+        assertEquals(dateFacetField, yearsDto.getFieldName());
         assertEquals(16, yearsDto.getCount());
         assertTrue("Years count should be 3 for most of the year or 4 when in january",
                 yearsDto.getFacetEntryDtos().size() == 3 || yearsDto.getFacetEntryDtos().size() == 4);

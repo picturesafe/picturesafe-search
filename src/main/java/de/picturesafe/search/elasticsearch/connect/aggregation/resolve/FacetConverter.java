@@ -25,5 +25,5 @@ public interface FacetConverter {
 
     boolean isResponsible(Aggregation aggregation);
 
-    FacetDto convert(Aggregation aggregation, FacetResolver facetResolver, Locale locale);
+    FacetDto convert(Aggregation aggregation, FacetResolver facetResolver, String fieldName, Locale locale);
 }

@@ -18,24 +18,30 @@ package de.picturesafe.search.elasticsearch.connect.dto;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
 
 public class FacetDto {
+
     private final String name;
+    private final String fieldName;
     private final long count;
     private final List<FacetEntryDto> facetEntryDtos;
 
-    public FacetDto(String name, long count, List<FacetEntryDto> facetEntryDtos) {
+    public FacetDto(String name, String fieldName, long count, List<FacetEntryDto> facetEntryDtos) {
         this.name = name;
+        this.fieldName = fieldName;
         this.count = count;
         this.facetEntryDtos = facetEntryDtos;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getFieldName() {
+        return fieldName;
     }
 
     public long getCount() {
@@ -52,20 +58,25 @@ public class FacetDto {
             return false;
         } else {
             final FacetDto target = (FacetDto) o;
-            return new EqualsBuilder().append(count, target.getCount()).append(name, target.getName()).append(facetEntryDtos,
-                    target.getFacetEntryDtos()).isEquals();
+            return new EqualsBuilder()
+                    .append(name, target.getName())
+                    .append(fieldName, target.getName())
+                    .append(count, target.getCount())
+                    .append(facetEntryDtos, target.getFacetEntryDtos())
+                    .isEquals();
         }
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(2621, 4271).append(name).append(count).append(facetEntryDtos).toHashCode();
+        return name.hashCode();
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("name", name) //--
+                .append("fieldName", fieldName) //--
                 .append("count", count) //--
                 .append("facetEntryDtos", facetEntryDtos) //--
                 .toString();

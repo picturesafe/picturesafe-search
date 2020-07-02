@@ -17,9 +17,7 @@
 package de.picturesafe.search.elasticsearch.model;
 
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.List;
@@ -30,6 +28,7 @@ import java.util.List;
 public class ResultFacet {
 
     private final String name;
+    private final String fieldName;
     private final long count;
     private final List<ResultFacetItem> facetItems;
 
@@ -37,11 +36,13 @@ public class ResultFacet {
      * Constructor
      *
      * @param name          Name of the facet
+     * @param fieldName     Name of the aggregation field (may be null)
      * @param count         Total count of documents
      * @param facetItems    Facet items
      */
-    public ResultFacet(String name, long count, List<ResultFacetItem> facetItems) {
+    public ResultFacet(String name, String fieldName, long count, List<ResultFacetItem> facetItems) {
         this.name = name;
+        this.fieldName = fieldName;
         this.count = count;
         this.facetItems = facetItems;
     }
@@ -53,6 +54,15 @@ public class ResultFacet {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Gets the name of the aggregation field.
+     *
+     * @return Name of the aggregation field (may be null)
+     */
+    public String getFieldName() {
+        return fieldName;
     }
 
     /**
@@ -84,23 +94,23 @@ public class ResultFacet {
 
         final ResultFacet that = (ResultFacet) o;
         return new EqualsBuilder()
-                .append(count, that.count)
                 .append(name, that.name)
+                .append(fieldName, that.fieldName)
+                .append(count, that.count)
                 .append(facetItems, that.facetItems)
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .append(name)
-                .toHashCode();
+        return name.hashCode();
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("name", name) //--
+                .append("fieldName", fieldName) //--
                 .append("count", count) //--
                 .append("facetItems", facetItems) //--
                 .toString();

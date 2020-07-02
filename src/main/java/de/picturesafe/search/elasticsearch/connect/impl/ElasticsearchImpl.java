@@ -94,6 +94,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.support.ValuesSourceAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
@@ -122,6 +123,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
@@ -456,15 +458,15 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
             @Override
             public SearchResultDto process() {
                 try {
-                    final SearchResponse searchResponse = internalSearch(queryDto, mappingConfiguration, indexPresetConfiguration);
-                    final SearchHits searchHits = searchResponse.getHits();
+                    final InternalSearchResponse internalSearchResponse = internalSearch(queryDto, mappingConfiguration, indexPresetConfiguration);
+                    final SearchHits searchHits = internalSearchResponse.searchResponse.getHits();
                     final TotalHits totalHits = searchHits.getTotalHits();
 
                     final List<SearchHitDto> searchHitDtos = new ArrayList<>();
                     for (SearchHit hit : searchHits.getHits()) {
                         searchHitDtos.add(convertSearchHit(hit, mappingConfiguration));
                     }
-                    final List<FacetDto> facetDtos = convertFacets(searchResponse, queryDto, mappingConfiguration);
+                    final List<FacetDto> facetDtos = convertFacets(internalSearchResponse, queryDto, mappingConfiguration);
 
                     return new SearchResultDto(totalHits.value, totalHits.relation == TotalHits.Relation.EQUAL_TO, searchHitDtos, facetDtos);
                 } catch (IndexMissingException e) {
@@ -553,17 +555,18 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         return new SearchHitDto(hit.getId(), attributes);
     }
 
-    protected List<FacetDto> convertFacets(SearchResponse searchResponse, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
+    protected List<FacetDto> convertFacets(InternalSearchResponse internalSearchResponse, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
         final List<FacetDto> result = new ArrayList<>();
 
-        if (searchResponse.getAggregations() != null) {
+        if (internalSearchResponse.searchResponse.getAggregations() != null) {
             if (facetConverterChain != null) {
                 final Locale locale = queryDto.getLocale();
 
-                for (Aggregation aggregation : searchResponse.getAggregations()) {
+                for (Aggregation aggregation : internalSearchResponse.searchResponse.getAggregations()) {
                     final FacetConverter facetConverter = facetConverterChain.getFirstResponsible(aggregation);
                     if (facetConverter != null) {
-                        result.add(facetConverter.convert(aggregation, facetResolver(aggregation), locale));
+                        final String fieldName = internalSearchResponse.aggregationFields.get(aggregation.getName());
+                        result.add(facetConverter.convert(aggregation, facetResolver(aggregation), fieldName, locale));
                     } else {
                         LOG.warn("Missing facet converter for aggregation: {}", aggregation);
                     }
@@ -586,7 +589,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         return null;
     }
 
-    protected SearchResponse internalSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration) {
+    protected InternalSearchResponse internalSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration,
+                                                    IndexPresetConfiguration indexPresetConfiguration) {
         final SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(queryDto);
 
         final SearchContext context = new SearchContext(queryDto, mappingConfiguration);
@@ -604,7 +608,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         }
 
         addSortOptionsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
-        addFacetsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
+        final Map<String, String> aggregationFields = addFacetsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
         addFieldsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
 
         final UUID queryId = UUID.randomUUID();
@@ -626,11 +630,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         }
 
         QUERY_LOGGER.debug("Search response {}:\n{},", queryId, new SearchResponseToString(searchResponse));
-        return searchResponse;
+        return new InternalSearchResponse(searchResponse, aggregationFields);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void addFacetsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfiguration, SearchSourceBuilder searchRequestBuilder) {
+    protected Map<String, String> addFacetsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfiguration,
+                                                           SearchSourceBuilder searchRequestBuilder) {
+        final Map<String, String> aggregationFields = new TreeMap<>();
+
         if (CollectionUtils.isNotEmpty(queryDto.getAggregations())) {
             for (SearchAggregation aggregation : queryDto.getAggregations()) {
                 final AggregationBuilderFactory aggregationBuilderFactory = (aggregationBuilderFactoryRegistry != null)
@@ -638,9 +645,15 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                 final List<AggregationBuilder> aggregationBuilders = (aggregationBuilderFactory != null)
                         ? aggregationBuilderFactory.create(aggregation, mappingConfiguration, queryDto.getLocale())
                         : Collections.emptyList();
-                aggregationBuilders.forEach(searchRequestBuilder::aggregation);
+                aggregationBuilders.forEach(agg -> {
+                        searchRequestBuilder.aggregation(agg);
+                        if (agg instanceof ValuesSourceAggregationBuilder) {
+                            aggregationFields.put(agg.getName(), ((ValuesSourceAggregationBuilder) agg).field());
+                        }
+                });
             }
         }
+        return aggregationFields;
     }
 
     protected void addSortOptionsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfig, SearchSourceBuilder searchRequestBuilder) {
@@ -863,6 +876,16 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
             return (Resp) new RestClientBulkAction().action(restClient, (BulkRequest) request);
         } else {
             throw new RuntimeException("Unsupported request type: " + request.getClass().getName());
+        }
+    }
+
+    protected static class InternalSearchResponse {
+        final SearchResponse searchResponse;
+        final Map<String, String> aggregationFields;
+
+        public InternalSearchResponse(SearchResponse searchResponse, Map<String, String> aggregationFields) {
+            this.searchResponse = searchResponse;
+            this.aggregationFields = aggregationFields;
         }
     }
 }

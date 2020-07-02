@@ -34,9 +34,10 @@ public class TermsFacetConverter implements FacetConverter {
     }
 
     @Override
-    public FacetDto convert(Aggregation aggregation, FacetResolver facetResolver, Locale locale) {
+    public FacetDto convert(Aggregation aggregation, FacetResolver facetResolver, String fieldName, Locale locale) {
         final Terms terms = (Terms) aggregation;
-        final String originalFacetName = StringUtils.substringBefore(terms.getName(), ".");
+        final String baseFacetName = StringUtils.substringBefore(terms.getName(), ".");
+        final String baseFieldName = (fieldName != null) ? StringUtils.substringBefore(fieldName, ".") : null;
 
         final List<FacetEntryDto> facetEntryDtos = new ArrayList<>();
         long totalCount = 0;
@@ -54,6 +55,6 @@ public class TermsFacetConverter implements FacetConverter {
             facetEntryDtos.add(new FacetEntryDto(value, docCount));
             totalCount += docCount;
         }
-        return new FacetDto(originalFacetName, totalCount, facetEntryDtos);
+        return new FacetDto(baseFacetName, baseFieldName, totalCount, facetEntryDtos);
     }
 }

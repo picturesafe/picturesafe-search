@@ -391,6 +391,7 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         assertEquals(1, result.getFacetDtoList().size());
         final FacetDto facetDto = result.getFacetDtoList().get(0);
         assertEquals("keywordField", facetDto.getName());
+        assertEquals("keywordField", facetDto.getFieldName());
         assertEquals(2, facetDto.getCount());
 
     }
