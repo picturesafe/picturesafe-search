@@ -79,6 +79,17 @@ public interface Elasticsearch {
     void removeFromIndex(String indexAlias, boolean applyIndexRefresh, Collection<?> ids);
 
     /**
+     * Removes multiple documents from the index.
+     *
+     * @param queryDto                  Query matching the documents to be removed
+     * @param mappingConfiguration      {@link MappingConfiguration}
+     * @param indexPresetConfiguration  {@link IndexPresetConfiguration}
+     * @param applyIndexRefresh         Should the search index be forced to be updated immediately? Be careful and use false as default.
+     */
+    void removeFromIndex(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
+                         boolean applyIndexRefresh);
+
+    /**
      * Checks if elasticsearch service is available.
      *
      * @return true if elasticsearch service is available

@@ -17,6 +17,7 @@
 package de.picturesafe.search.elasticsearch.connect.impl;
 
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
 
 /**
  * Interface of a write request handler.
@@ -30,4 +31,12 @@ public interface WriteRequestHandler {
      * @return          TRUE if the write request has been handled
      */
     boolean handle(WriteRequest<?> request);
+
+    /**
+     * Handles an Elasticsearch bulk by scroll request.
+     *
+     * @param request   {@link AbstractBulkByScrollRequest} to handle
+     * @return          TRUE if the write request has been handled
+     */
+    boolean handle(AbstractBulkByScrollRequest<?> request);
 }

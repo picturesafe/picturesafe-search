@@ -86,7 +86,7 @@ public class ElasticsearchServiceImplTest {
         assertEquals(QueryDto.FieldResolverType.SOURCE_VALUES, queryDto.getFieldResolverType());
         assertEquals(sortOptions, queryDto.getSortOptions());
         assertEquals(Locale.GERMAN, queryDto.getLocale());
-        final QueryRangeDto rangeDto = queryDto.getQueryRangeDto();
+        final QueryRangeDto rangeDto = queryDto.getQueryRange();
         assertEquals(start, rangeDto.getStart());
         assertEquals(limit, rangeDto.getLimit());
         assertEquals(searchParameter.getMaxTrackTotalHits(), rangeDto.getMaxTrackTotalHits());

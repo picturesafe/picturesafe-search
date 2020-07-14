@@ -16,17 +16,16 @@
 
 package de.picturesafe.search.elasticsearch.connect.dto;
 
-import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.expression.Expression;
+import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,43 +40,51 @@ public class QueryDto {
     }
 
     private final Expression expression;
-    private final QueryRangeDto queryRangeDto;
-    private final List<SortOption> sortOptions;
-    private final List<? extends SearchAggregation> aggregations;
     private final Locale locale;
-    private final List<String> fieldsToResolve;
-    private final FieldResolverType fieldResolverType;
+
+    private QueryRangeDto queryRange;
+    private List<SortOption> sortOptions = Collections.emptyList();
+    private List<? extends SearchAggregation> aggregations = Collections.emptyList();
+    private List<String> fieldsToResolve = Collections.emptyList();
+    private FieldResolverType fieldResolverType = FieldResolverType.DOC_VALUES;
     private AccountContext<?> accountContext;
     private boolean sortFilter;
 
-    public QueryDto(Expression expression,
-                    QueryRangeDto queryRangeDto,
-                    List<SortOption> sortOptions,
-                    List<? extends SearchAggregation> aggregations,
-                    Locale locale) {
-        this(expression, queryRangeDto, sortOptions, aggregations, locale, new ArrayList<>(), FieldResolverType.DOC_VALUES);
+    public QueryDto(Expression expression, Locale locale) {
+        this.expression = expression;
+        this.locale = locale;
     }
 
     public QueryDto(Expression expression,
-                    QueryRangeDto queryRangeDto,
+                    QueryRangeDto queryRange,
+                    List<SortOption> sortOptions,
+                    List<? extends SearchAggregation> aggregations,
+                    Locale locale) {
+        this.expression = expression;
+        this.queryRange = queryRange;
+        this.sortOptions = sortOptions;
+        this.aggregations = aggregations;
+        this.locale = locale;
+    }
+
+    public QueryDto(Expression expression,
+                    QueryRangeDto queryRange,
                     List<SortOption> sortOptions,
                     List<? extends SearchAggregation> aggregations,
                     Locale locale,
                     List<String> fieldsToResolve,
                     FieldResolverType fieldResolverType) {
         this.expression = expression;
-        this.queryRangeDto = queryRangeDto;
+        this.queryRange = queryRange;
         this.sortOptions = sortOptions;
         this.aggregations = aggregations;
         this.locale = locale;
         this.fieldsToResolve = fieldsToResolve;
         this.fieldResolverType = fieldResolverType;
-
-        Validate.notNull(queryRangeDto, "Search Result Range (QueryRangeDTO) is not allowed to be null.");
     }
 
     public QueryDto(QueryDto queryDto, Expression expression) {
-        this(expression, queryDto.queryRangeDto, queryDto.sortOptions, queryDto.aggregations, queryDto.locale, queryDto.fieldsToResolve,
+        this(expression, queryDto.queryRange, queryDto.sortOptions, queryDto.aggregations, queryDto.locale, queryDto.fieldsToResolve,
                 queryDto.fieldResolverType);
     }
 
@@ -85,28 +92,53 @@ public class QueryDto {
         return expression;
     }
 
-    public QueryRangeDto getQueryRangeDto() {
-        return queryRangeDto;
+    public Locale getLocale() {
+        return locale;
+    }
+
+    public QueryRangeDto getQueryRange() {
+        return queryRange;
+    }
+
+    public QueryDto queryRange(QueryRangeDto queryRangeDto) {
+        this.queryRange = queryRangeDto;
+        return this;
     }
 
     public List<SortOption> getSortOptions() {
         return sortOptions;
     }
 
+    public QueryDto sortOptions(List<SortOption> sortOptions) {
+        this.sortOptions = sortOptions;
+        return this;
+    }
+
     public List<? extends SearchAggregation> getAggregations() {
         return aggregations;
     }
 
-    public Locale getLocale() {
-        return locale;
+    public QueryDto aggregations(List<? extends SearchAggregation> aggregations) {
+        this.aggregations = aggregations;
+        return this;
     }
 
     public List<String> getFieldsToResolve() {
         return fieldsToResolve;
     }
 
+    public QueryDto fieldsToResolve(List<String> fieldsToResolve) {
+        this.fieldsToResolve = fieldsToResolve;
+        return this;
+    }
+
     public FieldResolverType getFieldResolverType() {
         return fieldResolverType;
+    }
+
+    public QueryDto fieldResolverType(FieldResolverType fieldResolverType) {
+        this.fieldResolverType = fieldResolverType;
+        return this;
     }
 
     public AccountContext<?> getAccountContext() {
@@ -129,7 +161,7 @@ public class QueryDto {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(expression).append(queryRangeDto).toHashCode();
+        return new HashCodeBuilder().append(expression).append(locale).toHashCode();
     }
 
     @Override
@@ -140,10 +172,10 @@ public class QueryDto {
             final QueryDto other = (QueryDto) o;
             return new EqualsBuilder()
                     .append(expression, other.expression)
-                    .append(queryRangeDto, other.queryRangeDto)
+                    .append(locale, other.locale)
+                    .append(queryRange, other.queryRange)
                     .append(sortOptions, other.sortOptions)
                     .append(aggregations, other.aggregations)
-                    .append(locale, other.locale)
                     .append(fieldsToResolve, other.fieldsToResolve)
                     .isEquals();
         }
@@ -153,16 +185,16 @@ public class QueryDto {
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("expression", expression) //--
-                .append("queryRangeDto", queryRangeDto) //--
+                .append("locale", locale) //--
+                .append("queryRange", queryRange) //--
                 .append("sortOptions", sortOptions) //--
                 .append("aggregations", aggregations) //--
-                .append("locale", locale) //--
                 .append("fieldsToResolve", fieldsToResolve) //--
                 .append("fieldResolverType", fieldResolverType) //--
                 .toString();
     }
 
     public static QueryDto sortFilter(Expression expression, Locale locale) {
-        return new QueryDto(expression, new QueryRangeDto(0, Integer.MAX_VALUE), null, null, locale).sortFilter(true);
+        return new QueryDto(expression, locale).sortFilter(true);
     }
 }

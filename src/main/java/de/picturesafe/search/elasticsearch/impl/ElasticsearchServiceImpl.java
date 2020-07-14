@@ -276,6 +276,18 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
+    public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Expression expression, Locale locale) {
+        Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
+        Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
+        Validate.notNull(expression, "Parameter 'expression' may not be null!");
+        Validate.notNull(locale, "Parameter 'locale' may not be null!");
+
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
+        elasticsearch.removeFromIndex(new QueryDto(expression, locale), getMappingConfiguration(indexAlias, true), indexPresetConfiguration,
+                dataChangeProcessingMode.isRefresh());
+    }
+
+    @Override
     public SearchResult search(String indexAlias, Expression expression, SearchParameter searchParameter) {
         return search(indexAlias, new AccountContext<>(), expression, searchParameter);
     }
