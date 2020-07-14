@@ -17,8 +17,8 @@
 package de.picturesafe.search.elasticsearch;
 
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
-import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
+import de.picturesafe.search.elasticsearch.model.IndexObject;
 import de.picturesafe.search.elasticsearch.model.SearchResult;
 import de.picturesafe.search.elasticsearch.model.SuggestResult;
 import de.picturesafe.search.expression.Expression;
@@ -29,6 +29,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -194,6 +195,16 @@ public interface ElasticsearchService {
      * @param ids                       IDs of the documents to be removed
      */
     void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids);
+
+    /**
+     * Removes multiple documents from the index.
+     *
+     * @param indexAlias                Name of the alias of the index
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param expression                Expression defining the search criteria for the documents to delete
+     * @param locale                    Locale for searching multilingual fields (use Locale.ROOT if it doesn't matter)
+     */
+    void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Expression expression, Locale locale);
 
     /**
      * Searches for documents.

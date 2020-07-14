@@ -29,9 +29,11 @@ import de.picturesafe.search.elasticsearch.connect.aggregation.search.Aggregatio
 import de.picturesafe.search.elasticsearch.connect.aggregation.search.AggregationBuilderFactoryRegistry;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientBulkAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientDeleteAction;
+import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientDeleteByQueryAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientIndexAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientIndexRefreshAction;
 import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientSearchAction;
+import de.picturesafe.search.elasticsearch.connect.asyncaction.RestClientUpdateByQueryAction;
 import de.picturesafe.search.elasticsearch.connect.context.SearchContext;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
@@ -53,8 +55,8 @@ import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticExceptionUtils;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
 import de.picturesafe.search.elasticsearch.connect.util.StringTrimUtility;
+import de.picturesafe.search.elasticsearch.connect.util.logging.SearchRequestSourceToString;
 import de.picturesafe.search.elasticsearch.connect.util.logging.SearchResponseToString;
-import de.picturesafe.search.elasticsearch.connect.util.logging.SearchSourceBuilderToString;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.IdFormat;
@@ -89,6 +91,10 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -336,6 +342,24 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                 }
                 count += size;
             } while (count < idsAsArray.length);
+        }
+    }
+
+    @Override
+    public void removeFromIndex(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
+                         boolean applyIndexRefresh) {
+        Validate.notNull(indexPresetConfiguration, "Parameter 'indexPresetConfiguration' may not be null.");
+        Validate.notNull(mappingConfiguration, "Parameter 'mappingConfiguration' may not be null.");
+        Validate.notNull(queryDto, "Parameter 'queryDto' may not be null.");
+
+        final InternalSearchRequest internalSearchRequest = searchRequest(indexPresetConfiguration, queryDto, mappingConfiguration);
+        final DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(indexPresetConfiguration.getIndexAlias()).setRefresh(applyIndexRefresh);
+        deleteByQueryRequest.getSearchRequest().source(internalSearchRequest.searchRequest.source());
+
+        if (!handleRequestExternally(deleteByQueryRequest)) {
+            LOG.debug("Delete by query request: {}", new SearchRequestSourceToString(internalSearchRequest.searchRequest));
+            final BulkByScrollResponse response = handleRequest(deleteByQueryRequest);
+            LOG.debug("Delete by query response: {}", response);
         }
     }
 
@@ -591,7 +615,29 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
 
     protected InternalSearchResponse internalSearch(QueryDto queryDto, MappingConfiguration mappingConfiguration,
                                                     IndexPresetConfiguration indexPresetConfiguration) {
-        final SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(queryDto);
+        final InternalSearchRequest internalSearchRequest = searchRequest(indexPresetConfiguration, queryDto, mappingConfiguration);
+        final UUID queryId = UUID.randomUUID();
+        QUERY_LOGGER.debug("Search request {}:\n{}\n{}", queryId, queryDto, new SearchRequestSourceToString(internalSearchRequest.searchRequest));
+
+        final SearchResponse searchResponse;
+        try {
+            searchResponse = new RestClientSearchAction().action(restClient, internalSearchRequest.searchRequest);
+        } catch (Exception e) {
+            final ElasticExceptionCause cause = ElasticExceptionUtils.getCause(e);
+            if (QUERY_SYNTAX == cause.getType()) {
+                throw new QuerySyntaxException("Elasticsearch rest client search action failed: Failed to parse query!", cause.getMessage(), e);
+            } else {
+                throw new ElasticsearchException("Elasticsearch rest client search action failed!", e);
+            }
+        }
+
+        QUERY_LOGGER.debug("Search response {}:\n{},", queryId, new SearchResponseToString(searchResponse));
+        return new InternalSearchResponse(searchResponse, internalSearchRequest.aggregationFields);
+    }
+
+    protected InternalSearchRequest searchRequest(IndexPresetConfiguration indexPresetConfiguration, QueryDto queryDto,
+                                                  MappingConfiguration mappingConfiguration) {
+        final SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(queryDto, indexPresetConfiguration);
 
         final SearchContext context = new SearchContext(queryDto, mappingConfiguration);
         final QueryBuilder queryBuilder = createQuery(context);
@@ -611,26 +657,8 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         final Map<String, String> aggregationFields = addFacetsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
         addFieldsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
 
-        final UUID queryId = UUID.randomUUID();
-        QUERY_LOGGER.debug("Search request {}:\n{}\n{}", queryId, queryDto, new SearchSourceBuilderToString(searchSourceBuilder));
-
-        final SearchRequest searchRequest = new SearchRequest(indexPresetConfiguration.getIndexAlias());
-        searchRequest.source(searchSourceBuilder);
-
-        final SearchResponse searchResponse;
-        try {
-            searchResponse = new RestClientSearchAction().action(restClient, searchRequest);
-        } catch (Exception e) {
-            final ElasticExceptionCause cause = ElasticExceptionUtils.getCause(e);
-            if (QUERY_SYNTAX == cause.getType()) {
-                throw new QuerySyntaxException("Elasticsearch rest client search action failed: Failed to parse query!", cause.getMessage(), e);
-            } else {
-                throw new ElasticsearchException("Elasticsearch rest client search action failed!", e);
-            }
-        }
-
-        QUERY_LOGGER.debug("Search response {}:\n{},", queryId, new SearchResponseToString(searchResponse));
-        return new InternalSearchResponse(searchResponse, aggregationFields);
+        final SearchRequest searchRequest = new SearchRequest(indexPresetConfiguration.getIndexAlias()).source(searchSourceBuilder);
+        return new InternalSearchRequest(searchRequest, aggregationFields);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -657,7 +685,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     protected void addSortOptionsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfig, SearchSourceBuilder searchRequestBuilder) {
-        if (queryDto.getSortOptions() != null) {
+        if (CollectionUtils.isNotEmpty(queryDto.getSortOptions())) {
             for (SortOption sortOption : queryDto.getSortOptions()) {
                 final String fieldName = sortOption.getFieldName();
                 SortBuilder<?> sortBuilder;
@@ -795,11 +823,16 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         searchRequestBuilder.fetchSource(includes, excludes);
     }
 
-    protected SearchSourceBuilder searchSourceBuilder(QueryDto queryDto) {
-        final QueryRangeDto queryRangeDto = queryDto.getQueryRangeDto();
-        final SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().from(queryRangeDto.getStart()).size(queryRangeDto.getLimit());
-        if (queryRangeDto.getMaxTrackTotalHits() != null) {
-            searchSourceBuilder.trackTotalHitsUpTo(queryRangeDto.getMaxTrackTotalHits().intValue());
+    protected SearchSourceBuilder searchSourceBuilder(QueryDto queryDto, IndexPresetConfiguration indexPresetConfiguration) {
+        final QueryRangeDto queryRangeDto = queryDto.getQueryRange();
+        final SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        if (queryRangeDto != null) {
+            searchSourceBuilder.from(queryRangeDto.getStart()).size(queryRangeDto.getLimit());
+            if (queryRangeDto.getMaxTrackTotalHits() != null) {
+                searchSourceBuilder.trackTotalHitsUpTo(queryRangeDto.getMaxTrackTotalHits().intValue());
+            }
+        } else {
+            searchSourceBuilder.size(indexPresetConfiguration.getMaxResultWindow());
         }
         return searchSourceBuilder;
     }
@@ -866,6 +899,10 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         return writeRequestHandler != null && writeRequestHandler.handle(request);
     }
 
+    protected boolean handleRequestExternally(AbstractBulkByScrollRequest<?> request) {
+        return writeRequestHandler != null && writeRequestHandler.handle(request);
+    }
+
     @SuppressWarnings("unchecked")
     protected <Req extends WriteRequest<Req>, Resp> Resp handleRequest(WriteRequest<Req> request) {
         if (request instanceof IndexRequest) {
@@ -876,6 +913,26 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
             return (Resp) new RestClientBulkAction().action(restClient, (BulkRequest) request);
         } else {
             throw new RuntimeException("Unsupported request type: " + request.getClass().getName());
+        }
+    }
+
+    protected BulkByScrollResponse handleRequest(AbstractBulkByScrollRequest<?> request) {
+        if (request instanceof UpdateByQueryRequest) {
+            return new RestClientUpdateByQueryAction().action(restClient, (UpdateByQueryRequest) request);
+        } else if (request instanceof DeleteByQueryRequest) {
+            return new RestClientDeleteByQueryAction().action(restClient, (DeleteByQueryRequest) request);
+        } else {
+            throw new RuntimeException("Unsupported request type: " + request.getClass().getName());
+        }
+    }
+
+    protected static class InternalSearchRequest {
+        final SearchRequest searchRequest;
+        final Map<String, String> aggregationFields;
+
+        public InternalSearchRequest(SearchRequest searchRequest, Map<String, String> aggregationFields) {
+            this.searchRequest = searchRequest;
+            this.aggregationFields = aggregationFields;
         }
     }
 

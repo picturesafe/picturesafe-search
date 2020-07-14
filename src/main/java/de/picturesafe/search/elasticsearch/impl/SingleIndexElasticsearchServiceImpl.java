@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Component
@@ -125,6 +126,11 @@ public class SingleIndexElasticsearchServiceImpl implements SingleIndexElasticse
     @Override
     public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids) {
         elasticsearchService.removeFromIndex(getIndexAlias(), dataChangeProcessingMode, ids);
+    }
+
+    @Override
+    public void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Expression expression, Locale locale) {
+        elasticsearchService.removeFromIndex(getIndexAlias(), dataChangeProcessingMode, expression, locale);
     }
 
     @Override

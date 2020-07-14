@@ -28,6 +28,7 @@ import de.picturesafe.search.parameter.SearchParameter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -156,6 +157,15 @@ public interface SingleIndexElasticsearchService {
      * @param ids                       IDs of the documents to be removed
      */
     void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids);
+
+    /**
+     * Removes multiple documents from the index.
+     *
+     * @param dataChangeProcessingMode  {@link DataChangeProcessingMode}
+     * @param expression                Expression defining the search criteria for the documents to delete
+     * @param locale                    Locale for searching multilingual fields (use Locale.ROOT if it doesn't matter)
+     */
+    void removeFromIndex(DataChangeProcessingMode dataChangeProcessingMode, Expression expression, Locale locale);
 
     /**
      * Searches for documents.

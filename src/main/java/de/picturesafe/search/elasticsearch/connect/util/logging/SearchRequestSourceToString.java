@@ -16,18 +16,18 @@
 
 package de.picturesafe.search.elasticsearch.connect.util.logging;
 
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 
-public class SearchSourceBuilderToString {
+public class SearchRequestSourceToString {
 
-    private final SearchSourceBuilder searchSourceBuilder;
+    private final SearchRequest searchRequest;
 
-    public SearchSourceBuilderToString(SearchSourceBuilder searchSourceBuilder) {
-        this.searchSourceBuilder = searchSourceBuilder;
+    public SearchRequestSourceToString(SearchRequest searchRequest) {
+        this.searchRequest = searchRequest;
     }
 
     @Override
     public String toString() {
-        return (searchSourceBuilder != null) ? searchSourceBuilder.toString() : null;
+        return (searchRequest != null) ? searchRequest.source().toString() : null;
     }
 }

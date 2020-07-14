@@ -585,5 +585,25 @@ public class BaseIT extends AbstractElasticIntegrationTest {
         final SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
         assertEquals("Expression does not work: indexAlias = " + indexAlias, 4, result.getTotalHitCount());
     }
+
+    @Test
+    public void testRemoveByQuery() {
+        final List<Map<String, Object>> docs = Arrays.asList(
+            DocumentBuilder.id(101).put("title.de", "Released").put("caption", "Record released").put("released", true)
+                .build(),
+            DocumentBuilder.id(102).put("title.de", "Released").put("caption", "Record not released").put("released", true)
+                .build(),
+            DocumentBuilder.id(103).put("title.de", "Not released").put("caption", "Record not released").put("released", false)
+                .build());
+        elasticsearch.addToIndex(indexAlias, true, true, docs);
+
+        final QueryDto queryDto = new QueryDto(new ValueExpression("released", true), Locale.ROOT);
+        SearchResultDto result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals(3, result.getTotalHitCount());
+
+        elasticsearch.removeFromIndex(queryDto, mappingConfiguration, indexPresetConfiguration, true);
+        result = elasticsearch.search(queryDto, mappingConfiguration, indexPresetConfiguration);
+        assertEquals(0, result.getTotalHitCount());
+    }
 }
 

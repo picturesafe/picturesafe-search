@@ -245,7 +245,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public void addToIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, List<Map<String, Object>> documents) {
-        Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(documents, "Parameter 'documents' may not be null!");
 
@@ -260,7 +260,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Object id) {
-        Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
 
         elasticsearch.removeFromIndex(indexAlias, dataChangeProcessingMode.isRefresh(), id);
@@ -268,11 +268,23 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Collection<?> ids) {
-        Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
         Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
         Validate.notNull(ids, "Parameter 'ids' may not be null!");
 
         elasticsearch.removeFromIndex(indexAlias, dataChangeProcessingMode.isRefresh(), ids);
+    }
+
+    @Override
+    public void removeFromIndex(String indexAlias, DataChangeProcessingMode dataChangeProcessingMode, Expression expression, Locale locale) {
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
+        Validate.notNull(dataChangeProcessingMode, "Parameter 'dataChangeProcessingMode' may not be null!");
+        Validate.notNull(expression, "Parameter 'expression' may not be null!");
+        Validate.notNull(locale, "Parameter 'locale' may not be null!");
+
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
+        elasticsearch.removeFromIndex(new QueryDto(expression, locale), getMappingConfiguration(indexAlias, true), indexPresetConfiguration,
+                dataChangeProcessingMode.isRefresh());
     }
 
     @Override
@@ -282,7 +294,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public SearchResult search(String indexAlias, AccountContext<?> accountContext, Expression expression, SearchParameter searchParameter) {
-        Validate.notEmpty(indexAlias, "Parameter 'indexName' may not be null or empty!");
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
 
         final StopWatch sw = new StopWatch();
 
