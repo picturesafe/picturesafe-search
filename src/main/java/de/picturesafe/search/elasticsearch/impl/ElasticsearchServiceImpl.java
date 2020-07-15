@@ -26,11 +26,12 @@ import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.Elasticsearch;
-import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetEntryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryRangeDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchHitDto;
+import de.picturesafe.search.elasticsearch.connect.dto.SearchResultDto;
 import de.picturesafe.search.elasticsearch.error.ElasticsearchServiceException;
 import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.IdFormat;
@@ -46,6 +47,7 @@ import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.AccountContext;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -64,6 +66,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Component
@@ -302,8 +305,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         final int pageSize = getPageSize(searchParameter);
         final SearchResultDto searchResultDto
                 = getElasticsearchResult(new InternalSearchContext(indexPresetConfiguration, accountContext, expression, searchParameter, pageSize), sw);
-        final List<SearchResultItem> resultItems
-                = searchResultDto.getHits().stream().map(hit -> new SearchResultItem(hit.getId(), hit.getAttributes(), idFormat)).collect(Collectors.toList());
+        final List<SearchResultItem> resultItems = searchResultDto.getHits().stream().map(this::searchResultItem).collect(Collectors.toList());
 
         sw.start("get max results");
         final long totalHitCount = searchResultDto.getTotalHitCount();
@@ -314,6 +316,22 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         final int pageIndex = (searchParameter.getPageIndex() != null) ? searchParameter.getPageIndex() : 1;
         return new SearchResult(resultItems, pageIndex, pageSize, resultCount, totalHitCount, searchResultDto.isExactCount(),
                 convertFacets(searchResultDto.getFacetDtoList()));
+    }
+
+    protected SearchResultItem searchResultItem(SearchHitDto hit) {
+        return new SearchResultItem(hit.getId(), hit.getAttributes(), idFormat).innerHits(convertInnerHits(hit.getInnerHits()));
+    }
+
+    protected Map<String, List<SearchResultItem>> convertInnerHits(Map<String, List<SearchHitDto>> innerHits) {
+        if (MapUtils.isNotEmpty(innerHits)) {
+            final Map<String, List<SearchResultItem>> convertedHits = new TreeMap<>();
+            innerHits.forEach((name, hits) -> {
+                hits.forEach(hit -> convertedHits.computeIfAbsent(name, k -> new ArrayList<>()).add(searchResultItem(hit)));
+            });
+            return convertedHits;
+        } else {
+            return null;
+        }
     }
 
     @Override

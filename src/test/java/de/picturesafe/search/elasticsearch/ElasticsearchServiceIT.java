@@ -35,6 +35,8 @@ import de.picturesafe.search.expression.FindAllExpression;
 import de.picturesafe.search.expression.FulltextExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
+import de.picturesafe.search.parameter.CollapseOption;
+import de.picturesafe.search.parameter.InnerHitsOption;
 import de.picturesafe.search.parameter.SearchParameter;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.parameter.aggregation.DateHistogramAggregation;
@@ -372,6 +374,42 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(2002, result.getSearchResultItems().get(2).getId(Long.class).longValue());
     }
 
+    @Test
+    public void testCollapseWithInnerHits() {
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
+        final List<Map<String, Object>> docs = Arrays.asList(
+                DocumentBuilder.id(10).put("title", "collapse").put("keyword", "Elastic").put("count", 1).build(),
+                DocumentBuilder.id(11).put("title", "collapse").put("keyword", "Elastic").put("count", 2).build(),
+                DocumentBuilder.id(13).put("title", "collapse").put("keyword", "Elastic").put("count", 3).build(),
+                DocumentBuilder.id(21).put("title", "collapse").put("keyword", "Java").put("count", 11).build(),
+                DocumentBuilder.id(22).put("title", "collapse").put("keyword", "Java").put("count", 12).build()
+        );
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, docs);
+
+        final SearchResult result = elasticsearchService.search(indexAlias, new ValueExpression("title", "collapse"),
+                SearchParameter.builder().sortOptions(SortOption.desc("count")).collapseOption(CollapseOption.field("keyword")
+                        .innerHits(InnerHitsOption.name("maxCounts").size(2).sortOptions(SortOption.desc("count")))).build());
+        assertEquals(2, result.getSearchResultItems().size());
+
+        SearchResultItem searchResultItem = result.getSearchResultItems().get(0);
+        assertEquals("Java", searchResultItem.getAttribute("keyword"));
+        assertNotNull(searchResultItem.getInnerHits());
+        assertEquals(2, searchResultItem.getInnerHits().get("maxCounts").size());
+        SearchResultItem innerHit = searchResultItem.getInnerHits().get("maxCounts").get(0);
+        assertEquals(12, innerHit.getAttribute("count"));
+        innerHit = searchResultItem.getInnerHits().get("maxCounts").get(1);
+        assertEquals(11, innerHit.getAttribute("count"));
+
+        searchResultItem = result.getSearchResultItems().get(1);
+        assertEquals("Elastic", searchResultItem.getAttribute("keyword"));
+        assertNotNull(searchResultItem.getInnerHits());
+        assertEquals(2, searchResultItem.getInnerHits().get("maxCounts").size());
+        innerHit = searchResultItem.getInnerHits().get("maxCounts").get(0);
+        assertEquals(3, innerHit.getAttribute("count"));
+        innerHit = searchResultItem.getInnerHits().get("maxCounts").get(1);
+        assertEquals(2, innerHit.getAttribute("count"));
+    }
+
     private Date parseDate(String date) {
         try {
             return new SimpleDateFormat("dd.MM.yyyy").parse(date);
@@ -440,7 +478,9 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
                     createFieldConfiguration("caption", ElasticsearchType.TEXT, true, false, false, false),
                     createFieldConfiguration("createDate", ElasticsearchType.DATE, false, true, true, false),
                     createFieldConfiguration("location", ElasticsearchType.TEXT, true, true, true, false),
-                    createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true)
+                    createFieldConfiguration("text_multilang", ElasticsearchType.TEXT, true, false, true, true),
+                    createFieldConfiguration("keyword", ElasticsearchType.KEYWORD, false, false, true, false),
+                    createFieldConfiguration("count", ElasticsearchType.INTEGER, false, false, true, false)
             );
         }
     }
