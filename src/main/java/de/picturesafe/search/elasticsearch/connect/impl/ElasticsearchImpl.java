@@ -62,10 +62,13 @@ import de.picturesafe.search.elasticsearch.model.ElasticsearchInfo;
 import de.picturesafe.search.elasticsearch.model.IdFormat;
 import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.expression.SuggestExpression;
+import de.picturesafe.search.parameter.CollapseOption;
+import de.picturesafe.search.parameter.InnerHitsOption;
 import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.lucene.search.TotalHits;
@@ -89,6 +92,7 @@ import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
@@ -102,6 +106,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.support.ValuesSourceAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
@@ -131,6 +136,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
 import static de.picturesafe.search.elasticsearch.connect.filter.util.FilterFactoryUtils.createFilter;
@@ -576,7 +582,21 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
             throw new RuntimeException("Missing data in search result!");
         }
 
-        return new SearchHitDto(hit.getId(), attributes);
+        return new SearchHitDto(hit.getId(), attributes).innerHits(convertInnerHits(hit.getInnerHits(), mappingConfiguration));
+    }
+
+    protected Map<String, List<SearchHitDto>> convertInnerHits(Map<String, SearchHits> innerHits, MappingConfiguration mappingConfiguration) {
+        if (MapUtils.isNotEmpty(innerHits)) {
+            final Map<String, List<SearchHitDto>> convertedHits = new TreeMap<>();
+            innerHits.forEach((name, hits) -> {
+                for (final SearchHit hit : hits.getHits()) {
+                    convertedHits.computeIfAbsent(name, k -> new ArrayList<>()).add(convertSearchHit(hit, mappingConfiguration));
+                }
+            });
+            return convertedHits;
+        } else {
+            return null;
+        }
     }
 
     protected List<FacetDto> convertFacets(InternalSearchResponse internalSearchResponse, QueryDto queryDto, MappingConfiguration mappingConfiguration) {
@@ -654,6 +674,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         }
 
         addSortOptionsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
+        addCollapseOptionToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
         final Map<String, String> aggregationFields = addFacetsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
         addFieldsToSearchRequest(queryDto, mappingConfiguration, searchSourceBuilder);
 
@@ -687,46 +708,50 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     protected void addSortOptionsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfig, SearchSourceBuilder searchRequestBuilder) {
         if (CollectionUtils.isNotEmpty(queryDto.getSortOptions())) {
             for (SortOption sortOption : queryDto.getSortOptions()) {
-                final String fieldName = sortOption.getFieldName();
-                SortBuilder<?> sortBuilder;
-
-                if (SortOption.RELEVANCE_NAME.equals(fieldName)) {
-                    sortBuilder = SortBuilders.scoreSort();
-                } else {
-                    FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
-                    final String topFieldName = StringUtils.substringBefore(fieldName, ".");
-
-                    if (fieldConfiguration == null) {
-                        fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
-                    }
-
-                    sortBuilder = null;
-                    if (fieldConfiguration != null) {
-                        if (fieldConfiguration.getParent() != null) {
-                            fieldConfiguration = fieldConfiguration.getParent();
-                        }
-
-                        if (fieldConfiguration.isNestedObject()) {
-                            sortBuilder = buildNestedSort(queryDto, fieldConfiguration, fieldName, sortOption, mappingConfig);
-                        } else if (isTextField(fieldConfiguration)) {
-                            sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), queryDto.getLocale());
-                        }
-                    } else {
-                        LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
-                    }
-
-                    if (sortBuilder == null) {
-                        sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
-                    }
-                }
-
-                searchRequestBuilder.sort(sortBuilder);
+                searchRequestBuilder.sort(sortBuilder(sortOption, mappingConfig, queryDto.getLocale()));
             }
         }
     }
 
-    private FieldSortBuilder buildNestedSort(QueryDto queryDto, FieldConfiguration fieldConfiguration, String nestedFieldName, SortOption sortOption,
-                                             MappingConfiguration mappingConfiguration) {
+    protected SortBuilder<?> sortBuilder(SortOption sortOption, MappingConfiguration mappingConfig, Locale locale) {
+        final String fieldName = sortOption.getFieldName();
+        SortBuilder<?> sortBuilder;
+
+        if (SortOption.RELEVANCE_NAME.equals(fieldName)) {
+            sortBuilder = SortBuilders.scoreSort();
+        } else {
+            FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
+            final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+
+            if (fieldConfiguration == null) {
+                fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
+            }
+
+            sortBuilder = null;
+            if (fieldConfiguration != null) {
+                if (fieldConfiguration.getParent() != null) {
+                    fieldConfiguration = fieldConfiguration.getParent();
+                }
+
+                if (fieldConfiguration.isNestedObject()) {
+                    sortBuilder = buildNestedSort(fieldConfiguration, fieldName, sortOption, mappingConfig, locale);
+                } else if (isTextField(fieldConfiguration)) {
+                    sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), locale);
+                }
+            } else {
+                LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
+            }
+
+            if (sortBuilder == null) {
+                sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
+            }
+        }
+
+        return sortBuilder;
+    }
+
+    private FieldSortBuilder buildNestedSort(FieldConfiguration fieldConfiguration, String nestedFieldName, SortOption sortOption,
+                                             MappingConfiguration mappingConfiguration, Locale locale) {
         final FieldConfiguration nestedField = fieldConfiguration.getNestedField(StringUtils.substringAfter(nestedFieldName, "."));
         final String sortFieldName = sortFieldName(nestedField, nestedFieldName);
         return SortBuilders
@@ -734,15 +759,14 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
                 .order(sortOrder(sortOption))
                 .missing(sortMissing())
                 .sortMode(sortMode(sortOption))
-                .setNestedSort(nestedSortBuilder(queryDto, fieldConfiguration.getName(), sortOption, mappingConfiguration));
+                .setNestedSort(nestedSortBuilder(fieldConfiguration.getName(), sortOption, mappingConfiguration, locale));
     }
 
-    private NestedSortBuilder nestedSortBuilder(QueryDto queryDto, String topFieldName, SortOption sortOption, MappingConfiguration mappingConfiguration) {
+    private NestedSortBuilder nestedSortBuilder(String topFieldName, SortOption sortOption, MappingConfiguration mappingConfiguration, Locale locale) {
         final NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(topFieldName);
         if (sortOption.getFilter() != null) {
             nestedSortBuilder.setFilter(
-                    createFilter(filterFactories,
-                            new SearchContext(QueryDto.sortFilter(sortOption.getFilter(), queryDto.getLocale()), mappingConfiguration)));
+                    createFilter(filterFactories, new SearchContext(QueryDto.sortFilter(sortOption.getFilter(), locale), mappingConfiguration)));
         }
         return nestedSortBuilder;
     }
@@ -775,6 +799,36 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         } else {
             throw new RuntimeException("The field '" + fieldConfiguration.getName() + "' is not configured as sortable!");
         }
+    }
+
+    protected void addCollapseOptionToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfig, SearchSourceBuilder searchSourceBuilder) {
+        final CollapseOption collapseOption = queryDto.getCollapseOption();
+        if (collapseOption != null) {
+            searchSourceBuilder.collapse(collapseBuilder(collapseOption, mappingConfig, queryDto.getLocale()));
+        }
+    }
+
+    protected CollapseBuilder collapseBuilder(CollapseOption collapseOption, MappingConfiguration mappingConfig, Locale locale) {
+        final CollapseBuilder collapseBuilder = new CollapseBuilder(collapseOption.getField());
+        if (CollectionUtils.isNotEmpty(collapseOption.getInnerHitsOptions())) {
+            final List<InnerHitBuilder> innerHitBuilders = collapseOption.getInnerHitsOptions().stream()
+                    .map(innerHitsOption -> innerHitBuilder(innerHitsOption, mappingConfig, locale))
+                    .collect(Collectors.toList());
+            collapseBuilder.setInnerHits(innerHitBuilders);
+        }
+        return collapseBuilder;
+    }
+
+    protected InnerHitBuilder innerHitBuilder(InnerHitsOption innerHitsOption, MappingConfiguration mappingConfig, Locale locale) {
+        final InnerHitBuilder innerHitBuilder
+                = new InnerHitBuilder(innerHitsOption.getName()).setSize(innerHitsOption.getSize()).setFrom(innerHitsOption.getFrom());
+        if (CollectionUtils.isNotEmpty(innerHitsOption.getSortOptions())) {
+            innerHitsOption.getSortOptions().forEach(sortOption -> innerHitBuilder.addSort(sortBuilder(sortOption, mappingConfig, locale)));
+        }
+        if (innerHitsOption.getCollapseOption() != null) {
+            innerHitBuilder.setInnerCollapse(collapseBuilder(innerHitsOption.getCollapseOption(), mappingConfig, locale));
+        }
+        return innerHitBuilder;
     }
 
     protected void addFieldsToSearchRequest(QueryDto queryDto, MappingConfiguration mappingConfiguration, SearchSourceBuilder searchRequestBuilder) {

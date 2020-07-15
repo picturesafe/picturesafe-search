@@ -391,8 +391,14 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         final Locale locale = StringUtils.isNotBlank(searchParameter.getLanguage())
                 ? LocaleUtils.toLocale(searchParameter.getLanguage())
                 : accountContext.getUserLanguage();
-        return new QueryDto(expression, queryRangeDto, searchParameter.getSortOptions(), searchParameter.getAggregations(), locale, fieldsToResolve,
-                fieldResolverType).withAccountContext(accountContext);
+        return new QueryDto(expression, locale)
+                .queryRange(queryRangeDto)
+                .sortOptions(searchParameter.getSortOptions())
+                .collapseOption(searchParameter.getCollapseOption())
+                .aggregations(searchParameter.getAggregations())
+                .fieldsToResolve(fieldsToResolve)
+                .fieldResolverType(fieldResolverType)
+                .accountContext(accountContext);
     }
 
     protected int getMaxResults(String indexAlias, Integer maxResults, long totalHitCount) {
