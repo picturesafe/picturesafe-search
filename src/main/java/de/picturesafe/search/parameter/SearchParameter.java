@@ -31,6 +31,7 @@ public class SearchParameter {
     public static final SearchParameter DEFAULT = builder().build();
 
     private final List<SortOption> sortOptions;
+    private final CollapseOption collapseOption;
     private final Integer maxResults;
     private final Long maxTrackTotalHits;
     private final Integer pageSize;
@@ -45,6 +46,7 @@ public class SearchParameter {
 
     private SearchParameter(Builder builder) {
         sortOptions = builder.sortOptions;
+        collapseOption = builder.collapseOption;
         maxResults = builder.maxResults;
         maxTrackTotalHits = builder.maxTrackTotalHits;
         pageSize = builder.pageSize;
@@ -65,6 +67,15 @@ public class SearchParameter {
      */
     public List<SortOption> getSortOptions() {
         return sortOptions;
+    }
+
+    /**
+     * Gets the result collapse option
+     *
+     * @return Result collapse option
+     */
+    public CollapseOption getCollapseOption() {
+        return collapseOption;
     }
 
     /**
@@ -178,6 +189,7 @@ public class SearchParameter {
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("sortOptions", sortOptions) //--
+                .append("collapseOption", collapseOption) //--
                 .append("maxResults", maxResults) //--
                 .append("maxTrackTotalHits", maxTrackTotalHits) //--
                 .append("pageSize", pageSize) //--
@@ -198,6 +210,7 @@ public class SearchParameter {
 
     public static class Builder {
         List<SortOption> sortOptions = new ArrayList<>();
+        CollapseOption collapseOption;
         Integer maxResults;
         Long maxTrackTotalHits;
         Integer pageSize;
@@ -243,6 +256,17 @@ public class SearchParameter {
          */
         public Builder addSortOption(SortOption sortOption) {
             sortOptions.add(sortOption);
+            return this;
+        }
+
+        /**
+         * Sets the result collapse option
+         *
+         * @param collapseOption Result collapse option
+         * @return Builder
+         */
+        public Builder collapseOption(CollapseOption collapseOption) {
+            this.collapseOption = collapseOption;
             return this;
         }
 

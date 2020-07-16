@@ -18,6 +18,7 @@ package de.picturesafe.search.elasticsearch.connect.dto;
 
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.parameter.AccountContext;
+import de.picturesafe.search.parameter.CollapseOption;
 import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -44,6 +46,7 @@ public class QueryDto {
 
     private QueryRangeDto queryRange;
     private List<SortOption> sortOptions = Collections.emptyList();
+    private CollapseOption collapseOption;
     private List<? extends SearchAggregation> aggregations = Collections.emptyList();
     private List<String> fieldsToResolve = Collections.emptyList();
     private FieldResolverType fieldResolverType = FieldResolverType.DOC_VALUES;
@@ -114,6 +117,10 @@ public class QueryDto {
         return this;
     }
 
+    public QueryDto sortOptions(SortOption... sortOptions) {
+        return sortOptions(Arrays.asList(sortOptions));
+    }
+
     public List<? extends SearchAggregation> getAggregations() {
         return aggregations;
     }
@@ -141,11 +148,20 @@ public class QueryDto {
         return this;
     }
 
+    public CollapseOption getCollapseOption() {
+        return collapseOption;
+    }
+
+    public QueryDto collapseOption(CollapseOption collapseOption) {
+        this.collapseOption = collapseOption;
+        return this;
+    }
+
     public AccountContext<?> getAccountContext() {
         return accountContext;
     }
 
-    public QueryDto withAccountContext(AccountContext<?> accountContext) {
+    public QueryDto accountContext(AccountContext<?> accountContext) {
         this.accountContext = accountContext;
         return this;
     }
@@ -175,6 +191,7 @@ public class QueryDto {
                     .append(locale, other.locale)
                     .append(queryRange, other.queryRange)
                     .append(sortOptions, other.sortOptions)
+                    .append(collapseOption, other.collapseOption)
                     .append(aggregations, other.aggregations)
                     .append(fieldsToResolve, other.fieldsToResolve)
                     .isEquals();
@@ -188,6 +205,7 @@ public class QueryDto {
                 .append("locale", locale) //--
                 .append("queryRange", queryRange) //--
                 .append("sortOptions", sortOptions) //--
+                .append("collapseOption", collapseOption) //--
                 .append("aggregations", aggregations) //--
                 .append("fieldsToResolve", fieldsToResolve) //--
                 .append("fieldResolverType", fieldResolverType) //--

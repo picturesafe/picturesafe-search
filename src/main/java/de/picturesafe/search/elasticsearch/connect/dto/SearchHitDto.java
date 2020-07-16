@@ -19,12 +19,14 @@ package de.picturesafe.search.elasticsearch.connect.dto;
 import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.List;
 import java.util.Map;
 
 public class SearchHitDto {
 
     private final String id;
     private final Map<String, Object> attributes;
+    private Map<String, List<SearchHitDto>> innerHits;
 
     public SearchHitDto(String id, Map<String, Object> attributes) {
         this.id = id;
@@ -47,11 +49,21 @@ public class SearchHitDto {
         return attributes.size();
     }
 
+    public Map<String, List<SearchHitDto>> getInnerHits() {
+        return innerHits;
+    }
+
+    public SearchHitDto innerHits(Map<String, List<SearchHitDto>> innerHits) {
+        this.innerHits = innerHits;
+        return this;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("id", id) //--
                 .append("attributes", attributes) //--
+                .append("innerHits", innerHits) //--
                 .toString();
     }
 }

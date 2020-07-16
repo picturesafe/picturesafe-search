@@ -21,6 +21,7 @@ import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -32,6 +33,7 @@ public class SearchResultItem {
     private final String id;
     private final Map<String, Object> attributes;
     private final IdFormat idFormat;
+    private Map<String, List<SearchResultItem>> innerHits;
 
     /**
      * Constructor
@@ -142,11 +144,32 @@ public class SearchResultItem {
         }
     }
 
+    /**
+     * Gets optional inner hits.
+     *
+     * @return Inner hits grouped by name
+     */
+    public Map<String, List<SearchResultItem>> getInnerHits() {
+        return innerHits;
+    }
+
+    /**
+     * Sets inner hits.
+     *
+     * @param innerHits Inner hits grouped by name
+     * @return Search hit item
+     */
+    public SearchResultItem innerHits(Map<String, List<SearchResultItem>> innerHits) {
+        this.innerHits = innerHits;
+        return this;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, new CustomJsonToStringStyle()) //--
                 .append("id", id) //--
                 .append("attributes", attributes) //--
+                .append("innerHits", innerHits) //--
                 .toString();
     }
 }
