@@ -63,7 +63,11 @@ public class SortOption {
         return new SortOption(RELEVANCE_NAME, Direction.DESC);
     }
 
-    private SortOption(String fieldName, Direction sortDirection) {
+    protected SortOption(Direction sortDirection) {
+        this(null, sortDirection);
+    }
+
+    protected SortOption(String fieldName, Direction sortDirection) {
         this.fieldName = fieldName;
         this.sortDirection = sortDirection;
     }

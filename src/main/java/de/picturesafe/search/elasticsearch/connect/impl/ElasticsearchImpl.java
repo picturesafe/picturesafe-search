@@ -64,6 +64,8 @@ import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.CollapseOption;
 import de.picturesafe.search.parameter.InnerHitsOption;
+import de.picturesafe.search.parameter.ScriptDefinition;
+import de.picturesafe.search.parameter.ScriptSortOption;
 import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
 import de.picturesafe.search.util.logging.StopWatchPrettyPrint;
@@ -100,6 +102,8 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -109,6 +113,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
+import org.elasticsearch.search.sort.ScriptSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortMode;
@@ -715,36 +720,53 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
 
     protected SortBuilder<?> sortBuilder(SortOption sortOption, MappingConfiguration mappingConfig, Locale locale) {
         final String fieldName = sortOption.getFieldName();
+
+        if (sortOption instanceof ScriptSortOption) {
+            return scriptSortBuilder((ScriptSortOption) sortOption);
+        } else if (SortOption.RELEVANCE_NAME.equals(fieldName)) {
+            return SortBuilders.scoreSort();
+        } else {
+            return fieldSortBuilder(sortOption, mappingConfig, locale);
+        }
+    }
+
+    protected ScriptSortBuilder scriptSortBuilder(ScriptSortOption scriptSortOption) {
+        final ScriptDefinition scriptDefinition = scriptSortOption.getScriptDefinition();
+        final ScriptType scriptType = ScriptType.valueOf(scriptDefinition.getScriptType().name());
+        final Script script = new Script(scriptType, scriptDefinition.getLanguage(), scriptDefinition.getIdOrCode(), scriptDefinition.getOptions(),
+                scriptDefinition.getParams());
+        final ScriptSortBuilder.ScriptSortType sortType = ScriptSortBuilder.ScriptSortType.valueOf(scriptDefinition.getSortType().name());
+        return new ScriptSortBuilder(script, sortType);
+    }
+
+    protected SortBuilder<?> fieldSortBuilder(SortOption sortOption, MappingConfiguration mappingConfig, Locale locale) {
+        final String fieldName = sortOption.getFieldName();
         SortBuilder<?> sortBuilder;
 
-        if (SortOption.RELEVANCE_NAME.equals(fieldName)) {
-            sortBuilder = SortBuilders.scoreSort();
+        FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
+        final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+
+        if (fieldConfiguration == null) {
+            fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
+        }
+
+        sortBuilder = null;
+        if (fieldConfiguration != null) {
+            if (fieldConfiguration.getParent() != null) {
+                fieldConfiguration = fieldConfiguration.getParent();
+            }
+
+            if (fieldConfiguration.isNestedObject()) {
+                sortBuilder = buildNestedSort(fieldConfiguration, fieldName, sortOption, mappingConfig, locale);
+            } else if (isTextField(fieldConfiguration)) {
+                sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), locale);
+            }
         } else {
-            FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
-            final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+            LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
+        }
 
-            if (fieldConfiguration == null) {
-                fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
-            }
-
-            sortBuilder = null;
-            if (fieldConfiguration != null) {
-                if (fieldConfiguration.getParent() != null) {
-                    fieldConfiguration = fieldConfiguration.getParent();
-                }
-
-                if (fieldConfiguration.isNestedObject()) {
-                    sortBuilder = buildNestedSort(fieldConfiguration, fieldName, sortOption, mappingConfig, locale);
-                } else if (isTextField(fieldConfiguration)) {
-                    sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), locale);
-                }
-            } else {
-                LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
-            }
-
-            if (sortBuilder == null) {
-                sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
-            }
+        if (sortBuilder == null) {
+            sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
         }
 
         return sortBuilder;
