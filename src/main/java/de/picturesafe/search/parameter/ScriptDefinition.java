@@ -38,8 +38,8 @@ public class ScriptDefinition {
 
     private String language = DEFAULT_LANGUAGE;
     private SortType sortType = DEFAULT_SORT_TYPE;
-    private Map<String, String> options;
-    private Map<String, Object> params;
+    private Map<String, String> options = new HashMap<>();
+    private Map<String, Object> params = new HashMap<>();
 
     /**
      * Creates a new inline script definition.
@@ -152,9 +152,6 @@ public class ScriptDefinition {
      * @return ScriptDefinition
      */
     public ScriptDefinition option(String name, String value) {
-        if (options == null) {
-            options = new HashMap<>();
-        }
         options.put(name, value);
         return this;
     }
@@ -187,9 +184,6 @@ public class ScriptDefinition {
      * @return ScriptDefinition
      */
     public ScriptDefinition param(String name, Object value) {
-        if (params == null) {
-            params = new HashMap<>();
-        }
         params.put(name, value);
         return this;
     }

@@ -64,6 +64,7 @@ import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.expression.SuggestExpression;
 import de.picturesafe.search.parameter.CollapseOption;
 import de.picturesafe.search.parameter.InnerHitsOption;
+import de.picturesafe.search.parameter.ScriptDefinition;
 import de.picturesafe.search.parameter.ScriptSortOption;
 import de.picturesafe.search.parameter.SearchAggregation;
 import de.picturesafe.search.parameter.SortOption;
@@ -101,6 +102,8 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -728,7 +731,12 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     protected ScriptSortBuilder scriptSortBuilder(ScriptSortOption scriptSortOption) {
-        return null; // ToDo
+        final ScriptDefinition scriptDefinition = scriptSortOption.getScriptDefinition();
+        final ScriptType scriptType = ScriptType.valueOf(scriptDefinition.getScriptType().name());
+        final Script script = new Script(scriptType, scriptDefinition.getLanguage(), scriptDefinition.getIdOrCode(), scriptDefinition.getOptions(),
+                scriptDefinition.getParams());
+        final ScriptSortBuilder.ScriptSortType sortType = ScriptSortBuilder.ScriptSortType.valueOf(scriptDefinition.getSortType().name());
+        return new ScriptSortBuilder(script, sortType);
     }
 
     protected SortBuilder<?> fieldSortBuilder(SortOption sortOption, MappingConfiguration mappingConfig, Locale locale) {
