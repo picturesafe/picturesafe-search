@@ -100,6 +100,7 @@ As you can see, picturesafe-search focuses more on WHAT to search for than on HO
 
 Only a few steps are necessary to get started with a standard configuration.
 A complete code example can be found https://github.com/picturesafe/picturesafe-search-samples[here].
+If you want to create a Spring Boot application, you can alternatively use the https://github.com/picturesafe/picturesafe-search-starter[picturesafe-search Starter].
 
 For more information, please see following https://picturesafe-search.io/docs/[documentation].
 
