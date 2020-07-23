@@ -16,6 +16,7 @@
 
 package de.picturesafe.search.elasticsearch.connect;
 
+import com.jayway.jsonpath.JsonPath;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.FacetDto;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
@@ -135,6 +136,15 @@ public class BaseIT extends AbstractElasticIntegrationTest {
 
     private QueryRangeDto defaultRange() {
         return new QueryRangeDto(0, 40);
+    }
+
+    @Test
+    public void testCreateQueryJson() {
+        final Expression expression = new FulltextExpression("caption*");
+        final QueryDto queryDto = new QueryDto(expression, defaultRange(), null, null, Locale.GERMAN);
+        final String json = elasticsearch.createQueryJson(queryDto, mappingConfiguration, indexPresetConfiguration, true);
+        LOG.debug("JSON:\n{}", json);
+        assertEquals("caption*", JsonPath.read(json, "$.query.query_string.query"));
     }
 
     @Test

@@ -215,6 +215,17 @@ public interface Elasticsearch {
     SearchResultDto search(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration);
 
     /**
+     * Creates an Elasticsearch query in JSON format.
+     *
+     * @param queryDto                      {@link QueryDto}
+     * @param mappingConfiguration          {@link MappingConfiguration}
+     * @param indexPresetConfiguration      {@link IndexPresetConfiguration}
+     * @param pretty                        TRUE for pretty format JSON string
+     * @return                              Query JSON
+     */
+    String createQueryJson(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration, boolean pretty);
+
+    /**
      * Gets a document from the index.
      *
      * @param indexAlias      Name of the alias of the index
