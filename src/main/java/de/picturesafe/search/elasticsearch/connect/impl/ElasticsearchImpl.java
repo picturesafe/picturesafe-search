@@ -16,6 +16,8 @@
 
 package de.picturesafe.search.elasticsearch.connect.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.IndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
@@ -658,6 +660,23 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
 
         QUERY_LOGGER.debug("Search response {}:\n{},", queryId, new SearchResponseToString(searchResponse));
         return new InternalSearchResponse(searchResponse, internalSearchRequest.aggregationFields);
+    }
+
+    @Override
+    public String createQueryJson(QueryDto queryDto, MappingConfiguration mappingConfiguration, IndexPresetConfiguration indexPresetConfiguration,
+                                  boolean pretty) {
+        final InternalSearchRequest internalSearchRequest = searchRequest(indexPresetConfiguration, queryDto, mappingConfiguration);
+        String json = internalSearchRequest.searchRequest.source().toString();
+        if (pretty) {
+            try {
+                final ObjectMapper mapper = new ObjectMapper();
+                final Object jsonObject = mapper.readValue(json, Object.class);
+                json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+            } catch (JsonProcessingException e) {
+                LOG.error("Failed to pretty format JSON string!", e);
+            }
+        }
+        return json;
     }
 
     protected InternalSearchRequest searchRequest(IndexPresetConfiguration indexPresetConfiguration, QueryDto queryDto,
