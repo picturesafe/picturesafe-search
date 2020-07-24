@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -284,20 +285,34 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
     }
 
     @Override
-    public List<String> resolveIndexNames(String alias) {
-        Validate.notEmpty(alias, "The argument 'indexAlias' is null or empty.");
+    public Map<String, List<String>> listIndices() {
+        final Map<String, List<String>> result = new TreeMap<>();
+        try {
+            final GetAliasesResponse response = restClient.indices().getAlias(new GetAliasesRequest(), RequestOptions.DEFAULT);
+            response.getAliases().forEach((indexName, aliasMetaData) -> {
+                aliasMetaData.forEach(aliasMeta -> result.computeIfAbsent(indexName, i -> new ArrayList<>()).add(aliasMeta.alias()));
+            });
+            return result;
+        } catch (Exception e) {
+            throw new ElasticsearchException("Failed list indices!", e);
+        }
+    }
 
-        final GetAliasesRequest getAliasesRequest = new GetAliasesRequest(alias);
+    @Override
+    public List<String> resolveIndexNames(String indexAlias) {
+        Validate.notEmpty(indexAlias, "Parameter 'indexAlias' may not be null or empty!");
+
+        final GetAliasesRequest getAliasesRequest = new GetAliasesRequest(indexAlias);
         final GetAliasesResponse getAliasesResponse;
         try {
             getAliasesResponse = restClient.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
-        } catch (IOException ioe) {
-            throw new RuntimeException("Failed to load alias with name '" + alias + "'!", ioe);
+        } catch (Exception e) {
+            throw new ElasticsearchException("Failed to resolve index names: indexAlias=" + indexAlias, e);
         }
         final List<String> indexesWithAlias = new ArrayList<>();
         getAliasesResponse.getAliases().forEach((indexName, aliasMetaData) -> {
             aliasMetaData.forEach(aliasMeta -> {
-                if (alias.equals(aliasMeta.alias())) {
+                if (indexAlias.equals(aliasMeta.alias())) {
                     indexesWithAlias.add(indexName);
                 }
             });

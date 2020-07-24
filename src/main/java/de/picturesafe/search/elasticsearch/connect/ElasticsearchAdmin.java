@@ -97,6 +97,13 @@ public interface ElasticsearchAdmin {
     void deleteIndexesOfAlias(String indexAlias);
 
     /**
+     * Lists all Elasticsearch indices.
+     *
+     * @return Map of indices with their aliases
+     */
+    Map<String, List<String>> listIndices();
+
+    /**
      * Returns the index names according to the given <code>indexAlias</code>.
      *
      * @param indexAlias    The alias name

@@ -31,6 +31,7 @@ import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.settings.Settings;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -45,6 +46,7 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -73,6 +75,17 @@ public class AdminIT extends AbstractElasticIntegrationTest {
     @Autowired
     ElasticsearchAdmin elasticsearchAdmin;
 
+    String indexAlias;
+
+    @After
+    public void tearDown() {
+        if (indexAlias != null) {
+            if (elasticsearchAdmin.aliasOrIndexExists(indexAlias)) {
+                elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
+            }
+        }
+    }
+
     @Test
     public void testGetMapping() {
         final String indexAlias = adminIndexPresetConfiguration.getIndexAlias();
@@ -90,80 +103,56 @@ public class AdminIT extends AbstractElasticIntegrationTest {
 
     @Test
     public void testCreateAndDeleteIndex() throws Exception {
-        final String indexAlias = adminIndexPresetConfiguration.getIndexAlias();
-
+        indexAlias = adminIndexPresetConfiguration.getIndexAlias();
         assertFalse("Index should not exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
-        try {
-            final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
-            assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
 
-            final GetSettingsResponse response = restClient.indices().getSettings(new GetSettingsRequest().indices(indexName), RequestOptions.DEFAULT);
-            final Settings settings = response.getIndexToSettings().get(indexName);
-            assertEquals("char_group", settings.get("index.analysis.tokenizer.file_name_tokenizer.type"));
-            assertEquals("file_name_tokenizer", settings.get("index.analysis.analyzer.file_name.tokenizer"));
+        final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
+        assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
 
-            elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
-            assertFalse("Deleted index must not exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
-        } finally {
-            if (elasticsearchAdmin.aliasOrIndexExists(indexAlias)) {
-                elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
-            }
-        }
+        final GetSettingsResponse response = restClient.indices().getSettings(new GetSettingsRequest().indices(indexName), RequestOptions.DEFAULT);
+        final Settings settings = response.getIndexToSettings().get(indexName);
+        assertEquals("char_group", settings.get("index.analysis.tokenizer.file_name_tokenizer.type"));
+        assertEquals("file_name_tokenizer", settings.get("index.analysis.analyzer.file_name.tokenizer"));
+
+        elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
+        assertFalse("Deleted index must not exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
     }
 
     @Test
     public void testUpdateMapping() throws Exception {
         final String fieldName = "update_test";
-        final String indexAlias = adminIndexPresetConfiguration.getIndexAlias();
+        indexAlias = adminIndexPresetConfiguration.getIndexAlias();
 
-        try {
-            final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
-            assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
+        final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
+        assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
 
-            final FieldConfiguration fieldConfig = StandardFieldConfiguration.builder(fieldName, ElasticsearchType.TEXT).copyToFulltext(true).build();
-            elasticsearchAdmin.updateMapping(adminIndexPresetConfiguration, mappingConfiguration, Collections.singletonList(fieldConfig));
+        final FieldConfiguration fieldConfig = StandardFieldConfiguration.builder(fieldName, ElasticsearchType.TEXT).copyToFulltext(true).build();
+        elasticsearchAdmin.updateMapping(adminIndexPresetConfiguration, mappingConfiguration, Collections.singletonList(fieldConfig));
 
-            final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
-            final MappingMetaData mapping = response.mappings().get(indexName);
-            final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
-            assertTrue("Mapping should contain new field", properties.containsKey(fieldName));
-
-            elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
-            assertFalse("Deleted index must not exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
-        } finally {
-            if (elasticsearchAdmin.aliasOrIndexExists(indexAlias)) {
-                elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
-            }
-        }
+        final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
+        final MappingMetaData mapping = response.mappings().get(indexName);
+        final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
+        assertTrue("Mapping should contain new field", properties.containsKey(fieldName));
     }
 
     @Test
     public void testFieldDisabled() throws Exception {
         final String fieldName = "objectField";
-        final String indexAlias = adminIndexPresetConfiguration.getIndexAlias();
+        indexAlias = adminIndexPresetConfiguration.getIndexAlias();
 
-        try {
-            final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
-            assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
+        final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
+        assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
 
-            final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
-            final MappingMetaData mapping = response.mappings().get(indexName);
-            final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
-            assertTrue("Mapping must contain field " + fieldName, properties.containsKey(fieldName));
+        final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
+        final MappingMetaData mapping = response.mappings().get(indexName);
+        final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
+        assertTrue("Mapping must contain field " + fieldName, properties.containsKey(fieldName));
 
-            final Map<String, Object> fieldProperties = (Map<String, Object>) properties.get(fieldName);
-            assertTrue("Field mapping must contain property 'type'", fieldProperties.containsKey("type"));
-            assertEquals("Elasticsearch type must be object", ElasticsearchType.OBJECT.toString(), fieldProperties.get("type"));
-            assertTrue("Field mapping must contain property 'enabled'", fieldProperties.containsKey("enabled"));
-            assertEquals("Property 'enabled' must be false", false, fieldProperties.get("enabled"));
-
-            elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
-            assertFalse("Deleted index must not exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
-        } finally {
-            if (elasticsearchAdmin.aliasOrIndexExists(indexAlias)) {
-                elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
-            }
-        }
+        final Map<String, Object> fieldProperties = (Map<String, Object>) properties.get(fieldName);
+        assertTrue("Field mapping must contain property 'type'", fieldProperties.containsKey("type"));
+        assertEquals("Elasticsearch type must be object", ElasticsearchType.OBJECT.toString(), fieldProperties.get("type"));
+        assertTrue("Field mapping must contain property 'enabled'", fieldProperties.containsKey("enabled"));
+        assertEquals("Property 'enabled' must be false", false, fieldProperties.get("enabled"));
     }
 
     @Test
@@ -180,6 +169,17 @@ public class AdminIT extends AbstractElasticIntegrationTest {
                 elasticsearchAdmin.deleteIndexesOfAlias(indexAlias);
             }
         }
+    }
+
+    @Test
+    public void testListIndices() {
+        indexAlias = adminIndexPresetConfiguration.getIndexAlias();
+        final String indexName = elasticsearchAdmin.createIndexWithAlias(adminIndexPresetConfiguration, mappingConfiguration);
+
+        final Map<String, List<String>> indices = elasticsearchAdmin.listIndices();
+        assertTrue("Indices should contain index name", indices.containsKey(indexName));
+        final List<String> aliases = indices.get(indexName);
+        assertTrue("Aliases should contain alias", aliases.contains(indexAlias));
     }
 
     @ComponentScan(basePackageClasses = {AdminIT.class})
