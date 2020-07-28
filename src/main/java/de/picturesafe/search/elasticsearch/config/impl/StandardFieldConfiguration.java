@@ -22,6 +22,7 @@ import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Arrays;
@@ -161,6 +162,37 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return parent;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final StandardFieldConfiguration that = (StandardFieldConfiguration) o;
+        return new EqualsBuilder()
+                .append(name, that.name)
+                .append(elasticsearchType, that.elasticsearchType)
+                .append(sortable, that.sortable)
+                .append(aggregatable, that.aggregatable)
+                .append(multilingual, that.multilingual)
+                .append(withoutIndexing, that.withoutIndexing)
+                .append(analyzer, that.analyzer).append(nestedFields, that.nestedFields)
+                .append(copyToFields, that.copyToFields)
+                .append(additionalParameters, that.additionalParameters)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .append(name)
+                .append(elasticsearchType)
+                .toHashCode();
+    }
+
     public static Builder builder(String name, ElasticsearchType elasticsearchType) {
         return new Builder(name, elasticsearchType);
     }
@@ -213,6 +245,11 @@ public class StandardFieldConfiguration implements FieldConfiguration {
 
         public Builder withoutIndexing() {
             this.withoutIndexing = true;
+            return this;
+        }
+
+        public Builder withoutIndexing(boolean withoutIndexing) {
+            this.withoutIndexing = withoutIndexing;
             return this;
         }
 
@@ -311,36 +348,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().fromDocument(doc)).collect(Collectors.toList())
                 : null;
         return this;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final StandardFieldConfiguration that = (StandardFieldConfiguration) o;
-        return new EqualsBuilder()
-                .append(sortable, that.sortable)
-                .append(aggregatable, that.aggregatable)
-                .append(multilingual, that.multilingual)
-                .append(name, that.name)
-                .append(elasticsearchType, that.elasticsearchType)
-                .append(analyzer, that.analyzer)
-                .append(withoutIndexing, that.withoutIndexing)
-                .append(nestedFields, that.nestedFields)
-                .append(copyToFields, that.copyToFields)
-                .append(additionalParameters, that.additionalParameters)
-                .isEquals();
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode();
     }
 
     @Override

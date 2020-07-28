@@ -16,22 +16,31 @@
 
 package de.picturesafe.search.elasticsearch.impl.mapping;
 
+import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public class MappingResolver {
+
+    private static final Set<String> KNOWN_PARAMETERS
+            = new HashSet<>(Arrays.asList("properties", "type", "nested", "completion", "analyzer", "copy_to", "fields"));
 
     public static MappingFields resolveFields(Map<String, Object> mapping, String indexName) {
         final List<FieldConfiguration> fieldConfigurations = new ArrayList<>();
@@ -48,10 +57,15 @@ public class MappingResolver {
 
     private static MappingField resolveField(String name, Map<String, Object> properties) {
         final String type = (String) properties.get("type");
+        final boolean enabled = booleanValue(properties, "enabled", true);
         final FieldConfiguration fieldConfiguration;
 
         if (type == null) {
-            return resolveMultiField(name, properties);
+            if (!enabled) {
+                fieldConfiguration = StandardFieldConfiguration.builder(name, ElasticsearchType.OBJECT).withoutIndexing().build();
+            } else {
+                return resolveObjectField(name, properties);
+            }
         } else if (type.equals("nested")) {
             return resolveNestedField(name, properties);
         } else if (type.equals("completion")) {
@@ -61,16 +75,42 @@ public class MappingResolver {
             fieldConfiguration = StandardFieldConfiguration.builder(name, type)
                     .sortable(sortableAndAggregatable)
                     .aggregatable(sortableAndAggregatable)
+                    .analyzer((String) properties.get("analyzer"))
+                    .copyTo((Collection<String>) properties.get("copy_to"))
+                    .additionalParameters(additionalParameters(properties))
+                    .withoutIndexing(!enabled)
                     .build();
         }
         return new MappingField(fieldConfiguration, Collections.emptyList());
     }
 
-    private static MappingField resolveMultiField(String name, Map<String, Object> properties) {
-        throw new NotImplementedException("Not yet implemented!"); // ToDo
+    private static MappingField resolveObjectField(String name, Map<String, Object> doc) {
+        final List<Locale> locales = new ArrayList<>();
+        final MutableObject<FieldConfiguration> fieldConfiguration = new MutableObject<>();
+        mappingObject(doc, "properties").forEach((subName, properties) -> {
+            final Locale locale = locale(name);
+            if (locale != null) {
+                locales.add(locale);
+            }
+            final MappingField field = resolveField(subName, (Map<String, Object>) properties);
+            if (fieldConfiguration.getValue() == null) {
+                fieldConfiguration.setValue(field.getFieldConfiguration());
+            } else if (!field.getFieldConfiguration().equals(fieldConfiguration.getValue())) {
+                throw new RuntimeException("Object fields are only supported as multilingual text fields or with enabled=false!");
+            }
+        });
+        return new MappingField(fieldConfiguration.getValue(), locales);
     }
 
-    private static MappingField resolveNestedField(String name, Map<String, Object> properties) {
+    private static Locale locale(String name) {
+        try {
+            return LocaleUtils.toLocale(name);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static MappingField resolveNestedField(String name, Map<String, Object> doc) {
         throw new NotImplementedException("Not yet implemented!"); // ToDo
     }
 
@@ -80,7 +120,7 @@ public class MappingResolver {
         }
 
         final Map<String, Object> fields = mappingObject(properties, "fields");
-        return MapUtils.isNotEmpty(fields) && fields.containsKey("keyword");
+        return MapUtils.isNotEmpty(fields) && (fields.containsKey("keyword") || fields.containsKey("keyword_icu"));
     }
 
     @SuppressWarnings("unchecked")
@@ -93,5 +133,19 @@ public class MappingResolver {
             }
         }
         return obj;
+    }
+
+
+    private static boolean booleanValue(Map<String, Object> properties, String name, boolean defaultValue) {
+        final Boolean value = (Boolean) properties.get(name);
+        return (value != null) ? value : defaultValue;
+    }
+
+    private static Map<String, Object> additionalParameters(Map<String, Object> properties) {
+        return properties.entrySet().stream().filter(MappingResolver::additionalParameter).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private static boolean additionalParameter(Map.Entry<String, Object> entry) {
+        return !KNOWN_PARAMETERS.contains(entry.getKey());
     }
 }
