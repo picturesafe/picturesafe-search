@@ -23,6 +23,7 @@ import de.picturesafe.search.elasticsearch.config.RestClientConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardIndexPresetConfiguration;
 import de.picturesafe.search.elasticsearch.impl.ElasticsearchServiceImpl;
+import de.picturesafe.search.elasticsearch.impl.SingleIndexElasticsearchServiceImpl;
 import de.picturesafe.search.elasticsearch.impl.StaticIndexPresetConfigurationProvider;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
@@ -68,8 +69,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {DefaultElasticConfiguration.class, SingleIndexElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
-        loader = AnnotationConfigContextLoader.class)
+@ContextConfiguration(classes = {DefaultElasticConfiguration.class, SingleIndexElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class,
+        SingleIndexElasticsearchServiceImpl.class}, loader = AnnotationConfigContextLoader.class)
 public class SingleIndexElasticsearchServiceIT {
 
     @Autowired
@@ -352,7 +353,7 @@ public class SingleIndexElasticsearchServiceIT {
         }
     }
 
-    @ComponentScan()
+    @ComponentScan(basePackages = "de.picturesafe.search.elasticsearch.connect")
     static class Config {
 
         @Bean

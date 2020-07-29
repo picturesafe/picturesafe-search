@@ -201,6 +201,18 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return new Builder(name, elasticsearchType);
     }
 
+    public static Builder builder(String name, FieldConfiguration fieldConfiguration) {
+        final Builder builder = new Builder(name, fieldConfiguration.getElasticsearchType());
+        builder.sortable = fieldConfiguration.isSortable();
+        builder.aggregatable = fieldConfiguration.isAggregatable();
+        builder.multilingual = fieldConfiguration.isMultilingual();
+        builder.analyzer = fieldConfiguration.getAnalyzer();
+        builder.withoutIndexing = fieldConfiguration.isWithoutIndexing();
+        builder.copyToFields = fieldConfiguration.getCopyToFields();
+        builder.additionalParameters = fieldConfiguration.getAdditionalParameters();
+        return builder;
+    }
+
     public static class Builder {
         private final String name;
         private final String elasticsearchType;
@@ -211,7 +223,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         private boolean withoutIndexing;
         private List<StandardFieldConfiguration> nestedFields;
         private Set<String> copyToFields;
-        private Map<String, Object> additionalParameters;
+        private Map<String, Object> additionalParameters = new TreeMap<>();;
 
         public Builder(String name, ElasticsearchType elasticsearchType) {
             this.name = name;
@@ -307,9 +319,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         }
 
         public Builder additionalParameter(String name, Object value) {
-            if (additionalParameters == null) {
-                additionalParameters = new TreeMap<>();
-            }
             additionalParameters.put(name, value);
             return this;
         }

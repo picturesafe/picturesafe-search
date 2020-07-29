@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -82,5 +83,20 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("nestedFields", getNestedFields())
                 .put("additionalParameters", getAdditionalParameters())
                 .build();
+    }
+
+    default boolean equalsBesidesName(FieldConfiguration conf) {
+        return new EqualsBuilder()
+                .append(getElasticsearchType(), conf.getElasticsearchType())
+                .append(isSortable(), conf.isSortable())
+                .append(isAggregatable(), conf.isAggregatable())
+                .append(isMultilingual(), conf.isMultilingual())
+                .append(getAnalyzer(), conf.getAnalyzer())
+                .append(isWithoutIndexing(), conf.isWithoutIndexing())
+                .append(getCopyToFields(), conf.getCopyToFields())
+                .append(getNestedFields(), conf.getNestedFields())
+                .append(getAdditionalParameters(), conf.getAdditionalParameters())
+                .append(getParent(), conf.getParent())
+                .isEquals();
     }
 }

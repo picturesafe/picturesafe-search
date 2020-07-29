@@ -22,7 +22,6 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.LocaleUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.ArrayList;
@@ -46,7 +45,7 @@ public class MappingResolver {
         final List<FieldConfiguration> fieldConfigurations = new ArrayList<>();
         final Set<Locale> locales = new HashSet<>();
 
-        final Map<String, Object> properties = mappingObject(mapping, indexName, "mappings", "properties");
+        final Map<String, Object> properties = objectValue(mapping, "properties");
         properties.forEach((name, value) -> {
             final MappingField field = resolveField(name, (Map<String, Object>) value);
             fieldConfigurations.add(field.getFieldConfiguration());
@@ -56,7 +55,7 @@ public class MappingResolver {
     }
 
     private static MappingField resolveField(String name, Map<String, Object> properties) {
-        final String type = (String) properties.get("type");
+        final String type = stringValue(properties, "type");
         final boolean enabled = booleanValue(properties, "enabled", true);
         final FieldConfiguration fieldConfiguration;
 
@@ -71,35 +70,40 @@ public class MappingResolver {
         } else if (type.equals("completion")) {
             fieldConfiguration = SuggestFieldConfiguration.name(name);
         } else {
-            final boolean sortableAndAggregatable = isSortableAndAggregatable(properties);
-            fieldConfiguration = StandardFieldConfiguration.builder(name, type)
-                    .sortable(sortableAndAggregatable)
-                    .aggregatable(sortableAndAggregatable)
-                    .analyzer((String) properties.get("analyzer"))
-                    .copyTo((Collection<String>) properties.get("copy_to"))
-                    .additionalParameters(additionalParameters(properties))
-                    .withoutIndexing(!enabled)
-                    .build();
+            fieldConfiguration = fieldConfiguration(name, type, properties, enabled);
         }
         return new MappingField(fieldConfiguration, Collections.emptyList());
     }
 
+    private static FieldConfiguration fieldConfiguration(String name, String type, Map<String, Object> properties, boolean enabled) {
+        final boolean sortableAndAggregatable = isSortableAndAggregatable(properties);
+        return StandardFieldConfiguration.builder(name, type)
+                    .sortable(sortableAndAggregatable)
+                    .aggregatable(sortableAndAggregatable)
+                    .analyzer(stringValue(properties, "analyzer"))
+                    .copyTo((Collection<String>) properties.get("copy_to"))
+                    .additionalParameters(additionalParameters(properties))
+                    .withoutIndexing(!enabled)
+                    .build();
+    }
+
     private static MappingField resolveObjectField(String name, Map<String, Object> doc) {
         final List<Locale> locales = new ArrayList<>();
-        final MutableObject<FieldConfiguration> fieldConfiguration = new MutableObject<>();
-        mappingObject(doc, "properties").forEach((subName, properties) -> {
-            final Locale locale = locale(name);
+        final MutableObject<FieldConfiguration> mutableFieldConfig = new MutableObject<>();
+        objectValue(doc, "properties").forEach((subName, properties) -> {
+            final Locale locale = locale(subName);
             if (locale != null) {
                 locales.add(locale);
             }
             final MappingField field = resolveField(subName, (Map<String, Object>) properties);
-            if (fieldConfiguration.getValue() == null) {
-                fieldConfiguration.setValue(field.getFieldConfiguration());
-            } else if (!field.getFieldConfiguration().equals(fieldConfiguration.getValue())) {
+            if (mutableFieldConfig.getValue() == null) {
+                mutableFieldConfig.setValue(field.getFieldConfiguration());
+            } else if (!field.getFieldConfiguration().equalsBesidesName(mutableFieldConfig.getValue())) {
                 throw new RuntimeException("Object fields are only supported as multilingual text fields or with enabled=false!");
             }
         });
-        return new MappingField(fieldConfiguration.getValue(), locales);
+        final FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder(name, mutableFieldConfig.getValue()).multilingual(true).build();
+        return new MappingField(fieldConfiguration, locales);
     }
 
     private static Locale locale(String name) {
@@ -111,7 +115,19 @@ public class MappingResolver {
     }
 
     private static MappingField resolveNestedField(String name, Map<String, Object> doc) {
-        throw new NotImplementedException("Not yet implemented!"); // ToDo
+        final List<StandardFieldConfiguration> nestedFields = new ArrayList<>();
+        objectValue(doc, "properties").forEach((subName, properties) -> {
+            final MappingField field = resolveField(subName, (Map<String, Object>) properties);
+            final FieldConfiguration fieldConfiguration = field.getFieldConfiguration();
+            if (fieldConfiguration instanceof StandardFieldConfiguration) {
+                nestedFields.add((StandardFieldConfiguration) fieldConfiguration);
+            } else {
+                throw new RuntimeException(("Unsupported inner field configuration for nested field: " + fieldConfiguration));
+            }
+        });
+        final FieldConfiguration fieldConfiguration
+                = StandardFieldConfiguration.builder("article", ElasticsearchType.NESTED).nestedFields(nestedFields).build();
+        return new MappingField(fieldConfiguration, Collections.emptyList());
     }
 
     private static boolean isSortableAndAggregatable(Map<String, Object> properties) {
@@ -119,22 +135,17 @@ public class MappingResolver {
             return true;
         }
 
-        final Map<String, Object> fields = mappingObject(properties, "fields");
+        final Map<String, Object> fields = objectValue(properties, "fields");
         return MapUtils.isNotEmpty(fields) && (fields.containsKey("keyword") || fields.containsKey("keyword_icu"));
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> mappingObject(Map<String, Object> doc, String... names) {
-        Map<String, Object> obj = doc;
-        for (final String name : names) {
-            obj = (Map<String, Object>) obj.get(name);
-            if (obj == null) {
-                break;
-            }
-        }
-        return obj;
+    private static Map<String, Object> objectValue(Map<String, Object> properties, String name) {
+        return (Map<String, Object>) properties.get(name);
     }
 
+    private static String stringValue(Map<String, Object> properties, String name) {
+        return (String) properties.get(name);
+    }
 
     private static boolean booleanValue(Map<String, Object> properties, String name, boolean defaultValue) {
         final Boolean value = (Boolean) properties.get(name);

@@ -307,7 +307,7 @@ public class ElasticsearchServiceNestedIT {
     }
 
     @Configuration
-    @ComponentScan
+    @ComponentScan(basePackages = "de.picturesafe.search.elasticsearch.connect")
     protected static class Config {
 
         @Bean

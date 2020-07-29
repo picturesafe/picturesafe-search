@@ -21,9 +21,11 @@ import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.impl.mapping.MappingFields;
 import de.picturesafe.search.elasticsearch.impl.mapping.MappingResolver;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -53,12 +55,14 @@ public class MappingFieldConfigurationProvider implements FieldConfigurationProv
 
     @Override
     public List<? extends FieldConfiguration> getFieldConfigurations(String indexAlias) {
-        return getMappingFields(indexAlias).getFieldConfigurations();
+        final MappingFields mappingFields = getMappingFields(indexAlias);
+        return (mappingFields != null) ? mappingFields.getFieldConfigurations() : Collections.emptyList();
     }
 
     @Override
     public List<Locale> getSupportedLocales(String indexAlias) {
-        return getMappingFields(indexAlias).getSupportedLocales();
+        final MappingFields mappingFields =  getMappingFields(indexAlias);
+        return (mappingFields != null) ? mappingFields.getSupportedLocales() : Collections.emptyList();
     }
 
     private MappingFields getMappingFields(String indexAlias) {
@@ -78,7 +82,9 @@ public class MappingFieldConfigurationProvider implements FieldConfigurationProv
 
     private MappingFields loadMappingFields(String indexAlias) {
         final List<String> indexNames = elasticsearchAdmin.resolveIndexNames(indexAlias);
-        if (indexNames.size() > 1) {
+        if (CollectionUtils.isEmpty(indexNames)) {
+            return null;
+        } else if (indexNames.size() > 1) {
             throw new RuntimeException("Alias '" + indexAlias + "' refers to multiple indexes, cannot resolve single mapping!");
         }
         final String indexName = indexNames.get(0);
