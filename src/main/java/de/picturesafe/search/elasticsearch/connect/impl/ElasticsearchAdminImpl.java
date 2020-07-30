@@ -294,7 +294,7 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
             });
             return result;
         } catch (Exception e) {
-            throw new ElasticsearchException("Failed list indices!", e);
+            throw new ElasticsearchException("Failed to list indices!", e);
         }
     }
 
