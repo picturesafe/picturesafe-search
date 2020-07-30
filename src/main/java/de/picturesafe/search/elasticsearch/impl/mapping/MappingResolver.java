@@ -46,6 +46,10 @@ public class MappingResolver {
         final Set<Locale> locales = new HashSet<>();
 
         final Map<String, Object> properties = objectValue(mapping, "properties");
+        if (MapUtils.isEmpty(properties)) {
+            return new MappingFields(Collections.emptyList(), Collections.emptyList());
+        }
+
         properties.forEach((name, value) -> {
             final MappingField field = resolveField(name, (Map<String, Object>) value);
             fieldConfigurations.add(field.getFieldConfiguration());

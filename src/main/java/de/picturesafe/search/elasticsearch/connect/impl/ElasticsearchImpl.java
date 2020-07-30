@@ -463,6 +463,11 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
     }
 
     @Override
+    public Map<String, List<String>> listIndices() {
+        return elasticsearchAdmin.listIndices();
+    }
+
+    @Override
     public List<String> resolveIndexNames(String indexAlias) {
         return elasticsearchAdmin.resolveIndexNames(indexAlias);
     }

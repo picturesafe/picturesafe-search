@@ -82,12 +82,10 @@ public class MappingFieldConfigurationProvider implements FieldConfigurationProv
 
     private MappingFields loadMappingFields(String indexAlias) {
         final List<String> indexNames = elasticsearchAdmin.resolveIndexNames(indexAlias);
-        if (CollectionUtils.isEmpty(indexNames)) {
-            return null;
-        } else if (indexNames.size() > 1) {
+        if (indexNames.size() > 1) {
             throw new RuntimeException("Alias '" + indexAlias + "' refers to multiple indexes, cannot resolve single mapping!");
         }
-        final String indexName = indexNames.get(0);
+        final String indexName = CollectionUtils.isNotEmpty(indexNames) ? indexNames.get(0) : indexAlias;
         return MappingResolver.resolveFields(elasticsearchAdmin.getMapping(indexName), indexName);
     }
 
