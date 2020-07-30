@@ -130,7 +130,7 @@ public class MappingResolver {
             }
         });
         final FieldConfiguration fieldConfiguration
-                = StandardFieldConfiguration.builder("article", ElasticsearchType.NESTED).nestedFields(nestedFields).build();
+                = StandardFieldConfiguration.builder(name, ElasticsearchType.NESTED).nestedFields(nestedFields).build();
         return new MappingField(fieldConfiguration, Collections.emptyList());
     }
 

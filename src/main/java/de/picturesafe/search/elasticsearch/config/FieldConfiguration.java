@@ -67,8 +67,14 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     FieldConfiguration getParent();
 
+    default String getParentName() {
+        final FieldConfiguration parent = getParent();
+        return (parent != null) ? parent.getName() : null;
+    }
+
     @Override
     default Map<String, Object> toDocument() {
+        // ATTENTION: Do not add parent here, parent is meant to be transient!
         return DocumentBuilder.withoutId()
                 .put(CLASS_NAME_FIELD, getClass().getName())
                 .put("name", getName())
@@ -88,6 +94,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
     default boolean equalsBesidesName(FieldConfiguration conf) {
         return new EqualsBuilder()
                 .append(getElasticsearchType(), conf.getElasticsearchType())
+                .append(isCopyToFulltext(), conf.isCopyToFulltext())
                 .append(isSortable(), conf.isSortable())
                 .append(isAggregatable(), conf.isAggregatable())
                 .append(isMultilingual(), conf.isMultilingual())
@@ -95,8 +102,9 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .append(isWithoutIndexing(), conf.isWithoutIndexing())
                 .append(getCopyToFields(), conf.getCopyToFields())
                 .append(getNestedFields(), conf.getNestedFields())
+                .append(isNestedObject(), conf.isNestedObject())
                 .append(getAdditionalParameters(), conf.getAdditionalParameters())
-                .append(getParent(), conf.getParent())
+                .append(getParentName(), conf.getParentName())
                 .isEquals();
     }
 }

@@ -54,8 +54,9 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private boolean withoutIndexing;
     private List<StandardFieldConfiguration> nestedFields;
     private Set<String> copyToFields;
-    private FieldConfiguration parent;
     private Map<String, Object> additionalParameters;
+
+    private transient FieldConfiguration parent;
 
     /**
      * ONLY FOR INTERNAL USAGE
@@ -160,37 +161,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     @Override
     public FieldConfiguration getParent() {
         return parent;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final StandardFieldConfiguration that = (StandardFieldConfiguration) o;
-        return new EqualsBuilder()
-                .append(name, that.name)
-                .append(elasticsearchType, that.elasticsearchType)
-                .append(sortable, that.sortable)
-                .append(aggregatable, that.aggregatable)
-                .append(multilingual, that.multilingual)
-                .append(withoutIndexing, that.withoutIndexing)
-                .append(analyzer, that.analyzer).append(nestedFields, that.nestedFields)
-                .append(copyToFields, that.copyToFields)
-                .append(additionalParameters, that.additionalParameters)
-                .isEquals();
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder()
-                .append(name)
-                .append(elasticsearchType)
-                .toHashCode();
     }
 
     public static Builder builder(String name, ElasticsearchType elasticsearchType) {
@@ -356,7 +326,42 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         nestedFields = (nestedDocuments != null)
                 ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().fromDocument(doc)).collect(Collectors.toList())
                 : null;
+        initNestedFields();
+
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final StandardFieldConfiguration that = (StandardFieldConfiguration) o;
+        return new EqualsBuilder()
+                .append(name, that.name)
+                .append(elasticsearchType, that.elasticsearchType)
+                .append(sortable, that.sortable)
+                .append(aggregatable, that.aggregatable)
+                .append(multilingual, that.multilingual)
+                .append(withoutIndexing, that.withoutIndexing)
+                .append(analyzer, that.analyzer)
+                .append(nestedFields, that.nestedFields)
+                .append(copyToFields, that.copyToFields)
+                .append(additionalParameters, that.additionalParameters)
+                .append(getParentName(), that.getParentName())
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .append(name)
+                .append(elasticsearchType)
+                .toHashCode();
     }
 
     @Override
@@ -372,7 +377,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append("nestedFields", nestedFields) //--
                 .append("copyToFields", copyToFields) //--
                 .append("additionalParameters", additionalParameters) //--
-                .append("parent", (parent != null) ? parent.getName() : null) //--
+                .append("parent", getParentName()) //--
                 .toString();
     }
 }
