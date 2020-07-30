@@ -22,6 +22,7 @@ import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Arrays;
@@ -53,8 +54,9 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private boolean withoutIndexing;
     private List<StandardFieldConfiguration> nestedFields;
     private Set<String> copyToFields;
-    private FieldConfiguration parent;
     private Map<String, Object> additionalParameters;
+
+    private transient FieldConfiguration parent;
 
     /**
      * ONLY FOR INTERNAL USAGE
@@ -169,6 +171,18 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         return new Builder(name, elasticsearchType);
     }
 
+    public static Builder builder(String name, FieldConfiguration fieldConfiguration) {
+        final Builder builder = new Builder(name, fieldConfiguration.getElasticsearchType());
+        builder.sortable = fieldConfiguration.isSortable();
+        builder.aggregatable = fieldConfiguration.isAggregatable();
+        builder.multilingual = fieldConfiguration.isMultilingual();
+        builder.analyzer = fieldConfiguration.getAnalyzer();
+        builder.withoutIndexing = fieldConfiguration.isWithoutIndexing();
+        builder.copyToFields = fieldConfiguration.getCopyToFields();
+        builder.additionalParameters = fieldConfiguration.getAdditionalParameters();
+        return builder;
+    }
+
     public static class Builder {
         private final String name;
         private final String elasticsearchType;
@@ -179,7 +193,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         private boolean withoutIndexing;
         private List<StandardFieldConfiguration> nestedFields;
         private Set<String> copyToFields;
-        private Map<String, Object> additionalParameters;
+        private Map<String, Object> additionalParameters = new TreeMap<>();;
 
         public Builder(String name, ElasticsearchType elasticsearchType) {
             this.name = name;
@@ -213,6 +227,11 @@ public class StandardFieldConfiguration implements FieldConfiguration {
 
         public Builder withoutIndexing() {
             this.withoutIndexing = true;
+            return this;
+        }
+
+        public Builder withoutIndexing(boolean withoutIndexing) {
+            this.withoutIndexing = withoutIndexing;
             return this;
         }
 
@@ -270,9 +289,6 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         }
 
         public Builder additionalParameter(String name, Object value) {
-            if (additionalParameters == null) {
-                additionalParameters = new TreeMap<>();
-            }
             additionalParameters.put(name, value);
             return this;
         }
@@ -310,6 +326,8 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         nestedFields = (nestedDocuments != null)
                 ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().fromDocument(doc)).collect(Collectors.toList())
                 : null;
+        initNestedFields();
+
         return this;
     }
 
@@ -318,29 +336,32 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         if (this == o) {
             return true;
         }
-
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
         final StandardFieldConfiguration that = (StandardFieldConfiguration) o;
         return new EqualsBuilder()
+                .append(name, that.name)
+                .append(elasticsearchType, that.elasticsearchType)
                 .append(sortable, that.sortable)
                 .append(aggregatable, that.aggregatable)
                 .append(multilingual, that.multilingual)
-                .append(name, that.name)
-                .append(elasticsearchType, that.elasticsearchType)
-                .append(analyzer, that.analyzer)
                 .append(withoutIndexing, that.withoutIndexing)
+                .append(analyzer, that.analyzer)
                 .append(nestedFields, that.nestedFields)
                 .append(copyToFields, that.copyToFields)
                 .append(additionalParameters, that.additionalParameters)
+                .append(getParentName(), that.getParentName())
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return new HashCodeBuilder()
+                .append(name)
+                .append(elasticsearchType)
+                .toHashCode();
     }
 
     @Override
@@ -356,7 +377,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append("nestedFields", nestedFields) //--
                 .append("copyToFields", copyToFields) //--
                 .append("additionalParameters", additionalParameters) //--
-                .append("parent", (parent != null) ? parent.getName() : null) //--
+                .append("parent", getParentName()) //--
                 .toString();
     }
 }

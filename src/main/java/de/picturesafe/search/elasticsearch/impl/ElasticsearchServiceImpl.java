@@ -188,6 +188,15 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
+    public Map<String, List<String>> listIndices() {
+        try {
+            return elasticsearch.listIndices();
+        } catch (Exception e) {
+            throw new ElasticsearchServiceException("Failed to list indices!", e);
+        }
+    }
+
+    @Override
     public List<String> resolveIndexNames(String indexAlias) {
         try {
             return elasticsearch.resolveIndexNames(indexAlias);

@@ -20,6 +20,7 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -66,8 +67,14 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     FieldConfiguration getParent();
 
+    default String getParentName() {
+        final FieldConfiguration parent = getParent();
+        return (parent != null) ? parent.getName() : null;
+    }
+
     @Override
     default Map<String, Object> toDocument() {
+        // ATTENTION: Do not add parent here, parent is meant to be transient!
         return DocumentBuilder.withoutId()
                 .put(CLASS_NAME_FIELD, getClass().getName())
                 .put("name", getName())
@@ -82,5 +89,22 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("nestedFields", getNestedFields())
                 .put("additionalParameters", getAdditionalParameters())
                 .build();
+    }
+
+    default boolean equalsBesidesName(FieldConfiguration conf) {
+        return new EqualsBuilder()
+                .append(getElasticsearchType(), conf.getElasticsearchType())
+                .append(isCopyToFulltext(), conf.isCopyToFulltext())
+                .append(isSortable(), conf.isSortable())
+                .append(isAggregatable(), conf.isAggregatable())
+                .append(isMultilingual(), conf.isMultilingual())
+                .append(getAnalyzer(), conf.getAnalyzer())
+                .append(isWithoutIndexing(), conf.isWithoutIndexing())
+                .append(getCopyToFields(), conf.getCopyToFields())
+                .append(getNestedFields(), conf.getNestedFields())
+                .append(isNestedObject(), conf.isNestedObject())
+                .append(getAdditionalParameters(), conf.getAdditionalParameters())
+                .append(getParentName(), conf.getParentName())
+                .isEquals();
     }
 }

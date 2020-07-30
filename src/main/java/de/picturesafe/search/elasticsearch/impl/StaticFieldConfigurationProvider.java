@@ -26,13 +26,18 @@ import java.util.Map;
 
 public class StaticFieldConfigurationProvider implements FieldConfigurationProvider {
 
-    private static final List<Locale> DEFAULT_LOCALES = Arrays.asList(Locale.GERMAN, Locale.ENGLISH);
+    public static final List<Locale> DEFAULT_LOCALES = Arrays.asList(Locale.GERMAN, Locale.ENGLISH);
 
     private final Map<String, List<FieldConfiguration>> fieldConfigurations;
     private List<Locale> supportedLocales = DEFAULT_LOCALES;
 
     public StaticFieldConfigurationProvider(Map<String, List<FieldConfiguration>> fieldConfigurations) {
         this.fieldConfigurations = fieldConfigurations;
+    }
+
+    public StaticFieldConfigurationProvider(Map<String, List<FieldConfiguration>> fieldConfigurations, List<Locale> supportedLocales) {
+        this.fieldConfigurations = fieldConfigurations;
+        this.supportedLocales = supportedLocales;
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.springframework.context.annotation.PropertySource;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Configuration
@@ -60,7 +61,7 @@ public class DefaultIndexConfiguration {
     @Value("${elasticsearch.index.default_analyzer.enabled:true}")
     private boolean defaultAnalyzerEnabled;
 
-   @Bean
+    @Bean
     public StandardIndexPresetConfiguration indexPresetConfiguration() {
         final StandardIndexPresetConfiguration cfg = new StandardIndexPresetConfiguration(indexAlias, indexNamePrefix,
                 indexNameDateFormat, numberOfShards, numberOfReplicas, maxResultWindow);
@@ -77,11 +78,16 @@ public class DefaultIndexConfiguration {
     }
 
     @Bean
+    public List<Locale> indexLocales() {
+        return StaticFieldConfigurationProvider.DEFAULT_LOCALES;
+    }
+
+    @Bean
     FieldConfigurationProvider fieldConfigurationProvider(IndexPresetConfiguration indexPresetConfiguration,
-                                                          List<FieldConfiguration> fieldConfigurations) {
+                                                          List<FieldConfiguration> fieldConfigurations, List<Locale> indexLocales) {
         final Map<String, List<FieldConfiguration>> fieldConfigurationMap = new HashMap<>();
         fieldConfigurationMap.put(indexPresetConfiguration.getIndexAlias(), fieldConfigurations);
-        return new StaticFieldConfigurationProvider(fieldConfigurationMap);
+        return new StaticFieldConfigurationProvider(fieldConfigurationMap, indexLocales);
     }
 
     protected boolean isDefaultAnalyzerEnabled() {
