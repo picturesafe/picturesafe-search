@@ -235,6 +235,17 @@ public interface ElasticsearchService {
     SearchResult search(String indexAlias, AccountContext<?> accountContext, Expression expression, SearchParameter searchParameter);
 
     /**
+     * Creates an Elasticsearch query in JSON format.
+     *
+     * @param indexAlias        Name of the alias of the index
+     * @param expression        Expression defining the search criteria
+     * @param searchParameter   Parameters for the search execution
+     * @param pretty            TRUE for pretty format JSON string
+     * @return                  Query JSON
+     */
+    String createQueryJson(String indexAlias, Expression expression, SearchParameter searchParameter, boolean pretty);
+
+    /**
      * Gets a document from the index.
      *
      * @param indexAlias    Name of the alias of the index
