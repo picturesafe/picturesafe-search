@@ -301,7 +301,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     @Override
     public SearchResult search(String indexAlias, Expression expression, SearchParameter searchParameter) {
-        return search(indexAlias, new AccountContext<>(), expression, searchParameter);
+        return search(indexAlias, null, expression, searchParameter);
     }
 
     @Override
@@ -344,6 +344,15 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     @Override
+    public String createQueryJson(String indexAlias, Expression expression, SearchParameter searchParameter, boolean pretty) {
+        final IndexPresetConfiguration indexPresetConfiguration = indexPresetConfigurationProvider.getIndexPresetConfiguration(indexAlias);
+        final int pageSize = getPageSize(searchParameter);
+        final InternalSearchContext context = new InternalSearchContext(indexPresetConfiguration, null, expression, searchParameter, pageSize);
+        final QueryDto queryDto = createQueryDto(context);
+        return elasticsearch.createQueryJson(queryDto, context.mappingConfiguration(), indexPresetConfiguration, pretty);
+    }
+
+    @Override
     public Map<String, Object> getDocument(String indexAlias, Object id) {
         return elasticsearch.getDocument(indexAlias, id);
     }
@@ -382,19 +391,8 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     }
 
     protected SearchResultDto getElasticsearchResult(InternalSearchContext context, StopWatch sw) {
-        SearchParameter searchParameter = context.searchParameter;
-        if (searchParameter == null) {
-            searchParameter = SearchParameter.DEFAULT;
-        }
-
         sw.start("create query");
-        final int pageIndex = (searchParameter.getPageIndex() != null) ? searchParameter.getPageIndex() : 1;
-        final int start = (pageIndex - 1) * context.pageSize;
-        final int maxResults = (searchParameter.getMaxResults() != null)
-                ? searchParameter.getMaxResults() : context.indexPresetConfiguration.getMaxResultWindow();
-        final int resultLimit = Math.min(context.pageSize, maxResults - start);
-
-        final QueryDto queryDto = createQueryDto(context.accountContext, context.expression, start, resultLimit, searchParameter);
+        final QueryDto queryDto = createQueryDto(context);
         sw.stop();
 
         sw.start("process search");
@@ -402,6 +400,25 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         sw.stop();
 
         return result;
+    }
+
+    protected QueryDto createQueryDto(InternalSearchContext context) {
+        SearchParameter searchParameter = context.searchParameter;
+        if (searchParameter == null) {
+            searchParameter = SearchParameter.DEFAULT;
+        }
+        AccountContext<?> accountContext = context.accountContext;
+        if (accountContext == null) {
+            accountContext = new AccountContext<>();
+        }
+
+        final int pageIndex = (searchParameter.getPageIndex() != null) ? searchParameter.getPageIndex() : 1;
+        final int start = (pageIndex - 1) * context.pageSize;
+        final int maxResults = (searchParameter.getMaxResults() != null)
+                ? searchParameter.getMaxResults() : context.indexPresetConfiguration.getMaxResultWindow();
+        final int resultLimit = Math.min(context.pageSize, maxResults - start);
+
+        return createQueryDto(accountContext, context.expression, start, resultLimit, searchParameter);
     }
 
     protected QueryDto createQueryDto(AccountContext<?> accountContext, Expression expression, int start, int limit, SearchParameter searchParameter) {

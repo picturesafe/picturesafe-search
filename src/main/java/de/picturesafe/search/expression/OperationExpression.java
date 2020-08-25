@@ -57,7 +57,7 @@ public class OperationExpression extends AbstractExpression {
     private Operator operator;
     private final List<Expression> operands = new ArrayList<>();
 
-    private OperationExpression(Operator operator) {
+    public OperationExpression(Operator operator) {
         this.operator = operator;
     }
 
