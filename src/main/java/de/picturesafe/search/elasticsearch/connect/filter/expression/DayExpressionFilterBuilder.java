@@ -16,17 +16,17 @@
 
 package de.picturesafe.search.elasticsearch.connect.filter.expression;
 
-import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.elasticsearch.connect.util.ElasticDateUtils;
+import de.picturesafe.search.elasticsearch.timezone.TimeZoneAware;
 import de.picturesafe.search.expression.ConditionExpression;
 import de.picturesafe.search.expression.DayExpression;
 import de.picturesafe.search.expression.Expression;
 import org.apache.commons.lang3.time.DateUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 
+import java.util.Calendar;
 import java.util.Date;
 
 public class DayExpressionFilterBuilder extends AbstractExpressionFilterBuilder implements TimeZoneAware {
@@ -48,7 +48,7 @@ public class DayExpressionFilterBuilder extends AbstractExpressionFilterBuilder 
         final String fieldName = expression.getName();
         final ConditionExpression.Comparison comparison = expression.getComparison();
         final RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(fieldName);
-        Date day = expression.getDay();
+        Date day = DateUtils.truncate(expression.getDay(), Calendar.DAY_OF_MONTH);
         switch (comparison) {
             case EQ:
                 return createEqualsQueryBuilder(fieldName, day, rangeQueryBuilder);
@@ -69,13 +69,10 @@ public class DayExpressionFilterBuilder extends AbstractExpressionFilterBuilder 
         }
     }
 
-    private BoolQueryBuilder createEqualsQueryBuilder(String mappedFieldName, Date day, RangeQueryBuilder rangeQueryBuilder) {
+    private QueryBuilder createEqualsQueryBuilder(String mappedFieldName, Date day, RangeQueryBuilder rangeQueryBuilder) {
         final String isoDay = ElasticDateUtils.formatIso(day, timeZone);
         final Date nextDay = DateUtils.addDays(day, 1);
         final String isoNextDay = ElasticDateUtils.formatIso(nextDay, timeZone);
-        return QueryBuilders
-                .boolQuery()
-                .should(rangeQueryBuilder.gte(isoDay).lt(isoNextDay))
-                .should(QueryBuilders.termQuery(mappedFieldName, isoDay));
+        return rangeQueryBuilder.gte(isoDay).lt(isoNextDay);
     }
 }
