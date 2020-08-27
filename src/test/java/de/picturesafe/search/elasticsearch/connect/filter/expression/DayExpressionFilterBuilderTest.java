@@ -67,11 +67,10 @@ public class DayExpressionFilterBuilderTest extends AbstractTimeZoneRelatedTest 
     public void equals() throws Exception {
         final String json = jsonFromFilterBuilder(EQ);
 
-        assertEquals("2016-04-07T00:00:00" + offset, JsonPath.read(json, "$.bool.should[0].range.createDate.from"));
-        assertEquals("2016-04-08T00:00:00" + offset, JsonPath.read(json, "$.bool.should[0].range.createDate.to"));
-        assertEquals(Boolean.TRUE, JsonPath.read(json, "$.bool.should[0].range.createDate.include_lower"));
-        assertEquals(Boolean.FALSE, JsonPath.read(json, "$.bool.should[0].range.createDate.include_upper"));
-        assertEquals("2016-04-07T00:00:00" + offset, JsonPath.read(json, "$.bool.should[1].term.createDate.value"));
+        assertEquals("2016-04-07T00:00:00" + offset, JsonPath.read(json, "$.range.createDate.from"));
+        assertEquals("2016-04-08T00:00:00" + offset, JsonPath.read(json, "$.range.createDate.to"));
+        assertEquals(Boolean.TRUE, JsonPath.read(json, "$.range.createDate.include_lower"));
+        assertEquals(Boolean.FALSE, JsonPath.read(json, "$.range.createDate.include_upper"));
     }
 
     @Test
