@@ -32,6 +32,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
 import static de.picturesafe.search.expression.ConditionExpression.Comparison.NOT_EQ;
 
 @Component
@@ -78,22 +79,24 @@ public class FulltextQueryFactory implements QueryFactory {
 
         final ValueExpression valueExpression = (ValueExpression) expression;
         final String value = valueExpression.getValue().toString();
+        QueryBuilder queryBuilder = null;
         if (!StringUtils.isBlank(value)) {
-            QueryBuilder queryBuilder = QueryBuilders.queryStringQuery(preprocess(value))
+            queryBuilder = QueryBuilders.queryStringQuery(preprocess(value))
                     .field(FieldConfiguration.FIELD_NAME_FULLTEXT)
                     .defaultOperator(queryConfig.getDefaultQueryStringOperator())
                     .analyzeWildcard(containsWildcard(value));
+            applyBoost(queryBuilder, expression);
             if (mustNot) {
                 queryBuilder = QueryBuilders.boolQuery().mustNot(queryBuilder);
             }
 
             context.setProcessed(valueExpression);
             context.setProcessed(expression);
-            return (valueExpression.getComparison() != null && valueExpression.getComparison().equals(NOT_EQ))
+            queryBuilder = (valueExpression.getComparison() != null && valueExpression.getComparison().equals(NOT_EQ))
                     ? QueryBuilders.boolQuery().mustNot(queryBuilder)
                     : queryBuilder;
         }
-        return null;
+        return queryBuilder;
     }
 
     private String preprocess(String queryString) {

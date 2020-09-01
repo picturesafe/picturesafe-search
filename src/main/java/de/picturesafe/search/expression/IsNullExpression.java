@@ -25,10 +25,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * Expression to match null values
  */
-public class IsNullExpression extends AbstractExpression implements FieldExpression {
+public class IsNullExpression extends AbstractExpression implements FieldExpression, BoostableExpression<IsNullExpression> {
 
     private String name;
     private boolean matchNull = true;
+    private Float boost;
 
     /**
      * Default constructor
@@ -84,6 +85,17 @@ public class IsNullExpression extends AbstractExpression implements FieldExpress
     }
 
     @Override
+    public Float getBoost() {
+        return boost;
+    }
+
+    @Override
+    public IsNullExpression boost(Float boost) {
+        this.boost = boost;
+        return this;
+    }
+
+    @Override
     public Expression optimize() {
         return this;
     }
@@ -101,6 +113,7 @@ public class IsNullExpression extends AbstractExpression implements FieldExpress
         return new EqualsBuilder()
                 .append(name, that.name)
                 .append(matchNull, that.matchNull)
+                .append(boost, that.boost)
                 .isEquals();
     }
 
@@ -117,6 +130,7 @@ public class IsNullExpression extends AbstractExpression implements FieldExpress
         return new ToStringBuilder(this, new CustomJsonToStringStyle())
                 .append("name", name)
                 .append("matchNull", matchNull)
+                .append("boost", boost)
                 .toString();
     }
 }

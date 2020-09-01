@@ -22,6 +22,8 @@ import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionF
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
+
 public class InternalQueryFilterBuilder implements InternalFilterBuilder {
 
     private final QueryConfiguration queryConfig;
@@ -33,9 +35,9 @@ public class InternalQueryFilterBuilder implements InternalFilterBuilder {
     @Override
     public QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context) {
         return QueryBuilders.boolQuery().filter(
-                QueryBuilders.queryStringQuery(convertObject(value)).field(key)
-                        .defaultOperator(queryConfig.getDefaultQueryStringOperator())
-                        .analyzeWildcard(true));
+                applyBoost(QueryBuilders.queryStringQuery(convertObject(value))
+                        .field(key).defaultOperator(queryConfig.getDefaultQueryStringOperator()).analyzeWildcard(true),
+                        context.getExpression()));
     }
 
     private String convertObject(Object value) {

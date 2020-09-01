@@ -27,6 +27,8 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
+
 public class InExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
     @Override
@@ -56,6 +58,7 @@ public class InExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
         } else {
             queryBuilder = QueryBuilders.termQuery(queryFieldName, values[0]);
         }
+        applyBoost(queryBuilder, context.getExpression());
 
         if (fieldConfiguration != null && fieldConfiguration.isNestedObject() && !context.isNestedQuery()) {
             final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);

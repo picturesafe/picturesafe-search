@@ -20,25 +20,29 @@ import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionF
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
+
 public class InternalNestedFilterBuilder implements InternalFilterBuilder {
 
     @Override
     public QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context) {
+        final QueryBuilder queryBuilder;
         if (context.getQueryDto().isSortFilter()) {
             // Build filter for nested sort
             if (value instanceof Object[]) {
                 final Object[] values = (Object[]) value;
                 if (values.length > 1) {
-                    return QueryBuilders.termsQuery(key, values);
+                    queryBuilder = QueryBuilders.termsQuery(key, values);
                 } else {
-                    return QueryBuilders.termQuery(key, values[0]);
+                    queryBuilder = QueryBuilders.termQuery(key, values[0]);
                 }
             } else {
-                return QueryBuilders.termQuery(key, value);
+                queryBuilder = QueryBuilders.termQuery(key, value);
             }
         } else {
             // Expressions on nested fields must be built as query because otherwise the score is missing!
-            return null;
+            queryBuilder = null;
         }
+        return applyBoost(queryBuilder, context.getExpression());
     }
 }

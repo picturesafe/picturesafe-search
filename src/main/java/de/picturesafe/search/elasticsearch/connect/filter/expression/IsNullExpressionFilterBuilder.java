@@ -26,6 +26,8 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
+import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
+
 public class IsNullExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
     @Override
@@ -41,7 +43,7 @@ public class IsNullExpressionFilterBuilder extends AbstractExpressionFilterBuild
                 = FieldConfigurationUtils.getElasticFieldName(mappingConfiguration, isNullExpression.getName(), context.getQueryDto().getLocale());
         final FieldConfiguration fieldConfiguration = FieldConfigurationUtils.fieldConfiguration(mappingConfiguration, fieldName);
 
-        QueryBuilder query = QueryBuilders.existsQuery(fieldName);
+        QueryBuilder query = applyBoost(QueryBuilders.existsQuery(fieldName), isNullExpression);
         if (fieldConfiguration != null && fieldConfiguration.isNestedObject() && !context.isNestedQuery()) {
             final String objectPath = FieldConfigurationUtils.rootFieldName(fieldConfiguration);
             query = QueryBuilders.nestedQuery(objectPath, query, ScoreMode.None);

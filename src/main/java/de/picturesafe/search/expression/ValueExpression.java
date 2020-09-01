@@ -26,10 +26,11 @@ import static de.picturesafe.search.expression.ConditionExpression.Comparison.EQ
 /**
  * Expression to match values on fields
  */
-public class ValueExpression extends ConditionExpression {
+public class ValueExpression extends ConditionExpression implements BoostableExpression<ValueExpression> {
 
     private Object value;
     private boolean matchPhrase = false;
+    private Float boost;
 
     /**
      * Constructor
@@ -92,6 +93,17 @@ public class ValueExpression extends ConditionExpression {
     }
 
     @Override
+    public Float getBoost() {
+        return boost;
+    }
+
+    @Override
+    public ValueExpression boost(Float boost) {
+        this.boost = boost;
+        return this;
+    }
+
+    @Override
     public Expression optimize() {
         if (value == null) {
             return null;
@@ -116,6 +128,7 @@ public class ValueExpression extends ConditionExpression {
                 .appendSuper(super.equals(o))
                 .append(matchPhrase, that.matchPhrase)
                 .append(value, that.value)
+                .append(boost, that.boost)
                 .isEquals();
     }
 
@@ -133,6 +146,7 @@ public class ValueExpression extends ConditionExpression {
                 .appendSuper(super.toString())
                 .append("value", value)
                 .append("matchPhrase", matchPhrase)
+                .append("boost", boost)
                 .toString();
     }
 }

@@ -24,9 +24,9 @@ import de.picturesafe.search.expression.KeywordExpression;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermsQueryBuilder;
 
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.keywordFieldName;
+import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
 
 public class KeywordExpressionFilterBuilder extends AbstractExpressionFilterBuilder {
 
@@ -51,12 +51,12 @@ public class KeywordExpressionFilterBuilder extends AbstractExpressionFilterBuil
                 .getElasticFieldName(context.getMappingConfiguration(), keywordExpression.getName(), context.getQueryDto().getLocale());
         fieldName = keywordFieldName(fieldConfig, fieldName, value);
 
-        final TermsQueryBuilder termsQueryBuilder = QueryBuilders.termsQuery(fieldName, value);
+        final QueryBuilder queryBuilder = applyBoost(QueryBuilders.termsQuery(fieldName, value), keywordExpression);
         switch (keywordExpression.getComparison()) {
             case EQ:
-                return termsQueryBuilder;
+                return queryBuilder;
             case NOT_EQ:
-                return QueryBuilders.boolQuery().mustNot(termsQueryBuilder);
+                return QueryBuilders.boolQuery().mustNot(queryBuilder);
             default:
                 throw new RuntimeException("Unsupported comparison " + keywordExpression.getComparison());
         }
