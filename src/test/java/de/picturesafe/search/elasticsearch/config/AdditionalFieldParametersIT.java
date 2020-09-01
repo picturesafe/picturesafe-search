@@ -67,14 +67,14 @@ public class AdditionalFieldParametersIT {
         final Map<String, Object> mappingProps = getObject(elasticsearchAdmin.getMapping(indexName), "properties");
 
         Map<String, Object> field = getObject(mappingProps, "simple_text");
-        assertEquals(2.0, field.get("boost"));
+        assertEquals("boolean", field.get("similarity"));
 
         field = getObject(mappingProps, "advanced_text");
         assertEquals(true, field.get("store"));
 
         Map<String, Object> fieldProps = getObject(getObject(mappingProps, "simple_multilingual_text"), "properties");
         field = getObject(fieldProps, "de");
-        assertEquals(3.0, field.get("boost"));
+        assertEquals("BM25", field.get("similarity"));
 
         fieldProps = getObject(getObject(mappingProps, "advanced_multilingual_text"), "properties");
         field = getObject(fieldProps, "de");
@@ -89,6 +89,12 @@ public class AdditionalFieldParametersIT {
         fieldProps = getObject(getObject(mappingProps, "nested_field"), "properties");
         field = getObject(fieldProps, "nested_text");
         assertEquals(false, field.get("index"));
+
+        field = getObject(mappingProps, "date_field");
+        assertEquals("dd.MM.yyyy", field.get("format"));
+
+        field = getObject(mappingProps, FIELD_NAME_SUGGEST);
+        assertEquals(100, field.get("max_input_length"));
     }
 
     @SuppressWarnings("unchecked")
@@ -103,13 +109,17 @@ public class AdditionalFieldParametersIT {
         protected List<FieldConfiguration> fieldConfigurations() {
             return Arrays.asList(
                     FieldConfiguration.FULLTEXT_FIELD,
+                    // Elasticsearch seems to have dropped support for index time boosting on text fields in version 7.8. Although it is still described in the
+                    // official docs, Elasticsearch simply drops the boost parameter from the mapping without notification.
+//                    StandardFieldConfiguration.builder(
+//                        "simple_text", ElasticsearchType.TEXT).additionalParameter("boost", 2.0).build(),
                     StandardFieldConfiguration.builder(
-                        "simple_text", ElasticsearchType.TEXT).additionalParameter("boost", 2.0).build(),
+                        "simple_text", ElasticsearchType.TEXT).additionalParameter("similarity", "boolean").build(),
                     StandardFieldConfiguration.builder(
                         "advanced_text", ElasticsearchType.TEXT).copyToFulltext(true).aggregatable(true).copyToSuggest(true)
                             .additionalParameter("store", true).build(),
                     StandardFieldConfiguration.builder(
-                        "simple_multilingual_text", ElasticsearchType.TEXT).multilingual(true).additionalParameter("boost", 3.0).build(),
+                        "simple_multilingual_text", ElasticsearchType.TEXT).multilingual(true).additionalParameter("similarity", "BM25").build(),
                     StandardFieldConfiguration.builder(
                         "advanced_multilingual_text", ElasticsearchType.TEXT).multilingual(true).copyToFulltext(true).aggregatable(true)
                             .copyToSuggest(true).additionalParameter("store", true).build(),
@@ -122,6 +132,8 @@ public class AdditionalFieldParametersIT {
                                 StandardFieldConfiguration.builder("nested_text", ElasticsearchType.TEXT)
                                         .additionalParameter("index", false).build())
                             .build(),
+                    StandardFieldConfiguration.builder(
+                        "date_field", ElasticsearchType.DATE).additionalParameter("format", "dd.MM.yyyy").build(),
                     SuggestFieldConfiguration.name(FIELD_NAME_SUGGEST).additionalParameter("max_input_length", 100)
             );
         }

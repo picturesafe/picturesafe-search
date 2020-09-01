@@ -41,7 +41,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,7 +114,7 @@ public class SingleIndexElasticsearchServiceIT {
                 .build());
 
         final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
-        final MappingMetaData mapping = response.mappings().get(indexName);
+        final MappingMetadata mapping = response.mappings().get(indexName);
         final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
         assertTrue("Mapping should contain new field", properties.containsKey(fieldName));
     }

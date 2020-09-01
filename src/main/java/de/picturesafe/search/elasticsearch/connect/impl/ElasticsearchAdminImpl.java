@@ -29,6 +29,7 @@ import de.picturesafe.search.elasticsearch.connect.error.ElasticsearchException;
 import de.picturesafe.search.elasticsearch.connect.error.IndexCreateException;
 import de.picturesafe.search.elasticsearch.connect.mapping.MappingBuilder;
 import de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils;
+import de.picturesafe.search.elasticsearch.connect.util.logging.ToXcontentObjectToString;
 import de.picturesafe.search.elasticsearch.connect.util.logging.XcontentToString;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -50,7 +51,7 @@ import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -109,8 +110,10 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
                 request.settings(indexSettings);
             }
             request.mapping(new MappingBuilder(mappingConfiguration.getLanguageSortConfigurations()).build(mappingConfiguration));
+            LOG.debug("Create index request:\n{}", new ToXcontentObjectToString(request));
 
             final CreateIndexResponse response = restClient.indices().create(request, RequestOptions.DEFAULT);
+            LOG.debug("Create index response:\n{}", new ToXcontentObjectToString(response));
             if (!response.isAcknowledged()) {
                 throw new RuntimeException("Elasticsearch did not acknowledge index create request: " + response);
             }
@@ -336,7 +339,7 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
         return doGetMapping(indexName).source().toString();
     }
 
-    private MappingMetaData doGetMapping(String indexName) {
+    private MappingMetadata doGetMapping(String indexName) {
         final GetMappingsRequest request = new GetMappingsRequest();
         request.indices(indexName);
         final GetMappingsResponse getMappingResponse;
@@ -345,7 +348,7 @@ public class ElasticsearchAdminImpl implements ElasticsearchAdmin {
         } catch (IOException ioe) {
             throw new RuntimeException("Failed to load mapping for index name '" + indexName + "'!", ioe);
         }
-        final Map<String, MappingMetaData> allMappings = getMappingResponse.mappings();
+        final Map<String, MappingMetadata> allMappings = getMappingResponse.mappings();
         return allMappings.get(indexName);
     }
 
