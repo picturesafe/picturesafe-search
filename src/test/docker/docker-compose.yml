@@ -2,6 +2,7 @@ version: '3'
 services:
   elasticsearch:
     build: elastic-7
+    image: picturesafe-search/elasticsearch-icu:7.9.0
     ports:
       - 9200:9200
       - 9300:9300
@@ -24,9 +25,9 @@ services:
       retries: 5
 
   cerebro:
-    image: lmenezes/cerebro:0.9.1
+    image: lmenezes/cerebro:0.9.2
     ports:
-      - 9100:9000
+      - 9000:9000
     healthcheck:
       test: curl -s http://localhost:9000 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
@@ -34,7 +35,7 @@ services:
       retries: 5
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.7.1
+    image: docker.elastic.co/kibana/kibana:7.9.0
     ports:
       - 5601:5601
     healthcheck:

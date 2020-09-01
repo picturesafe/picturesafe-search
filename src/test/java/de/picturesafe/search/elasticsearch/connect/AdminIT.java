@@ -29,7 +29,7 @@ import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.junit.After;
 import org.junit.Rule;
@@ -130,7 +130,7 @@ public class AdminIT extends AbstractElasticIntegrationTest {
         elasticsearchAdmin.updateMapping(adminIndexPresetConfiguration, mappingConfiguration, Collections.singletonList(fieldConfig));
 
         final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
-        final MappingMetaData mapping = response.mappings().get(indexName);
+        final MappingMetadata mapping = response.mappings().get(indexName);
         final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
         assertTrue("Mapping should contain new field", properties.containsKey(fieldName));
     }
@@ -144,7 +144,7 @@ public class AdminIT extends AbstractElasticIntegrationTest {
         assertTrue("Created index should exist", elasticsearchAdmin.aliasOrIndexExists(indexAlias));
 
         final GetMappingsResponse response = restClient.indices().getMapping(new GetMappingsRequest().indices(indexName), RequestOptions.DEFAULT);
-        final MappingMetaData mapping = response.mappings().get(indexName);
+        final MappingMetadata mapping = response.mappings().get(indexName);
         final Map<String, Object> properties = (Map<String, Object>) mapping.sourceAsMap().get("properties");
         assertTrue("Mapping must contain field " + fieldName, properties.containsKey(fieldName));
 
