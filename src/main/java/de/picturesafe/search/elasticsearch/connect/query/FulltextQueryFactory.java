@@ -78,6 +78,9 @@ public class FulltextQueryFactory implements QueryFactory {
         }
 
         final ValueExpression valueExpression = (ValueExpression) expression;
+        if (valueExpression.getComparison() == NOT_EQ) {
+            mustNot = true;
+        }
         final String value = valueExpression.getValue().toString();
         QueryBuilder queryBuilder = null;
         if (!StringUtils.isBlank(value)) {
@@ -91,10 +94,6 @@ public class FulltextQueryFactory implements QueryFactory {
             }
 
             context.setProcessed(valueExpression);
-            context.setProcessed(expression);
-            queryBuilder = (valueExpression.getComparison() != null && valueExpression.getComparison().equals(NOT_EQ))
-                    ? QueryBuilders.boolQuery().mustNot(queryBuilder)
-                    : queryBuilder;
         }
         return queryBuilder;
     }

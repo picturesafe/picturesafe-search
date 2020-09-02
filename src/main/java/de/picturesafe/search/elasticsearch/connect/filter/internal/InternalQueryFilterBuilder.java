@@ -32,10 +32,9 @@ public class InternalQueryFilterBuilder implements InternalFilterBuilder {
 
     @Override
     public QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context) {
-        return QueryBuilders.boolQuery().filter(
-                QueryBuilders.queryStringQuery(convertObject(value)).field(key)
+        return QueryBuilders.queryStringQuery(convertObject(value)).field(key)
                         .defaultOperator(queryConfig.getDefaultQueryStringOperator())
-                        .analyzeWildcard(true));
+                        .analyzeWildcard(true);
     }
 
     private String convertObject(Object value) {

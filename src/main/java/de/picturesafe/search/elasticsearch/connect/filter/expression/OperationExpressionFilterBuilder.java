@@ -60,7 +60,7 @@ public class OperationExpressionFilterBuilder implements ExpressionFilterBuilder
                 for (QueryBuilder filter: filterBuilders) {
                     switch (operationExpression.getOperator()) {
                         case AND:
-                            bool.filter(filter);
+                            bool.must(filter);
                             break;
                         case OR:
                             bool.should(filter);
