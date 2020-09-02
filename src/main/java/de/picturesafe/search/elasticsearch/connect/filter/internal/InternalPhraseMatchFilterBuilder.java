@@ -20,12 +20,10 @@ import de.picturesafe.search.elasticsearch.connect.filter.expression.ExpressionF
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import static de.picturesafe.search.elasticsearch.connect.util.QueryBuilderUtils.applyBoost;
-
 public class InternalPhraseMatchFilterBuilder implements InternalFilterBuilder {
 
     @Override
     public QueryBuilder build(String key, Object value, ExpressionFilterBuilderContext context) {
-        return applyBoost(QueryBuilders.matchPhraseQuery(key, value), context.getExpression());
+        return QueryBuilders.matchPhraseQuery(key, value);
     }
 }
