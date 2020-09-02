@@ -28,10 +28,10 @@ import de.picturesafe.search.elasticsearch.connect.ElasticsearchAdmin;
 import de.picturesafe.search.elasticsearch.connect.aggregation.resolve.FacetResolver;
 import de.picturesafe.search.elasticsearch.connect.filter.DefaultExpressionFilterFactory;
 import de.picturesafe.search.elasticsearch.connect.filter.FilterFactory;
-import de.picturesafe.search.elasticsearch.connect.impl.ElasticsearchAdminImpl;
 import de.picturesafe.search.elasticsearch.connect.mock.FacetResolverMock;
 import de.picturesafe.search.elasticsearch.connect.support.IndexSetup;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
@@ -43,8 +43,8 @@ import java.util.Locale;
 import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_SUGGEST;
 
 @Configuration
-@Import({ DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class,
-        ElasticsearchAdminImpl.class})
+@Import({DefaultClientConfiguration.class, DefaultIndexConfiguration.class, DefaultQueryConfiguration.class, DefaultAggregationConfiguration.class})
+@ComponentScan(basePackages = "de.picturesafe.search.elasticsearch.connect")
 @PropertySource(value = "classpath:${ES_PROPERTIES_CLASSPATH:elasticsearch.properties}", ignoreResourceNotFound = true)
 public class TestConfiguration {
 

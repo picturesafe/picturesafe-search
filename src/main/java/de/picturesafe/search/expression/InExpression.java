@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Expression to match a set of values
  */
-public class InExpression extends AbstractExpression implements FieldExpression {
+public class InExpression extends AbstractExpression implements FieldExpression, BoostableExpression<InExpression> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InExpression.class);
 
@@ -37,6 +37,7 @@ public class InExpression extends AbstractExpression implements FieldExpression 
 
     private String name = "";
     private Object[] values;
+    private Float boost;
 
     /**
      * Default constructor
@@ -102,6 +103,17 @@ public class InExpression extends AbstractExpression implements FieldExpression 
     }
 
     @Override
+    public Float getBoost() {
+        return boost;
+    }
+
+    @Override
+    public InExpression boost(Float boost) {
+        this.boost = boost;
+        return this;
+    }
+
+    @Override
     public Expression optimize() {
         if (ArrayUtils.isEmpty(values)) {
             return new FalseExpression();
@@ -141,6 +153,7 @@ public class InExpression extends AbstractExpression implements FieldExpression 
         return new EqualsBuilder()
                 .append(name, that.name)
                 .append(values, that.values)
+                .append(boost, that.boost)
                 .isEquals();
     }
 
@@ -156,6 +169,7 @@ public class InExpression extends AbstractExpression implements FieldExpression 
         return new ToStringBuilder(this, new CustomJsonToStringStyle())
                 .append("name", name)
                 .append("values", valuesToString(10))
+                .append("boost", boost)
                 .toString();
     }
 

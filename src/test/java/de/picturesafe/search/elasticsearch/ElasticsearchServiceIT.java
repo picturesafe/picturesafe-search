@@ -33,6 +33,9 @@ import de.picturesafe.search.expression.DayRangeExpression;
 import de.picturesafe.search.expression.Expression;
 import de.picturesafe.search.expression.FindAllExpression;
 import de.picturesafe.search.expression.FulltextExpression;
+import de.picturesafe.search.expression.InExpression;
+import de.picturesafe.search.expression.KeywordExpression;
+import de.picturesafe.search.expression.OperationExpression;
 import de.picturesafe.search.expression.RangeValueExpression;
 import de.picturesafe.search.expression.ValueExpression;
 import de.picturesafe.search.parameter.CollapseOption;
@@ -48,6 +51,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -71,6 +76,8 @@ import static org.junit.Assert.assertNotNull;
 @ContextConfiguration(classes = {TestConfiguration.class, ElasticsearchServiceIT.Config.class, ElasticsearchServiceImpl.class},
         loader = AnnotationConfigContextLoader.class)
 public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchServiceIT.class);
 
     @Before
     public void setup() {
@@ -302,6 +309,56 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         assertEquals(4712, result.getSearchResultItems().get(1).getId(Long.class).longValue());
         assertEquals(4711, result.getSearchResultItems().get(2).getId(Long.class).longValue());
         assertEquals(4714, result.getSearchResultItems().get(3).getId(Long.class).longValue());
+    }
+
+    @Test
+    public void testSearchWithBoost() {
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
+                DocumentBuilder.id(7001).put("name", "aaa").put("title", "bbb").build(),
+                DocumentBuilder.id(7002).put("name", "bbb").put("title", "aaa").build(),
+                DocumentBuilder.id(7003).put("name", "aaa").build(),
+                DocumentBuilder.id(7004).put("name", "bbb").build(),
+                DocumentBuilder.id(7005).put("name", "ccc").build()
+        ));
+
+        Expression expression = OperationExpression.or(new ValueExpression("name", "aaa"), new ValueExpression("title", "aaa"));
+        final SearchParameter searchParameter = SearchParameter.builder().sortOptions(SortOption.relevance(), SortOption.asc("id")).build();
+        SearchResult result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(3, result.getResultCount());
+        result.forEach(item -> LOGGER.debug("{}", item));
+        assertEquals(7001, result.getSearchResultItem(0).getId(Integer.class).intValue());
+        assertEquals(7003, result.getSearchResultItem(1).getId(Integer.class).intValue());
+        assertEquals(7002, result.getSearchResultItem(2).getId(Integer.class).intValue());
+
+        expression = OperationExpression.or(new ValueExpression("title", "aaa").boost(2.0F), new ValueExpression("name", "aaa"));
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(3, result.getResultCount());
+        assertEquals(7002, result.getSearchResultItem(0).getId(Integer.class).intValue());
+        assertEquals(7001, result.getSearchResultItem(1).getId(Integer.class).intValue());
+        assertEquals(7003, result.getSearchResultItem(2).getId(Integer.class).intValue());
+
+        expression = OperationExpression.or(new FulltextExpression("aaa").boost(2.0F), new ValueExpression("name", "aaa"));
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(3, result.getResultCount());
+        assertEquals(7002, result.getSearchResultItem(0).getId(Integer.class).intValue());
+        assertEquals(7001, result.getSearchResultItem(1).getId(Integer.class).intValue());
+        assertEquals(7003, result.getSearchResultItem(2).getId(Integer.class).intValue());
+
+        expression = OperationExpression.or(new KeywordExpression("name", "aaa").boost(2.0F), new ValueExpression("title", "aaa"));
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(3, result.getResultCount());
+        assertEquals(7001, result.getSearchResultItem(0).getId(Integer.class).intValue());
+        assertEquals(7003, result.getSearchResultItem(1).getId(Integer.class).intValue());
+        assertEquals(7002, result.getSearchResultItem(2).getId(Integer.class).intValue());
+
+        expression = OperationExpression.or(new InExpression("name", "aaa", "ccc").boost(2.0F), new ValueExpression("title", "aaa"));
+        result = elasticsearchService.search(indexAlias, expression, searchParameter);
+        assertEquals(4, result.getResultCount());
+        assertEquals(7001, result.getSearchResultItem(0).getId(Integer.class).intValue());
+        assertEquals(7003, result.getSearchResultItem(1).getId(Integer.class).intValue());
+        assertEquals(7005, result.getSearchResultItem(2).getId(Integer.class).intValue());
+        assertEquals(7002, result.getSearchResultItem(3).getId(Integer.class).intValue());
     }
 
     @Test

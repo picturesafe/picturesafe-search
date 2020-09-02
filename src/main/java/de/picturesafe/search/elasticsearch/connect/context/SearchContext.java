@@ -19,8 +19,10 @@ package de.picturesafe.search.elasticsearch.connect.context;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
 import de.picturesafe.search.elasticsearch.connect.dto.QueryDto;
 import de.picturesafe.search.expression.Expression;
+import de.picturesafe.search.parameter.SortOption;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class SearchContext {
@@ -87,5 +89,9 @@ public class SearchContext {
 
     public boolean isNestedQuery() {
         return nestedQuery;
+    }
+
+    public List<SortOption> getSortOptions() {
+        return queryDto.getSortOptions();
     }
 }

@@ -20,13 +20,17 @@ import de.picturesafe.search.util.logging.CustomJsonToStringStyle;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * Elasticsearch result
  */
-public class SearchResult {
+public class SearchResult implements Iterable<SearchResultItem> {
 
     private final List<SearchResultItem> searchResultItems;
     private final int pageIndex;
@@ -80,6 +84,16 @@ public class SearchResult {
      */
     public List<SearchResultItem> getSearchResultItems() {
         return searchResultItems;
+    }
+
+    /**
+     * Gets the search result item at the specified index.
+     *
+     * @param index Index of the search result item
+     * @return      Search result item
+     */
+    public SearchResultItem getSearchResultItem(int index) {
+        return searchResultItems.get(index);
     }
 
     /**
@@ -179,6 +193,21 @@ public class SearchResult {
      */
     public <T> List<T> getIds(Class<T> type) {
         return searchResultItems.stream().map(item -> item.getId(type)).collect(Collectors.toList());
+    }
+
+    @Override
+    public Iterator<SearchResultItem> iterator() {
+        return searchResultItems.iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super SearchResultItem> action) {
+        searchResultItems.forEach(action);
+    }
+
+    @Override
+    public Spliterator<SearchResultItem> spliterator() {
+        return Spliterators.spliterator(searchResultItems, Spliterator.ORDERED);
     }
 
     @Override
