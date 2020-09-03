@@ -769,22 +769,22 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         SortBuilder<?> sortBuilder;
 
         FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
-        final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+        final String rootFieldName = StringUtils.substringBefore(fieldName, ".");
 
         if (fieldConfiguration == null) {
-            fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
+            fieldConfiguration = fieldConfiguration(mappingConfig, rootFieldName, false);
         }
 
         sortBuilder = null;
-        String sortFieldName = topFieldName;
+        String sortFieldName = rootFieldName;
         if (fieldConfiguration != null) {
-            final FieldConfiguration topConfiguration = (fieldConfiguration.getParent() != null) ? fieldConfiguration.getParent() : fieldConfiguration;
+            final FieldConfiguration rootConfiguration = (fieldConfiguration.getParent() != null) ? fieldConfiguration.getParent() : fieldConfiguration;
 
-            if (topConfiguration.isNestedObject()) {
-                sortBuilder = buildNestedSort(topConfiguration, fieldName, sortOption, mappingConfig, locale);
+            if (rootConfiguration.isNestedObject()) {
+                sortBuilder = buildNestedSort(rootConfiguration, fieldName, sortOption, mappingConfig, locale);
             } else if (isTextField(fieldConfiguration)) {
                 sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), locale);
-            } else if (topConfiguration.getElasticsearchType().equals(OBJECT.getElasticType())) {
+            } else if (rootConfiguration.getElasticsearchType().equals(OBJECT.getElasticType())) {
                 sortFieldName = fieldName;
             }
         } else {
