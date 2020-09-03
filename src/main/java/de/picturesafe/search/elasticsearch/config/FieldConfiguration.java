@@ -20,11 +20,14 @@ import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguratio
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
 import de.picturesafe.search.elasticsearch.model.DocumentBuilder;
 import de.picturesafe.search.elasticsearch.model.IndexObject;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.NESTED;
 
 /**
  * Definition of a field that will be stored in the elasticsearch index
@@ -57,15 +60,23 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
 
     Set<String> getCopyToFields();
 
-    List<? extends FieldConfiguration> getNestedFields();
+    List<? extends FieldConfiguration> getInnerFields();
 
-    FieldConfiguration getNestedField(String name);
-
-    boolean isNestedObject();
+    FieldConfiguration getInnerField(String name);
 
     Map<String, Object> getAdditionalParameters();
 
-    FieldConfiguration getParent();
+    default boolean hasInnerFields() {
+        return CollectionUtils.isNotEmpty(getInnerFields());
+    }
+
+    default boolean isNestedObject() {
+        return getElasticsearchType().equalsIgnoreCase(NESTED.toString());
+    }
+
+    default FieldConfiguration getParent() {
+        return null;
+    }
 
     default String getParentName() {
         final FieldConfiguration parent = getParent();
@@ -86,7 +97,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .put("analyzer", getAnalyzer())
                 .put("withoutIndexing", isWithoutIndexing())
                 .put("copyToFields", getCopyToFields())
-                .put("nestedFields", getNestedFields())
+                .put("innerFields", getInnerFields())
                 .put("additionalParameters", getAdditionalParameters())
                 .build();
     }
@@ -101,8 +112,7 @@ public interface FieldConfiguration extends IndexObject<FieldConfiguration> {
                 .append(getAnalyzer(), conf.getAnalyzer())
                 .append(isWithoutIndexing(), conf.isWithoutIndexing())
                 .append(getCopyToFields(), conf.getCopyToFields())
-                .append(getNestedFields(), conf.getNestedFields())
-                .append(isNestedObject(), conf.isNestedObject())
+                .append(getInnerFields(), conf.getInnerFields())
                 .append(getAdditionalParameters(), conf.getAdditionalParameters())
                 .append(getParentName(), conf.getParentName())
                 .isEquals();

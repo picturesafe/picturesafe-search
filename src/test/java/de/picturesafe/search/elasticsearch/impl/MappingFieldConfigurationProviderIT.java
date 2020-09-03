@@ -94,7 +94,7 @@ public class MappingFieldConfigurationProviderIT {
         fieldConfigurations.sort(Comparator.comparing(FieldConfiguration::getName));
         fieldConfigurations.forEach(field -> {
             if (field.isNestedObject()) {
-                field.getNestedFields().sort(Comparator.comparing(FieldConfiguration::getName));
+                field.getInnerFields().sort(Comparator.comparing(FieldConfiguration::getName));
             }
         });
         return  fieldConfigurations;
@@ -132,7 +132,7 @@ public class MappingFieldConfigurationProviderIT {
                     StandardFieldConfiguration.builder("keyword", ElasticsearchType.KEYWORD).sortable(true).aggregatable(true).build(),
                     StandardFieldConfiguration.builder("count", ElasticsearchType.INTEGER).sortable(true).aggregatable(true).build(),
                     StandardFieldConfiguration.builder("article", ElasticsearchType.NESTED)
-                        .nestedFields(
+                        .innerFields(
                                 StandardFieldConfiguration.builder(FIELD_NAME_ID, ElasticsearchType.LONG).sortable(true).aggregatable(true).build(),
                                 StandardFieldConfiguration.builder("title", ElasticsearchType.TEXT).copyToFulltext(true).sortable(true).aggregatable(true)
                                         .build(),

@@ -145,6 +145,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.OBJECT;
 import static de.picturesafe.search.elasticsearch.connect.error.ElasticExceptionCause.Type.QUERY_SYNTAX;
 import static de.picturesafe.search.elasticsearch.connect.filter.util.FilterFactoryUtils.createFilter;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getId;
@@ -768,29 +769,30 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
         SortBuilder<?> sortBuilder;
 
         FieldConfiguration fieldConfiguration = fieldConfiguration(mappingConfig, fieldName, false);
-        final String topFieldName = StringUtils.substringBefore(fieldName, ".");
+        final String rootFieldName = StringUtils.substringBefore(fieldName, ".");
 
         if (fieldConfiguration == null) {
-            fieldConfiguration = fieldConfiguration(mappingConfig, topFieldName, false);
+            fieldConfiguration = fieldConfiguration(mappingConfig, rootFieldName, false);
         }
 
         sortBuilder = null;
+        String sortFieldName = rootFieldName;
         if (fieldConfiguration != null) {
-            if (fieldConfiguration.getParent() != null) {
-                fieldConfiguration = fieldConfiguration.getParent();
-            }
+            final FieldConfiguration rootConfiguration = (fieldConfiguration.getParent() != null) ? fieldConfiguration.getParent() : fieldConfiguration;
 
-            if (fieldConfiguration.isNestedObject()) {
-                sortBuilder = buildNestedSort(fieldConfiguration, fieldName, sortOption, mappingConfig, locale);
+            if (rootConfiguration.isNestedObject()) {
+                sortBuilder = buildNestedSort(rootConfiguration, fieldName, sortOption, mappingConfig, locale);
             } else if (isTextField(fieldConfiguration)) {
                 sortBuilder = buildStringSort(fieldConfiguration, mappingConfig, fieldName, sortOrder(sortOption), locale);
+            } else if (rootConfiguration.getElasticsearchType().equals(OBJECT.getElasticType())) {
+                sortFieldName = fieldName;
             }
         } else {
             LOG.warn("Missing field configuration for field '{}', sorting by this field may not be possible.", fieldName);
         }
 
         if (sortBuilder == null) {
-            sortBuilder = SortBuilders.fieldSort(topFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
+            sortBuilder = SortBuilders.fieldSort(sortFieldName).order(sortOrder(sortOption)).sortMode(sortMode(sortOption)).missing(sortMissing());
         }
 
         return sortBuilder;
@@ -798,7 +800,7 @@ public class ElasticsearchImpl implements Elasticsearch, QueryFactoryCaller, Tim
 
     private FieldSortBuilder buildNestedSort(FieldConfiguration fieldConfiguration, String nestedFieldName, SortOption sortOption,
                                              MappingConfiguration mappingConfiguration, Locale locale) {
-        final FieldConfiguration nestedField = fieldConfiguration.getNestedField(StringUtils.substringAfter(nestedFieldName, "."));
+        final FieldConfiguration nestedField = fieldConfiguration.getInnerField(StringUtils.substringAfter(nestedFieldName, "."));
         final String sortFieldName = sortFieldName(nestedField, nestedFieldName);
         return SortBuilders
                 .fieldSort(sortFieldName)

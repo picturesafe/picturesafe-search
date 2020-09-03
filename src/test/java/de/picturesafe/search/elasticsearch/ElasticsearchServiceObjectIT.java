@@ -16,9 +16,9 @@
 
 package de.picturesafe.search.elasticsearch;
 
-public class ElasticsearchServiceNestedIT extends AbstractElasticsearchServiceInnerFieldsIT {
+public class ElasticsearchServiceObjectIT extends AbstractElasticsearchServiceInnerFieldsIT {
 
-    public ElasticsearchServiceNestedIT() {
-        super(NESTED_ARTICLE_FIELD_NAME);
+    public ElasticsearchServiceObjectIT() {
+        super(OBJECT_ARTICLE_FIELD_NAME);
     }
 }

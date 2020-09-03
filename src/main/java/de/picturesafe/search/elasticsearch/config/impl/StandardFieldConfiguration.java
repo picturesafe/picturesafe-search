@@ -34,6 +34,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.NESTED;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.OBJECT;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getBoolean;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocument;
 import static de.picturesafe.search.elasticsearch.connect.util.ElasticDocumentUtils.getDocuments;
@@ -52,7 +54,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     private boolean multilingual;
     private String analyzer;
     private boolean withoutIndexing;
-    private List<StandardFieldConfiguration> nestedFields;
+    private List<StandardFieldConfiguration> innerFields;
     private Set<String> copyToFields;
     private Map<String, Object> additionalParameters;
 
@@ -74,14 +76,14 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         this.withoutIndexing = builder.withoutIndexing;
         this.copyToFields = builder.copyToFields;
         this.additionalParameters = builder.additionalParameters;
-        this.nestedFields = builder.nestedFields;
-        initNestedFields();
+        this.innerFields = builder.innerFields;
+        initInnerFields();
     }
 
-    private void initNestedFields() {
-        if (CollectionUtils.isNotEmpty(nestedFields)) {
-            for (final StandardFieldConfiguration nestedField : nestedFields) {
-                nestedField.parent = this;
+    private void initInnerFields() {
+        if (CollectionUtils.isNotEmpty(innerFields)) {
+            for (final StandardFieldConfiguration innerField : innerFields) {
+                innerField.parent = this;
             }
         }
     }
@@ -127,25 +129,20 @@ public class StandardFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
-    public List<? extends FieldConfiguration> getNestedFields() {
-        return nestedFields;
+    public List<? extends FieldConfiguration> getInnerFields() {
+        return innerFields;
     }
 
     @Override
-    public FieldConfiguration getNestedField(String name) {
-        if (CollectionUtils.isNotEmpty(nestedFields)) {
-            for (final FieldConfiguration nestedField : nestedFields) {
-                if (nestedField.getName().equals(name)) {
-                    return nestedField;
+    public FieldConfiguration getInnerField(String name) {
+        if (hasInnerFields()) {
+            for (final FieldConfiguration innerField : innerFields) {
+                if (innerField.getName().equals(name)) {
+                    return innerField;
                 }
             }
         }
         return null;
-    }
-
-    @Override
-    public boolean isNestedObject() {
-        return getElasticsearchType().equalsIgnoreCase(ElasticsearchType.NESTED.toString());
     }
 
     @Override
@@ -191,7 +188,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         private boolean multilingual;
         private String analyzer;
         private boolean withoutIndexing;
-        private List<StandardFieldConfiguration> nestedFields;
+        private List<StandardFieldConfiguration> innerFields;
         private Set<String> copyToFields;
         private Map<String, Object> additionalParameters = new TreeMap<>();;
 
@@ -274,12 +271,15 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             return copyTo(Arrays.asList(copyToFields));
         }
 
-        public Builder nestedFields(StandardFieldConfiguration... nestedFields) {
-            return nestedFields(Arrays.asList(nestedFields));
+        public Builder innerFields(StandardFieldConfiguration... innerFields) {
+            return innerFields(Arrays.asList(innerFields));
         }
 
-        public Builder nestedFields(List<StandardFieldConfiguration> nestedFields) {
-            this.nestedFields = nestedFields;
+        @SuppressWarnings("unchecked")
+        public Builder innerFields(List<? extends FieldConfiguration> innerFields) {
+            Validate.isTrue(innerFields.stream().allMatch(f -> f instanceof StandardFieldConfiguration),
+                    "Inner fields support only instances of StandardFieldConfiguration!");
+            this.innerFields = (List<StandardFieldConfiguration>) innerFields;
             return this;
         }
 
@@ -304,8 +304,9 @@ public class StandardFieldConfiguration implements FieldConfiguration {
             Validate.isTrue(!name.contains("."), "Parameter 'name' must not contain a '.'!");
             Validate.notNull(fieldConfiguration.elasticsearchType, "Parameter 'elasticsearchType' must not be null!");
 
-            if (CollectionUtils.isNotEmpty(nestedFields) && !(elasticsearchType.equalsIgnoreCase(ElasticsearchType.NESTED.toString()))) {
-                throw new IllegalArgumentException("Field type has to be '" + ElasticsearchType.NESTED + "' to set nested fields!");
+            if (CollectionUtils.isNotEmpty(innerFields)) {
+                Validate.isTrue(elasticsearchType.equals(NESTED.getElasticType()) || elasticsearchType.equals(OBJECT.getElasticType()),
+                        "Inner fields are only supported by elasticsearch types '%s' or '%s'!", NESTED, OBJECT);
             }
         }
     }
@@ -322,11 +323,11 @@ public class StandardFieldConfiguration implements FieldConfiguration {
         copyToFields = getStringSet(document, "copyToFields");
         additionalParameters = getDocument(document, "additionalParameters");
 
-        final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "nestedFields");
-        nestedFields = (nestedDocuments != null)
+        final Collection<Map<String, Object>> nestedDocuments = getDocuments(document, "innerFields");
+        innerFields = (nestedDocuments != null)
                 ? nestedDocuments.stream().map(doc -> new StandardFieldConfiguration().fromDocument(doc)).collect(Collectors.toList())
                 : null;
-        initNestedFields();
+        initInnerFields();
 
         return this;
     }
@@ -349,7 +350,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append(multilingual, that.multilingual)
                 .append(withoutIndexing, that.withoutIndexing)
                 .append(analyzer, that.analyzer)
-                .append(nestedFields, that.nestedFields)
+                .append(innerFields, that.innerFields)
                 .append(copyToFields, that.copyToFields)
                 .append(additionalParameters, that.additionalParameters)
                 .append(getParentName(), that.getParentName())
@@ -374,7 +375,7 @@ public class StandardFieldConfiguration implements FieldConfiguration {
                 .append("multilingual", multilingual) //--
                 .append("analyzer", analyzer) //--
                 .append("withoutIndexing", withoutIndexing) //--
-                .append("nestedFields", nestedFields) //--
+                .append("innerFields", innerFields) //--
                 .append("copyToFields", copyToFields) //--
                 .append("additionalParameters", additionalParameters) //--
                 .append("parent", getParentName()) //--

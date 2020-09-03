@@ -46,8 +46,8 @@ public class MappingConfiguration {
         this.fieldConfigurations = fieldConfigurations;
         for (FieldConfiguration fieldConfiguration : fieldConfigurations) {
             fieldConfigurationMap.put(fieldConfiguration.getName(), fieldConfiguration);
-            if (CollectionUtils.isNotEmpty(fieldConfiguration.getNestedFields())) {
-                for (final FieldConfiguration nestedConfig : fieldConfiguration.getNestedFields()) {
+            if (CollectionUtils.isNotEmpty(fieldConfiguration.getInnerFields())) {
+                for (final FieldConfiguration nestedConfig : fieldConfiguration.getInnerFields()) {
                     fieldConfigurationMap.put(fieldConfiguration.getName() + "." + nestedConfig.getName(), nestedConfig);
                 }
             }
