@@ -400,7 +400,7 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
         FieldConfiguration storedConfig = elasticsearchService.getObject(indexAlias, 1001, FieldConfiguration.class);
         assertEquals(fieldConfig, storedConfig);
 
-        fieldConfig = StandardFieldConfiguration.builder("test-nested-persistence", ElasticsearchType.NESTED).nestedFields(
+        fieldConfig = StandardFieldConfiguration.builder("test-nested-persistence", ElasticsearchType.NESTED).innerFields(
                 StandardFieldConfiguration.builder("test-persistence-1", ElasticsearchType.TEXT)
                         .sortable(true).aggregatable(false).multilingual(true).analyzer("myAnalyzer").copyToFulltext(true).copyTo("test").build(),
                 StandardFieldConfiguration.builder("test-persistence-2", ElasticsearchType.INTEGER).sortable(true).aggregatable(true).build())

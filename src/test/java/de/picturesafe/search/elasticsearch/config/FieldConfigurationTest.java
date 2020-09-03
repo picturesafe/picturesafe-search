@@ -22,12 +22,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 import java.util.TreeSet;
 
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.BOOLEAN;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.COMPLETION;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.DATE;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.INTEGER;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.NESTED;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.OBJECT;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.TEXT;
+import static de.picturesafe.search.elasticsearch.config.FieldConfiguration.FIELD_NAME_SUGGEST;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
@@ -41,17 +48,17 @@ public class FieldConfigurationTest {
 
     @Test
     public void testStandardFieldConfiguration() {
-        FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).build();
+        FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT).build();
 
         assertEquals("textField", fieldConfiguration.getName());
-        assertEquals(ElasticsearchType.TEXT.toString(), fieldConfiguration.getElasticsearchType());
+        assertEquals(TEXT.getElasticType(), fieldConfiguration.getElasticsearchType());
         assertFalse(fieldConfiguration.isCopyToFulltext());
         assertFalse(fieldConfiguration.isAggregatable());
         assertFalse(fieldConfiguration.isSortable());
         assertFalse(fieldConfiguration.isMultilingual());
         assertFalse(fieldConfiguration.isNestedObject());
 
-        fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT)
+        fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT)
                 .copyToFulltext(true)
                 .aggregatable(true)
                 .sortable(true)
@@ -73,7 +80,7 @@ public class FieldConfigurationTest {
     public void testInvalidFieldNames() {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Parameter 'name' must not contain a '.'!");
-        StandardFieldConfiguration.builder("text.field", ElasticsearchType.TEXT).build();
+        StandardFieldConfiguration.builder("text.field", TEXT).build();
 
         SuggestFieldConfiguration.name("suggest.field");
         exception.expect(IllegalArgumentException.class);
@@ -82,28 +89,54 @@ public class FieldConfigurationTest {
 
     @Test
     public void testNestedFieldFieldConfiguration() {
-        final List<StandardFieldConfiguration> nestedFields = new ArrayList<>();
-        nestedFields.add(StandardFieldConfiguration.builder("nestedTestField", ElasticsearchType.TEXT).build());
-        nestedFields.add(StandardFieldConfiguration.builder("nestedIntegerField", ElasticsearchType.INTEGER).build());
-        nestedFields.add(StandardFieldConfiguration.builder("nestedDateField", ElasticsearchType.DATE).build());
-
-        final FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("nestedField", ElasticsearchType.NESTED)
-                .nestedFields(nestedFields)
+        final FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("nestedField", NESTED)
+                .innerFields(StandardFieldConfiguration.builder("innerTextField", TEXT).build(),
+                             StandardFieldConfiguration.builder("innerIntegerField", INTEGER).build(),
+                             StandardFieldConfiguration.builder("innerDateField", DATE).build())
                 .build();
 
         assertTrue(fieldConfiguration.isNestedObject());
-        assertNotNull(fieldConfiguration.getNestedFields());
-        assertEquals(3, fieldConfiguration.getNestedFields().size());
-        assertNotNull(fieldConfiguration.getNestedField("nestedTestField"));
-        assertEquals("nestedTestField", fieldConfiguration.getNestedField("nestedTestField").getName());
-        assertEquals(ElasticsearchType.TEXT.toString(), fieldConfiguration.getNestedField("nestedTestField").getElasticsearchType());
+        assertTrue(fieldConfiguration.hasInnerFields());
+        assertNotNull(fieldConfiguration.getInnerFields());
+        assertEquals(3, fieldConfiguration.getInnerFields().size());
+        assertNotNull(fieldConfiguration.getInnerField("innerTextField"));
+        assertEquals("innerTextField", fieldConfiguration.getInnerField("innerTextField").getName());
+        assertEquals(TEXT.getElasticType(), fieldConfiguration.getInnerField("innerTextField").getElasticsearchType());
+    }
+
+    @Test
+    public void testObjectFieldFieldConfiguration() {
+        final FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("objectField", OBJECT)
+                .innerFields(StandardFieldConfiguration.builder("innerTextField", TEXT).build(),
+                             StandardFieldConfiguration.builder("innerIntegerField", INTEGER).build(),
+                             StandardFieldConfiguration.builder("innerDateField", DATE).build())
+                .build();
+
+        assertTrue(fieldConfiguration.hasInnerFields());
+        assertNotNull(fieldConfiguration.getInnerFields());
+        assertEquals(3, fieldConfiguration.getInnerFields().size());
+        assertNotNull(fieldConfiguration.getInnerField("innerDateField"));
+        assertEquals("innerDateField", fieldConfiguration.getInnerField("innerDateField").getName());
+        assertEquals(DATE.getElasticType(), fieldConfiguration.getInnerField("innerDateField").getElasticsearchType());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInnerFieldsWrongElasticTypeError() {
+        StandardFieldConfiguration.builder("test", TEXT)
+                .innerFields(StandardFieldConfiguration.builder("inner", BOOLEAN).build()).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInnerFieldsWrongClassError() {
+        StandardFieldConfiguration.builder("test", OBJECT)
+                .innerFields(Collections.singletonList(SuggestFieldConfiguration.name("suggest"))).build();
     }
 
     @Test
     public void testSuggestFieldConfiguration() {
         FieldConfiguration fieldConfiguration = SuggestFieldConfiguration.name("mySuggestField").additionalParameter("max_input_length", 100);
         assertEquals("mySuggestField", fieldConfiguration.getName());
-        assertEquals(ElasticsearchType.COMPLETION.toString(), fieldConfiguration.getElasticsearchType());
+        assertEquals(COMPLETION.getElasticType(), fieldConfiguration.getElasticsearchType());
         assertFalse(fieldConfiguration.isCopyToFulltext());
         assertFalse(fieldConfiguration.isAggregatable());
         assertFalse(fieldConfiguration.isSortable());
@@ -113,26 +146,26 @@ public class FieldConfigurationTest {
         assertEquals(100, fieldConfiguration.getAdditionalParameters().get("max_input_length"));
 
         fieldConfiguration = FieldConfiguration.SUGGEST_FIELD;
-        assertEquals(FieldConfiguration.FIELD_NAME_SUGGEST, fieldConfiguration.getName());
-        assertEquals(ElasticsearchType.COMPLETION.toString(), fieldConfiguration.getElasticsearchType());
+        assertEquals(FIELD_NAME_SUGGEST, fieldConfiguration.getName());
+        assertEquals(COMPLETION.getElasticType(), fieldConfiguration.getElasticsearchType());
         assertNull(fieldConfiguration.getAdditionalParameters());
     }
 
     @Test
     public void testCopyTo() {
-        FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo("1", "2", "3").build();
+        FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT).copyTo("1", "2", "3").build();
         assertEquals(new TreeSet<>(Arrays.asList("1", "2", "3")), fieldConfiguration.getCopyToFields());
 
-        fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo("1").copyTo("2").copyTo("3").build();
+        fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT).copyTo("1").copyTo("2").copyTo("3").build();
         assertEquals(new TreeSet<>(Arrays.asList("1", "2", "3")), fieldConfiguration.getCopyToFields());
 
-        fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo(Arrays.asList("1", "2", "3")).build();
+        fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT).copyTo(Arrays.asList("1", "2", "3")).build();
         assertEquals(new TreeSet<>(Arrays.asList("1", "2", "3")), fieldConfiguration.getCopyToFields());
 
-        fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo((Collection<String>) null).build();
+        fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT).copyTo((Collection<String>) null).build();
         assertNull(fieldConfiguration.getCopyToFields());
 
-        fieldConfiguration = StandardFieldConfiguration.builder("textField", ElasticsearchType.TEXT).copyTo("1", "2", "3")
+        fieldConfiguration = StandardFieldConfiguration.builder("textField", TEXT).copyTo("1", "2", "3")
                 .copyTo((Collection<String>) null).build();
         assertNull(fieldConfiguration.getCopyToFields());
     }

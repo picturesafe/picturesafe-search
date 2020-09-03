@@ -16,7 +16,6 @@
 
 package de.picturesafe.search.elasticsearch.connect.mapping;
 
-import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.LanguageSortConfiguration;
 import de.picturesafe.search.elasticsearch.config.MappingConfiguration;
@@ -32,6 +31,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.KEYWORD;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.TEXT;
 import static de.picturesafe.search.elasticsearch.connect.mapping.MappingConstants.KEYWORD_FIELD;
 import static de.picturesafe.search.elasticsearch.connect.mapping.MappingConstants.MULTILINGUAL_KEYWORD_FIELD;
 import static de.picturesafe.search.elasticsearch.connect.util.FieldConfigurationUtils.isTextField;
@@ -67,7 +68,7 @@ public class MappingBuilder {
 
             if (addFulltextField) {
                 mapping.startObject(FieldConfiguration.FIELD_NAME_FULLTEXT);
-                mapping.field("type", "text");
+                mapping.field("type", TEXT.getElasticType());
                 mapping.endObject();
             }
 
@@ -94,19 +95,18 @@ public class MappingBuilder {
                     addTextField(mapping, fieldConfig);
                 }
             } else {
-                if (fieldConfig.isNestedObject()) {
-                    addNestedObject(mapping, fieldConfig);
+                if (fieldConfig.hasInnerFields()) {
+                    addObjectField(mapping, fieldConfig);
                 } else {
                     mapping.field("type", fieldConfig.getElasticsearchType());
-                    if (fieldConfig.getElasticsearchType().equalsIgnoreCase(ElasticsearchType.OBJECT.toString())
-                            && fieldConfig.isWithoutIndexing()) {
-                        mapping.field("enabled", false);
-                    }
                     addCopyTo(mapping, fieldConfig);
                     addAdditionalParameters(mapping, fieldConfig);
                 }
             }
 
+            if (fieldConfig.isWithoutIndexing()) {
+                mapping.field("enabled", false);
+            }
             if (StringUtils.isNoneBlank(fieldConfig.getAnalyzer())) {
                 mapping.field("analyzer", fieldConfig.getAnalyzer());
             }
@@ -120,7 +120,7 @@ public class MappingBuilder {
         for (LanguageSortConfiguration languageSortConfiguration : languageSortConfigurations) {
             final String localeSubName = languageSortConfiguration.getLanguage();
             mapping.startObject(localeSubName);
-            mapping.field("type", "text");
+            mapping.field("type", TEXT.getElasticType());
             addCopyTo(mapping, fieldConfiguration);
 
             if (fieldConfiguration.isSortable() || fieldConfiguration.isAggregatable()) {
@@ -137,7 +137,7 @@ public class MappingBuilder {
                 }
                 if (fieldConfiguration.isAggregatable()) {
                     mapping.startObject(KEYWORD_FIELD);
-                    mapping.field("type", "keyword");
+                    mapping.field("type", KEYWORD.getElasticType());
                     mapping.endObject();
                 }
                 mapping.endObject();
@@ -151,23 +151,23 @@ public class MappingBuilder {
     }
 
     private void addTextField(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
-        mapping.field("type", "text");
+        mapping.field("type", fieldConfiguration.getElasticsearchType());
         addCopyTo(mapping, fieldConfiguration);
 
         if (fieldConfiguration.isAggregatable() || fieldConfiguration.isSortable()) {
             mapping.startObject("fields");
             mapping.startObject(KEYWORD_FIELD);
-            mapping.field("type", "keyword");
+            mapping.field("type", KEYWORD.getElasticType());
             mapping.endObject();
             mapping.endObject();
         }
         addAdditionalParameters(mapping, fieldConfiguration);
     }
 
-    private void addNestedObject(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
-        mapping.field("type", "nested");
+    private void addObjectField(XContentBuilder mapping, FieldConfiguration fieldConfiguration) throws IOException {
+        mapping.field("type", fieldConfiguration.getElasticsearchType());
         mapping.startObject("properties");
-        addFields(mapping, fieldConfiguration.getNestedFields());
+        addFields(mapping, fieldConfiguration.getInnerFields());
         mapping.endObject();
     }
 

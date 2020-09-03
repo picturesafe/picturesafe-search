@@ -119,7 +119,7 @@ public class TestConfiguration {
         nestedFields.add(StandardFieldConfiguration.builder("linkingTime", ElasticsearchType.LONG).sortable(true).build());
         nestedFields.add(StandardFieldConfiguration.builder("note", ElasticsearchType.TEXT).sortable(true).build());
         return StandardFieldConfiguration.builder("referenceWithSort", ElasticsearchType.NESTED)
-                .nestedFields(nestedFields)
+                .innerFields(nestedFields)
                 .build();
     }
 }

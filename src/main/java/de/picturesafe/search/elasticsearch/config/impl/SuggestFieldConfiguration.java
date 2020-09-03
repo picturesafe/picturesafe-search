@@ -93,18 +93,13 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
     }
 
     @Override
-    public List<FieldConfiguration> getNestedFields() {
+    public List<FieldConfiguration> getInnerFields() {
         return Collections.emptyList();
     }
 
     @Override
-    public FieldConfiguration getNestedField(String name) {
+    public FieldConfiguration getInnerField(String name) {
         return null;
-    }
-
-    @Override
-    public boolean isNestedObject() {
-        return false;
     }
 
     @Override
@@ -128,11 +123,6 @@ public class SuggestFieldConfiguration implements FieldConfiguration {
         }
         additionalParameters.put(name, value);
         return this;
-    }
-
-    @Override
-    public FieldConfiguration getParent() {
-        return null;
     }
 
     @Override

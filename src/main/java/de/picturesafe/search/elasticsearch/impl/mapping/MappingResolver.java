@@ -16,7 +16,6 @@
 
 package de.picturesafe.search.elasticsearch.impl.mapping;
 
-import de.picturesafe.search.elasticsearch.config.ElasticsearchType;
 import de.picturesafe.search.elasticsearch.config.FieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.StandardFieldConfiguration;
 import de.picturesafe.search.elasticsearch.config.impl.SuggestFieldConfiguration;
@@ -34,6 +33,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.COMPLETION;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.NESTED;
+import static de.picturesafe.search.elasticsearch.config.ElasticsearchType.OBJECT;
 
 @SuppressWarnings("unchecked")
 public class MappingResolver {
@@ -63,15 +66,11 @@ public class MappingResolver {
         final boolean enabled = booleanValue(properties, "enabled", true);
         final FieldConfiguration fieldConfiguration;
 
-        if (type == null) {
-            if (!enabled) {
-                fieldConfiguration = StandardFieldConfiguration.builder(name, ElasticsearchType.OBJECT).withoutIndexing().build();
-            } else {
-                return resolveObjectField(name, properties);
-            }
-        } else if (type.equals("nested")) {
+        if (type == null || type.equals(OBJECT.getElasticType())) {
+            return resolveObjectField(name, properties, enabled);
+        } else if (type.equals(NESTED.getElasticType())) {
             return resolveNestedField(name, properties);
-        } else if (type.equals("completion")) {
+        } else if (type.equals(COMPLETION.getElasticType())) {
             fieldConfiguration = SuggestFieldConfiguration.name(name);
         } else {
             fieldConfiguration = fieldConfiguration(name, type, properties, enabled);
@@ -91,22 +90,25 @@ public class MappingResolver {
                     .build();
     }
 
-    private static MappingField resolveObjectField(String name, Map<String, Object> doc) {
+    private static MappingField resolveObjectField(String name, Map<String, Object> doc, boolean enabled) {
         final List<Locale> locales = new ArrayList<>();
-        final MutableObject<FieldConfiguration> mutableFieldConfig = new MutableObject<>();
+        final List<FieldConfiguration> innerFields = new ArrayList<>();
+        final MutableObject<FieldConfiguration> currentFieldConfig = new MutableObject<>();
         objectValue(doc, "properties").forEach((subName, properties) -> {
             final Locale locale = locale(subName);
             if (locale != null) {
                 locales.add(locale);
             }
             final MappingField field = resolveField(subName, (Map<String, Object>) properties);
-            if (mutableFieldConfig.getValue() == null) {
-                mutableFieldConfig.setValue(field.getFieldConfiguration());
-            } else if (!field.getFieldConfiguration().equalsBesidesName(mutableFieldConfig.getValue())) {
-                throw new RuntimeException("Object fields are only supported as multilingual text fields or with enabled=false!");
+            final FieldConfiguration fieldConfig = field.getFieldConfiguration();
+            if (currentFieldConfig.getValue() == null || !fieldConfig.equalsBesidesName(currentFieldConfig.getValue())) {
+                innerFields.add(fieldConfig);
             }
+            currentFieldConfig.setValue(fieldConfig);
         });
-        final FieldConfiguration fieldConfiguration = StandardFieldConfiguration.builder(name, mutableFieldConfig.getValue()).multilingual(true).build();
+        final FieldConfiguration fieldConfiguration = locales.isEmpty()
+                ? StandardFieldConfiguration.builder(name, OBJECT.getElasticType()).innerFields(innerFields).withoutIndexing(!enabled).build()
+                : StandardFieldConfiguration.builder(name, currentFieldConfig.getValue()).multilingual(true).withoutIndexing(!enabled).build();
         return new MappingField(fieldConfiguration, locales);
     }
 
@@ -130,7 +132,7 @@ public class MappingResolver {
             }
         });
         final FieldConfiguration fieldConfiguration
-                = StandardFieldConfiguration.builder(name, ElasticsearchType.NESTED).nestedFields(nestedFields).build();
+                = StandardFieldConfiguration.builder(name, NESTED).innerFields(nestedFields).build();
         return new MappingField(fieldConfiguration, Collections.emptyList());
     }
 

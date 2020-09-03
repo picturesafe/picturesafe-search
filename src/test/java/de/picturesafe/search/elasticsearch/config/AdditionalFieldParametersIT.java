@@ -128,7 +128,7 @@ public class AdditionalFieldParametersIT {
                     StandardFieldConfiguration.builder(
                         "boolean_field", ElasticsearchType.BOOLEAN).additionalParameter("boost", 4.0).build(),
                     StandardFieldConfiguration.builder(
-                        "nested_field", ElasticsearchType.NESTED).nestedFields(
+                        "nested_field", ElasticsearchType.NESTED).innerFields(
                                 StandardFieldConfiguration.builder("nested_text", ElasticsearchType.TEXT)
                                         .additionalParameter("index", false).build())
                             .build(),

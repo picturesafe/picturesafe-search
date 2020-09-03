@@ -34,8 +34,18 @@ public enum ElasticsearchType {
     COMPLETION,
     OBJECT;
 
+    private final String elasticType;
+
+    ElasticsearchType() {
+        elasticType = name().toLowerCase(Locale.ROOT);
+    }
+
+    public String getElasticType() {
+        return elasticType;
+    }
+
     @Override
     public String toString() {
-        return name().toLowerCase(Locale.ROOT);
+        return elasticType;
     }
 }
