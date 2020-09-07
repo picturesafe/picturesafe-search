@@ -138,7 +138,7 @@ Add the current version of the picturesafe-search library to your project.
 <dependency>
     <groupId>de.picturesafe.search</groupId>
     <artifactId>picturesafe-search</artifactId>
-    <version>3.5.0-SNAPSHOT</version>
+    <version>3.5.0</version>
 </dependency>
 ----
 
