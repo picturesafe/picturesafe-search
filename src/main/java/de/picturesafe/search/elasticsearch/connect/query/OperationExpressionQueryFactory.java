@@ -51,7 +51,7 @@ public class OperationExpressionQueryFactory implements QueryFactory {
                     somethingAddedToBuilder = true;
                     switch (operationExpression.getOperator()) {
                         case AND:
-                            boolQueryBuilder.filter(subQueryBuilder);
+                            boolQueryBuilder.must(subQueryBuilder);
                             break;
                         case OR:
                             boolQueryBuilder.should(subQueryBuilder);
