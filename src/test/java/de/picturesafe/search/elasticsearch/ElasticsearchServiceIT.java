@@ -138,6 +138,25 @@ public class ElasticsearchServiceIT extends AbstractElasticsearchServiceIT {
     }
 
     @Test
+    public void testSearchComplex() {
+        indexName = elasticsearchService.createIndexWithAlias(indexAlias);
+        final List<Map<String, Object>> docs = Arrays.asList(
+                DocumentBuilder.id(9001).put("title", "Titel 1").put("count", 13).build(),
+                DocumentBuilder.id(9002).put("title", "Titel 2").put("count", 27).build(),
+                DocumentBuilder.id(9003).put("title", "Titel 3").put("count", 42).build()
+        );
+        elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, docs);
+        final OperationExpression andExpression = OperationExpression.and(
+                new FulltextExpression("titel"),
+                new ValueExpression("count", 27));
+        SearchResult result = elasticsearchService.search(indexAlias, andExpression, SearchParameter.DEFAULT);
+        assertEquals(1, result.getTotalHitCount());
+
+        result = elasticsearchService.search(indexAlias, andExpression, SearchParameter.builder().sortOptions(SortOption.relevance()).build());
+        assertEquals(1, result.getTotalHitCount());
+    }
+
+    @Test
     public void testSearchRanges() {
         indexName = elasticsearchService.createIndexWithAlias(indexAlias);
         elasticsearchService.addToIndex(indexAlias, DataChangeProcessingMode.BLOCKING, Arrays.asList(
