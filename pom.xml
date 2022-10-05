@@ -52,7 +52,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <user.timezone>Europe/Berlin</user.timezone>
-        <elasticsearch.version>7.9.1</elasticsearch.version>
+        <elasticsearch.version>7.14.0</elasticsearch.version>
         <asciidoctor-maven-plugin.version>1.6.0</asciidoctor-maven-plugin.version>
         <springframework.version>5.2.8.RELEASE</springframework.version>
         <slf4j.version>1.7.30</slf4j.version>
